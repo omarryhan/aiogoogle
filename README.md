@@ -1,1 +1,5 @@
-an Async-framework agnostic library that uses Google's discovery service.
+# Aiogoogle
+
+## Aiogoogle is an async-framework agnostic async library for Google's Discovery Service
+
+### Under Construction!
