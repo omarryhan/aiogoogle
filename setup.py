@@ -1,5 +1,12 @@
 import setuptools
 
+import os
+from os import listdir
+from os.path import isfile, join
+mypath = os.path.dirname(os.path.abspath(__file__))
+print([f for f in listdir(mypath) if isfile(join(mypath, f))])
+
+
 with open('requirements.txt', "r") as f:
     requirements = f.read().splitlines()
 

@@ -36,11 +36,6 @@ class AbstractResponse(ABC):
         pass
 
     @abstractmethod
-    async def 
-
-    async def 
-
-    @abstractmethod
     def raise_for_status(self):
         '''
         A method that should raise a google_async.excs.HTTPError for status codes that are >= 400.

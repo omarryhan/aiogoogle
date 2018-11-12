@@ -2,7 +2,7 @@ from ..utils import _dict
 
 
 
-class Oauth2UserCreds(_dict):
+class UserCreds(_dict):
     def __init__(self, *args, **kwargs):
         '''
         Viable parameters:
@@ -11,10 +11,7 @@ class Oauth2UserCreds(_dict):
             expiry
         ''' 
 
-class Oauth2ClientCreds(_dict):
-    pass
-
-class ApiKeyCreds(_dict):
+class ClientCreds(_dict):
     pass
 
 class ServiceAccountKeyCreds(_dict):

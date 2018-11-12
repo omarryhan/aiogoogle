@@ -1,14 +1,10 @@
 import os
 import pytest
-
-try:
-    from .keys import KEYS
-except:
-    from .keys_template import KEYS
+from time import sleep
 
 def main():
-    test_integration = KEYS.get('test_integration')
-    test_integration_with_keys = KEYS.get('test_integration_with_keys')
+    test_integration = os.getenv('TEST_INTEGRATION')
+    test_integration_with_keys = os.getenv('TEST_INTEGRATION_WITH_KEYS')
 
     if test_integration and test_integration_with_keys:  # Run unit tests then integration tests
         print('Running unit tests followed by integration tests and integration tests with keys provided')

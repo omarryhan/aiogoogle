@@ -1,1 +1,1 @@
-from client import DiscoveryClient
+from .client import DiscoveryClient

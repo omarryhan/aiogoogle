@@ -43,7 +43,7 @@ class Oauth2Manager:
 
 
     async def _refresh_user_creds(self, *user_creds, client_creds, session_factory):
-        
+        pass
 
     async def _refresh_client_creds(self, client_creds, session_factory):
         pass
@@ -91,7 +91,7 @@ class ApiKeyManager:
     async def refresh_creds(self, *creds, session_factory):
         return creds
 
-class ServiceAccountManager(AuthManager):
+class ServiceAccountManager:
 
     __metaclass__ = AbstractAuthManager
     

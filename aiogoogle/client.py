@@ -9,7 +9,7 @@ DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_ve
 
 
 class DiscoveryClient:
-    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None, service_account_creds=None, discovery_document=None):
+    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None, service_account_creds=None, discovery_document={}):
         '''
         Parameters:
 
@@ -39,7 +39,6 @@ class DiscoveryClient:
             discovery_document:
 
                 - Optional
-                - Discovery documents include machine readable specs for all of Google APIs.
                 - Should be a dict.
                 - You can download and set a discovery doc after instantiating a DiscoveryClient by calling self.discover()
         '''
@@ -60,22 +59,26 @@ class DiscoveryClient:
 
     #-------- Discovery Document ---------#
 
-    @discovery_document.setter
-    def discovery_document(self, discovery_document):
-        self._discovery_document = discovery_document
-        self.resources = Resources(self._discovery_document)
-
     @property
     def discovery_document(self):
         return self._discovery_document
+
+    @discovery_document.setter
+    def discovery_document(self, discovery_document):
+        self._discovery_document = discovery_document
+
+        # save some data from the discovery document to main client to minimize memory consumption when many resources and resource.methods are instantiated
+        self._schema = discovery_document.get('schema')
+        self._auth = discovery_document.get('auth')
+        self._global_parameters = discovery_document.get('parameters')
+
+        # Make a gateway object that will be responsible for creating requests that access resources from google's apis.
+        self.resources = Resources(self._discovery_document, self._schema, self._auth, self._global_parameters)
 
     async def _download_discovery_document(self, api_name, api_version):
         url = DISCOVERY_URL.format(api_name, api_version)
         request = Request(method='GET', url=url)
         return await self.send_unauthorized(request)
-
-    def discover_from_doc(self, discovery_document):
-        self.discovery_document = discovery_document
 
     async def discover(self, api_name, api_version):
         ''' Downloads discovery document and sets it to self '''

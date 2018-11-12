@@ -1,0 +1,9 @@
+graft tests/
+include tox.ini
+graft aiogoogle/
+include requirements.txt
+include test_requirements.txt
+include README.md
+include *keys_template.py
+global-exclude *.pyc
+global-exclude *tox_private.ini
