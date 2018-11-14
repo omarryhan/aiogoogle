@@ -50,6 +50,14 @@ class ResourceMethod:
         self._global_parameters = global_parameters
         self._schema = schema
 
+    @property
+    def description(self):
+        return self._method_specs.get('description')
+    
+    @property
+    def scopes(self):
+        return self._method_specs.get('scopes')
+
     def __call__(self, **kwargs):
         ''' builds a request '''
         pass
@@ -61,11 +69,14 @@ class Resource:
         self._global_parameters = global_parameters
         self._schema = schema
 
-        methods = resource.get('methods')
-        self.available_methods = [k for k,v in methods.items()] if methods else []  # Some resources have nested resources, ergo the need for "{}"
-        self.nested_resources = self._get_nested_resources(resource)
+    @property
+    def methods(self) -> [str, str]:
+        # Some resources have nested resources, ergo the need for "{}"
+        methods_ = self._resource.get('methods')
+        return [k for k,v in methods_.items()] if methods_ else []
 
-    def _get_nested_resources(self, resource):
+    @property
+    def resources(self) -> [str, str]:
         '''
         Checks if there's any nested resources in the discovery document
 
@@ -86,8 +97,8 @@ class Resource:
                 a_method
         '''
 
-        if resource.get('resources'):
-            return [k for k,v in resource.get('resources').items()]
+        if self._resource.get('resources'):
+            return [k for k,v in self._resource.get('resources').items()]
         else:
             return []
         
@@ -97,7 +108,7 @@ class Resource:
         Will first check for nested resources then will check for methods on main resource
         '''
         # 1. Search in nested resources
-        if method_or_resource in self.nested_resources:
+        if method_or_resource in self.resources:
             return Resource(
                 name=method_or_resource,
                 resource=self._resource['resources'][method_or_resource],
@@ -105,7 +116,7 @@ class Resource:
                 schema=self._schema
             )
         # 2. Must be a method
-        elif method_or_resource in self.available_methods:
+        elif method_or_resource in self.methods:
             return ResourceMethod(
                 name=method_or_resource,
                 method_specs=self._resource['methods'][method_or_resource],

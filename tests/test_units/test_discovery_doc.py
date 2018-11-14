@@ -77,8 +77,8 @@ def test_resource_get_nested_resources_method():
             }
         }
     )
-    assert 'first_resource' in resource.nested_resources
-    assert 'second_resource' in resource.nested_resources
+    assert 'first_resource' in resource.resources
+    assert 'second_resource' in resource.resources
 
 def test_resource_available_methods():
     resource = Resource(
@@ -94,8 +94,8 @@ def test_resource_available_methods():
             }
         }
     )
-    assert 'third_method' in resource.available_methods
-    assert 'forth_method' in resource.available_methods
+    assert 'third_method' in resource.methods
+    assert 'forth_method' in resource.methods
 
 @pytest.mark.parametrize('name,version', some_apis)
 def test_resource_returns_nested_resource(open_discovery_document, name, version):
@@ -103,9 +103,9 @@ def test_resource_returns_nested_resource(open_discovery_document, name, version
     client = DiscoveryClient(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get('resources', {}).items():
         resource = getattr(client.resources, resource_name)
-        if resource.nested_resources:
+        if resource.resources:
             # Assert that it returns resources not methods
-            for nested_resource_name in resource.nested_resources:
+            for nested_resource_name in resource.resources:
                 nested_resource = getattr(resource, nested_resource_name)
                 assert isinstance(nested_resource, Resource)
 
@@ -115,8 +115,8 @@ def test_resource_returns_available_methods(open_discovery_document, name, versi
     client = DiscoveryClient(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get('resources', {}).items():
         resource = getattr(client.resources, resource_name)
-        if resource.available_methods:
+        if resource.methods:
             # Assert that it returns resources not methods
-            for available_method_name in resource.available_methods:
+            for available_method_name in resource.methods:
                 available_method = getattr(resource, available_method_name)
                 assert isinstance(available_method, ResourceMethod)
