@@ -1,6 +1,15 @@
+import os
+import json
+
 import pytest
 
 
-@pytest.fixture('session')
-def youtube_v3_discovery_doc_url():
-    return "https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"
+@pytest.fixture('function')
+def open_discovery_document():
+    def wrapped(name, version):
+        current_dir = os.getcwd()
+        file_name = current_dir + '/tests/data/' + name + '_' + version + '_discovery_doc.json'
+        with open(file_name, 'r') as discovery_doc:
+            discovery_doc_dict = json.loads(discovery_doc.read())
+        return discovery_doc_dict
+    return wrapped

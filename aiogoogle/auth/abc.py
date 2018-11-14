@@ -5,7 +5,7 @@ class AbstractAuthManager(ABC):
 
     def __new__(cls, *args, **kwargs):
         # Get all coros of this the abstract class
-        parent_abstract_coros = inspect.getmembers(AbstractResponse, predicate=inspect.iscoroutinefunction)
+        parent_abstract_coros = inspect.getmembers(AbstractAuthManager, predicate=inspect.iscoroutinefunction)
 
         # Ensure all relevant child methods are implemented as coros
         for coro in parent_abstract_coros:
@@ -15,7 +15,7 @@ class AbstractAuthManager(ABC):
                 raise RuntimeError(f'{child_method} must be a coroutine')
 
         # Resume with normal behavior of a Python constructor
-        return super(AbstractResponse, cls).__new__(cls, *args, **kwargs)
+        return super(AbstractAuthManager, cls).__new__(cls, *args, **kwargs)
 
     @abstractmethod
     def authorize_request(self, request, creds):

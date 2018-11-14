@@ -1,63 +1,25 @@
 from abc import ABC, abstractproperty, abstractmethod, abstractclassmethod, abstractstaticmethod
 import inspect
 
-
 class AbstractResponse(ABC):
-
-    def __new__(cls, *args, **kwargs):
-        # Get all coros of this the abstract class
-        parent_abstract_coros = inspect.getmembers(AbstractResponse, predicate=inspect.iscoroutinefunction)
-
-        # Ensure all relevant child methods are implemented as coros
-        for coro in parent_abstract_coros:
-            coro_name = coro[0]
-            child_method = getattr(cls, coro_name)
-            if not inspect.iscoroutinefunction(child_method):
-                raise RuntimeError(f'{child_method} must be a coroutine')
-
-        # Resume with normal behavior of a Python constructor
-        return super(AbstractResponse, cls).__new__(cls, *args, **kwargs)
-
+    # Not actually inhereted from for convenience. This serves as a reference for the developer
     @abstractproperty
-    def url(self):
+    def content(self):
+        ''' 
+        Here is where the content of the response will be resolved
+        whether its JSON, str or whatever.
+        '''
         pass
 
     @abstractproperty
     def status_code(self):
         pass
 
-    @abstractmethod
-    async def json(self):
-        pass
-
-    @abstractmethod
-    async def content(self):
-        ''' Should return an object that implements AbstractContent '''
-        pass
-
-    @abstractmethod
-    def raise_for_status(self):
-        '''
-        A method that should raise a google_async.excs.HTTPError for status codes that are >= 400.
-        Preferably this should pass constructor the original error raised
-        '''
-        pass
-
-class AbstractContent(ABC):
-    @abstractmethod
-    def iter_chunked(self):
-        '''
-        This method should return an iterable to be used as such:
-
-            for data in AbstractResponse.AbstractContent
-        '''
-        
-
 class AbstractSession(ABC):
 
     def __new__(cls, *args, **kwargs):
         # Get all coros of this the abstract class
-        parent_abstract_coros = inspect.getmembers(AbstractResponse, predicate=inspect.iscoroutinefunction)
+        parent_abstract_coros = inspect.getmembers(AbstractSession, predicate=inspect.iscoroutinefunction)
 
         # Ensure all relevant child methods are implemented as coros
         for coro in parent_abstract_coros:
@@ -67,10 +29,10 @@ class AbstractSession(ABC):
                 raise RuntimeError(f'{child_method} must be a coroutine')
 
         # Resume with normal behavior of a Python constructor
-        return super(AbstractResponse, cls).__new__(cls, *args, **kwargs)
+        return super(AbstractSession, cls).__new__(cls, *args, **kwargs)
 
     @abstractmethod
-    async def send(self, *requests, return_json_only=True, raise_for_status=True, return_tasks=False):
+    async def send(self, *requests, return_json_only=True, return_tasks=False):
         '''
         This method should accept
         args:

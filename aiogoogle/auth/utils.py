@@ -1,23 +1,9 @@
 from functools import wraps
-        
-def refresh_creds(creds_name, manager_name):
-    '''
-    1. Sends the creds specified to be refreshed if expired
-    2. Sets tham back to the instance that the method is bound to
-    '''
-    def outer_wrapper(f):
-        @wraps(f)
-        async def wrapper(self, *requests, **kwargs):
-            manager = getattr(self, manager_name)
-            creds = getattr(self, creds_name)
-            
-            # refreshes creds with manager
-            if manager.is_expired(creds):
-                creds = manager.refresh(creds)
-            
-            return f(self, *requests, **kwargs) 
-        return wrapper
-    return outer_wrapper
+import secrets
+
+
+def _create_secret(bytes_length=32):  # pragma: no cover
+    return secrets.base64.standard_b64encode(secrets.token_bytes(bytes_length)).decode('utf-8')
 
 def authorize_requests(creds_name, manager_name):
     '''
