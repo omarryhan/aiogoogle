@@ -2,6 +2,13 @@ sudo: false
 language: python
 python:
   - 3.7
+# <Workaround>. Python 3.7 not yet supported on Travis
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
+# </Workaround>
 install:
   pip install tox-travis
 script: 
