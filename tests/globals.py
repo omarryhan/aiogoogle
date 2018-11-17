@@ -1,5 +1,5 @@
 # APIs explorer (for more): https://developers.google.com/apis-explorer/
-some_apis = [
+SOME_APIS = [
     ('androidmanagement', 'v1'),
     ('books', 'v1'),
     ('blogger', 'v3'),

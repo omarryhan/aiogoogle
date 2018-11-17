@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 tox = "*"
+jsonschema = "*"
+pytest = "*"
 
 [dev-packages]
 

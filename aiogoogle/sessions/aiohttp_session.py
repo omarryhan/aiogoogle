@@ -1,6 +1,7 @@
 import asyncio
 
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientResponseError
 import aiofiles
 
 from .abc import AbstractSession
@@ -8,11 +9,13 @@ from ..excs import HTTPError
 
 class AiohttpSession(ClientSession, AbstractSession):
 
-    async def send(self, *requests, return_full_response=False, return_tasks=False):
+    async def send(self, *requests, return_full_http_response=False):
+        # TODO: Implement etag caching
+
         async def resolve_response(request, response):
             # If downloading file
-            if request.chunked_download is True:
-                async with aiofiles.open(request.download_file_name, 'wb') as download_file:
+            if request.media_download: 
+                async with aiofiles.open(request.media_download.file_path, 'wb+') as download_file:
                     while True:
                         chunk = await response.content.read()
                         if not chunk:
@@ -30,19 +33,20 @@ class AiohttpSession(ClientSession, AbstractSession):
         def raise_for_status(response):
             try:
                 response.raise_for_status()
-            except Exception as e:
+            except ClientResponseError as e:
                 raise HTTPError(e)
 
         async def fire_request(request):
             # If uploading file
-            if request.chunked_upload is True:
-                async with aiofiles.open(request.upload_file_name) as data:
+            if request.media_upload:
+                async with aiofiles.open(request.media_upload.file_path, 'rb') as data:
                     return await self.request(
                         method = request.method,
                         url = request.url,
                         headers = request.headers,
                         data = data,
-                        json = request.json
+                        json = request.json,
+                        timeout = request.timeout
                     )
             else:
                 return await self.request(
@@ -50,7 +54,8 @@ class AiohttpSession(ClientSession, AbstractSession):
                     url = request.url,
                     headers = request.headers,
                     data = request.data,
-                    json = request.json
+                    json = request.json,
+                    timeout = request.timeout
                 )
 
         #----------------- coro runners ------------------#
@@ -66,23 +71,14 @@ class AiohttpSession(ClientSession, AbstractSession):
         #----------------- /coro runners ------------------#
 
         # 1. Create tasks
-        if return_full_response is True:
+        if return_full_http_response is True:
             tasks = [asyncio.create_task(get_response(request)) for request in requests]
         else:
             tasks = [asyncio.create_task(get_content(request)) for request in requests]
 
-        # 2. Return if tasks were needed
-        if return_tasks:
-            if isinstance(tasks, list) and len(tasks) == 1:
-                return tasks[0]
-            else:
-                return tasks
-
-        # 3. Else await tasks and return results
+        # 2. await tasks and return results
+        results = await asyncio.gather(*tasks, return_exceptions=False)
+        if isinstance(results, list) and len(results) == 1:
+            return results[0]
         else:
-            results = await asyncio.gather(*tasks, return_exceptions=False)
-            if isinstance(results, list) and len(results) == 1:
-                return results[0]
-            else:
-                return results
-        
+            return results

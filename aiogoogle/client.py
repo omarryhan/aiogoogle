@@ -11,7 +11,7 @@ DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_ve
 
 
 class DiscoveryClient:
-    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None, service_account_creds=None, discovery_document={}):
+    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None, service_account_creds=None, discovery_document={}, validate=False):
         '''
         Parameters:
 
@@ -43,10 +43,15 @@ class DiscoveryClient:
                 - Optional
                 - Should be a dict.
                 - You can download and set a discovery doc after instantiating a DiscoveryClient by calling self.discover()
+
+            validate:
+
+                - whether or not to validate input when calling methods of resources
         '''
 
         self.discovery_document = discovery_document
         self.session_factory = session_factory
+        self.validate = validate
 
         # Auth managers
         self.api_key_manager = ApiKeyManager(self.session_factory)
@@ -57,7 +62,7 @@ class DiscoveryClient:
         self.api_key = api_key
         self.user_creds = user_creds
         self.client_creds = client_creds
-        self.servivde_account_creds = service_account_creds
+        self.service_account_creds = service_account_creds
 
     #-------- Discovery Document ---------#
 
@@ -69,13 +74,8 @@ class DiscoveryClient:
     def discovery_document(self, discovery_document):
         self._discovery_document = discovery_document
 
-        # save some data from the discovery document to main client to minimize memory consumption when many resources and resource.methods are instantiated
-        self._schema = self._discovery_document.get('schema')
-        self._auth = self._discovery_document.get('auth')
-        self._global_parameters = self._discovery_document.get('parameters')
-
         # Make a gateway object that will be responsible for creating requests that access resources from google's apis.
-        self.resources = Resources(self._discovery_document, self._schema, self._auth, self._global_parameters)
+        self.resources = Resources(self._discovery_document, validate=self.validate)
 
     async def _download_discovery_document(self, api_name, api_version):
         url = DISCOVERY_URL.format(api_name=api_name, api_version=api_version)
@@ -88,7 +88,7 @@ class DiscoveryClient:
 
     #-------- Send Requests ----------#
 
-    async def send_as_client(self, *requests, return_full_response=False, return_tasks=False):
+    async def send_as_client(self, *requests, return_full_http_response=False):
         ''' 
         Sends requests on behalf of self.client_creds
         Uses OAuth2
@@ -103,11 +103,11 @@ class DiscoveryClient:
 
         # Send authorized requests
         async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, return_full_response=return_full_response, return_tasks=return_tasks)
+            responses = await session.send(*authorized_requests, return_full_http_response=return_full_http_response)
         return responses
 
 
-    async def send_as_user(self, *requests, return_full_response=False, return_tasks=False):
+    async def send_as_user(self, *requests, return_full_http_response=False):
         '''
         Sends requests on behalf of self.user_creds
         Uses OAuth2
@@ -123,16 +123,16 @@ class DiscoveryClient:
 
         # Send authorized requests
         async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, return_full_response=return_full_response, return_tasks=return_tasks)
+            responses = await session.send(*authorized_requests, return_full_http_response=return_full_http_response)
         return responses
 
-    async def send_as_service_account(self, *requests, return_full_response=False, return_tasks=False):
+    async def send_as_service_account(self, *requests, return_full_http_response=False):
         '''
         Sends requests on behalf og self.service_account_creds
         '''
         raise NotImplementedError
 
-    async def send_as_api(self, *requests, return_full_response=False, return_tasks=False):
+    async def send_as_api(self, *requests, return_full_http_response=False):
         '''
         Sends requests on behalf of the owner of self.api_key
         '''
@@ -142,42 +142,55 @@ class DiscoveryClient:
 
         # Send authorized requests
         async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, return_full_response=return_full_response, return_tasks=return_tasks)
+            responses = await session.send(*authorized_requests, return_full_http_response=return_full_http_response)
         return responses
 
-    async def send_unauthorized(self, *requests, return_full_response=False, return_tasks=False):
+    async def send_unauthorized(self, *requests, return_full_http_response=False):
         '''
         Sends unauthorized requests
         '''
         async with self.session_factory() as session:
-            responses = await session.send(*requests, return_full_response=return_full_response, return_tasks=return_tasks)
+            responses = await session.send(*requests, return_full_http_response=return_full_http_response)
         return responses
 
-    #------------------- Some Properties -------------------#
-
-    @property
-    def name(self) -> str:
-        return self.discovery_document.get('name')
-    
-    @property
-    def version(self) -> str:
-        return self.discovery_document.get('version')
-
-    #-------------- Helper methods ------------------#
-
-    def is_authorized_for_resource(self, resource_object, creds_name: str) -> bool:
+    def user_authorized_for_method(self, resource_method, user_creds=None) -> bool:
         '''
-        checks with appropriate oauth manager if user will be authorized with the currently available creds
-            - Checks whether appropriate creds exist
-            - Checks if relevant creds object has sufficient scope
-        However:
-            - Doesn't check whether creds are refreshed
+            - Checks if oauth2 user creds have sufficient scopes for a method of a resource i.e. ResourceMethod
+        However, Doesn't check whether creds are refreshed or valid. As this is done automatically before each request
 
         e.g. input:
-            
-                youtube = DiscoveryClient(discovery_document=youtube_disc_doc)
-                result = youtube.is_authorized_for_resource(
-                    youtube.resources.video  # NOT youtube.resources.video.list()
+                youtube = DiscoveryClient(discovery_document=doc)
+                is_authorized = youtube.user_authorized_for_resource(
+                    youtube.resources.video.list  # NOT youtube.resources.video.list() AND NOT youtube.resources.videos
                 )
         '''
-        pass
+        if user_creds is None:
+            user_creds = self.user_creds
+        method_scopes = getattr(resource_method, 'scopes', []) 
+        if not method_scopes:
+            return True
+        
+        if not isinstance(user_creds['scopes'], (list, set, tuple)):
+            raise TypeError('Scopes should be an instance of list, set or tuple')
+        
+        if set(method_scopes).issubset(
+            set(user_creds['scopes'])
+        ):
+            return True
+        else:
+            return False
+
+    def __getattr__(self, value):
+        return self.discovery_document.get(value)
+
+    def __repr__(self):
+        return self.title or (self.name + '-' + self.version)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __len__(self):
+        try:
+            return len(self.resources)
+        except AttributeError:
+            return 0

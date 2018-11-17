@@ -5,11 +5,11 @@ import json
 import pytest
 
 from aiogoogle import DiscoveryClient
-from ..globals import some_apis
+from ..globals import SOME_APIS
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('name,version', some_apis)
+@pytest.mark.parametrize('name,version', SOME_APIS)
 async def test_download_discovery_client(name, version):
     discovery_client = DiscoveryClient()
     await discovery_client.discover(name, version)
@@ -17,7 +17,7 @@ async def test_download_discovery_client(name, version):
     assert len(discovery_client.discovery_document) >= 1
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('name,version', some_apis)
+@pytest.mark.parametrize('name,version', SOME_APIS)
 async def test_save_docs_as_json(name, version):
     discovery_client = DiscoveryClient()
 
@@ -39,8 +39,9 @@ async def test_save_docs_as_json(name, version):
     with open(file_name, 'w') as discovery_file:
         json.dump(discovery_client.discovery_document, discovery_file)
 
-@pytest.mark.parametrize('name,version', some_apis)
+@pytest.mark.parametrize('name,version', SOME_APIS)
 def test_load_docs_as_dict(open_discovery_document, name, version):
     doc = open_discovery_document(name, version)
     assert isinstance(doc, dict)
     assert doc
+

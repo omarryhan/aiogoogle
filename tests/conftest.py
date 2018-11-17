@@ -3,6 +3,8 @@ import json
 
 import pytest
 
+from aiogoogle.models import Request
+
 
 @pytest.fixture('function')
 def open_discovery_document():
