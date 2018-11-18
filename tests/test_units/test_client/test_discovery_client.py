@@ -3,14 +3,14 @@ import pytest
 import pprint
 from aiogoogle import DiscoveryClient
 from aiogoogle.models import Resource, Resources, ResourceMethod
-from ..globals import SOME_APIS
+from ...globals import SOME_APIS
 
 
 def test_discovery_client():
     DiscoveryClient()
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
-def test_discovery_setter(open_discovery_document, name, version):
+def test_discovery_doc_setter(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     client = DiscoveryClient(discovery_document=discovery_document)
     assert client.name == discovery_document.get('name')
@@ -19,7 +19,7 @@ def test_discovery_setter(open_discovery_document, name, version):
     assert isinstance(client.resources, Resources)
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
-def test_discovery_client_properties(open_discovery_document, name, version):
+def test_properties(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     client = DiscoveryClient(discovery_document=discovery_document)
     assert client.name == discovery_document.get('name')

@@ -54,16 +54,16 @@ class DiscoveryClient:
         self.validate = validate
         self.discovery_document = discovery_document
 
-        # Auth managers
-        self.api_key_manager = ApiKeyManager(self.session_factory)
-        self.service_account_manager = ServiceAccountManager(self.session_factory)
-        self.oauth2_manager = Oauth2Manager(self.session_factory)
-
         # Keys
         self.api_key = api_key
         self.user_creds = user_creds
         self.client_creds = client_creds
         self.service_account_creds = service_account_creds
+
+        # Auth managers
+        self.api_key_manager = ApiKeyManager(self.session_factory)
+        self.service_account_manager = ServiceAccountManager(self.session_factory)
+        self.oauth2_manager = Oauth2Manager(self.session_factory)
 
     #-------- Discovery Document ---------#
 

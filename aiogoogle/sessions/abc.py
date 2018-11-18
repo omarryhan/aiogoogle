@@ -1,19 +1,6 @@
 from abc import ABC, abstractproperty, abstractmethod, abstractclassmethod, abstractstaticmethod
 import inspect
 
-class AbstractResponse(ABC):
-    # Not actually inhereted from for convenience. This serves as a reference for the developer
-    @abstractproperty
-    def content(self):
-        ''' 
-        Here is where the content of the response will be resolved
-        whether its JSON, str or whatever.
-        '''
-        pass
-
-    @abstractproperty
-    def status_code(self):
-        pass
 
 class AbstractSession(ABC):
 
@@ -42,4 +29,4 @@ class AbstractSession(ABC):
         
         pass
         '''
-        raise NotImplementedError
+        NotImplemented

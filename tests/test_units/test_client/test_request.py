@@ -3,7 +3,7 @@ import pytest
 import pprint
 from aiogoogle import DiscoveryClient
 from aiogoogle.models import Resource, Resources, ResourceMethod, Request, MediaDownload, MediaUpload, ResumableUpload
-from ..globals import SOME_APIS
+from ...globals import SOME_APIS
 
 def test_request_constructor():
     req = Request(

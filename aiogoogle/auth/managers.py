@@ -1,4 +1,4 @@
-from .abc import AbstractAuthManager
+from .abc import AbstractOAuth2Manager, AbstractAPIKeyManager
 from .creds import UserCreds, ClientCreds
 from .utils import _create_secret
 
@@ -12,14 +12,14 @@ from ..models import Request
 # - Creds must always be an instance of dict
 
 
-class Oauth2Manager:
-
-    __metaclass__ = AbstractAuthManager
+class Oauth2Manager(AbstractOAuth2Manager):
 
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
     def authorize_request(self, request: Request, creds: dict) -> Request:
+        if request.headers is None:
+            request.headers = {}
         request.headers['Authorization'] = f'Bearer {creds["access_token"]}'
         return request
 
@@ -84,27 +84,20 @@ class Oauth2Manager:
 
             An instance of UserCreds
         '''
-        pass    
+        pass
 
-class ApiKeyManager:
-
-    __metaclass__ = AbstractAuthManager
+class ApiKeyManager(AbstractAPIKeyManager):
 
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
     def authorize_request(self, request, creds) -> Request:
-        pass
-
-    def is_expired(self, api_key) -> bool:
-        return False
-
-    async def refresh_creds(self, api_key: str) -> str:
-        return api_key
+        if request.headers is None:
+            request.headers = {}
+        request.headers['Authorization'] = f'Bearer {creds["access_token"]}'
+        return request
 
 class ServiceAccountManager:
-
-    __metaclass__ = AbstractAuthManager
 
     def __init__(self, session_factory):
         self.session_factory = session_factory

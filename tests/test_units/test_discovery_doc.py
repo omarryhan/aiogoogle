@@ -43,8 +43,16 @@ def test_parameters_not_colliding_with_resource_method__call__(open_discovery_do
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_parameters_not_colliding_with_resource_method__call__fails(open_discovery_document, name, version):
 
-    COLLIDING_PRESERVED_KEYWORDS = ['alt']
+    COLLIDING_PRESERVED_KEYWORDS = ['alt', 'part']
     
+    ''' asserts previous test catches collisions if any'''
+    class CollisionError(Exception):
+        pass
+    
+    def check_collision(param_name):
+        if param_name in COLLIDING_PRESERVED_KEYWORDS:
+            raise CollisionError()
+
     discovery_document = open_discovery_document(name, version)
     client = DiscoveryClient(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get('resources').items():
@@ -52,7 +60,6 @@ def test_parameters_not_colliding_with_resource_method__call__fails(open_discove
         for method_name in resource.methods:
             resource_method = getattr(resource, method_name)
             params = resource_method.parameters
-            for param_name, _ in params.items():
-                if param_name == 'alt':
-                    assert param_name in COLLIDING_PRESERVED_KEYWORDS
-
+            with pytest.raises(CollisionError):
+                for param_name, _ in params.items():
+                    check_collision(param_name)

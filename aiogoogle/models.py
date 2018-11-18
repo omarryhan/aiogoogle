@@ -87,12 +87,13 @@ class Request:
 
 
 class ResourceMethod:
-    def __init__(self, name, method_specs, global_parameters, schemas, base_url, validate):
+    def __init__(self, name, method_specs, global_parameters, schemas, base_url, root_url, validate):
         self.name = name
         self._method_specs = method_specs
         self._global_parameters = global_parameters
         self._schemas = schemas
         self._base_url = base_url
+        self._root_url = root_url
         self._validate = validate
 
     
@@ -147,8 +148,31 @@ class ResourceMethod:
         except KeyError:
             raise AttributeError(f'{self.name} method doesn\'t have a {value} attribute.')
 
+    def _validate_url(self, sorted_required_path_params):
+        for path_param_name, path_param_info in sorted_required_path_params.items():
+            self._validator(path_param_info, self.parameters[path_param_name])  # instance, schema
+
+    def _build_url(self, uri_params, validate):
+        if self.path_parameters:
+            # sort path params as sepcified in method_specs.parameterOrder
+            sorted_required_path_params = {}  # Dict order is guaranteed (by insertion) as of Python 3.6+
+            for param_name in self.parameterOrder:
+                try:
+                    sorted_required_path_params[param_name] = uri_params.pop(param_name)
+                except KeyError:
+                    raise TypeError(f'Missing URL path parameter: {param_name}')
+            
+            # Validate path params
+            if validate is True:
+                self._validate_url(sorted_required_path_params)
+
+        # Build full path
+            return self._base_url + self.path.format(**sorted_required_path_params)
+        else:
+            return self._base_url + self.path
+
     def __call__(self, validate=None, data=None, json=None, upload_file=None, 
-                download_file=None, timeout=None, **url_params) -> Request:
+                download_file=None, timeout=None, **uri_params) -> Request:
         ''' 
         Builds a request
 
@@ -158,51 +182,31 @@ class ResourceMethod:
         upload_file: file to upload
         download_file: file to download to
         timeout: total timeout
-        **url_params: (path and query) (required and optional) parameters
+        **uri_params: (path and query) (required and optional) parameters
         '''
-        # if collisions were found between **url_params and explicit kwargs e.g. data, json etc., then 
-        # priority will be given to explicit kwargs
-        
+        # This is where most of the magic happens. Carefull, evil witch and minions ahead.
+
+        # If collisions are found between **uri_params and explicit kwargs e.g. data, json etc., then 
+        # priority will be given to explicit kwargs. With that said, it's not likely there will be any.
+        # If you want to double check if there are any collisions,
+        # you can append the API name and version you're using to tests.globals.SOME_APIS (only if they don't exist, otherwise, you shouldn't worry about collisions)
+        # Then, run the unit tests and monitor: tests.test_discovery_document.test_parameters_not_colliding_with_resource_method__call__ for failure
+
+        # Assert timeout is int
+        if timeout is not None:
+            if not isinstance(timeout, int) or type(timeout) == bool:
+                raise TypeError('Timeouts can only be ints or None')
+
         # Resolve validation status
         if not isinstance(validate, bool):
             validate = self._validate
-
-        # Ensure only one param for http req body.
-        if json and data:
-            raise TypeError('Pass either json or data for the body of the request, not both.'
-                            '\nThis is similar to the "body" argument in google-python-client'
-                            '\nThis will validate agains the $request key in this method\'s '
-                            'discovery document')
         
-        # Build full url minus query & fragment
-        if self.path_parameters:
-            # sort path params as sepcified in method_specs.parameterOrder
-            sorted_required_path_params = {}  # Dict order is guaranteed (by insertion) as of Python 3.6+
-            for param_name in self.parameterOrder:
-                try:
-                    sorted_required_path_params[param_name] = url_params.pop(param_name)
-                except KeyError:
-                    raise KeyError(f'Missing URL path parameter: {param_name}')
-            # Validate path params
-            if validate is True:
-                for path_param_name, path_param_info in sorted_required_path_params.items():
-                    self._validator(path_param_info, self.parameters[path_param_name])  # instance, schema
-        # Build full path
-            url_path = self.path.format(**sorted_required_path_params)
-        else:
-            url_path = self.path
+        # Build full url minus query & fragment (i.e. uri)
+        url = self._build_url(uri_params=uri_params, validate=validate)
 
-        # Validate body
-        body = json or data
-        if validate is True:
-            if body is not None:
-                self._validator(body, self.request)
+        # Filter out query parameters from all uri_params that were passed to this method
+        passed_query_params = {param_name: param_info for param_name, param_info in uri_params.items() if param_name in self.query_parameters}
 
-        # Filter out query parameters from url_params that were passed to this method
-        passed_query_params = {param_name: param_info for param_name, param_info in url_params.items() if param_name in self.query_parameters}
-        # pop url params consumes
-        for param_name, _ in passed_query_params.items():
-            del url_params[param_name]
         # Ensure all required query parameteters were passed
         for param in self.required_query_parameters:
             if param not in passed_query_params:
@@ -213,57 +217,77 @@ class ResourceMethod:
             if passed_query_params:
                 for param_name, passed_param in passed_query_params.items():
                     self._validator(passed_param, self.parameters[param_name])
-
-        # Make full path
-        if url_path:
-            full_path = self._base_url + url_path
-        else:
-            full_path = self._base_url
-
+        
         # Join query params
         if passed_query_params:
-            full_url = full_path + '?' + urlencode(passed_query_params)
+            uri = url + '?' + urlencode(passed_query_params)
         else:
-            full_url = full_path
+            uri = url
 
-        # Warn if not all url_params were consumed/popped
-        if url_params:
+        # Pop uri_params consumed
+        for param_name, _ in passed_query_params.items():
+            del uri_params[param_name]
+
+        # Warn if not all uri_params were consumed/popped
+        if uri_params:  # should be empty by now
             warnings.warn('Parameters {} were not used and are being discarded.'
-                          ' Check if they\'re valid parameters'.format(str(url_params)))
+                          ' Check if they\'re valid parameters'.format(str(uri_params)))
+
+        # Ensure only one param for http req body.
+        if json and data:
+            raise TypeError('Pass either json or data for the body of the request, not both.'
+                            '\nThis is similar to the "body" argument in google-python-client'
+                            '\nThis will validate agains the $request key in this method\'s '
+                            'discovery document')
+
+        # Validate body
+        if validate is True:
+            body = json if json is not None else data if data is not None else None
+            if body is not None:
+                request_schema_name = _safe_getitem(self._method_specs, 'request', '$ref')
+                request_schema = self._schemas.get(request_schema_name)
+                self._validator(body, request_schema)
 
         # Process download_file
         if download_file:
-            if getattr(self, 'supportsMediaDownload', None) is not True:
-                raise ValueError('download_file was provided while method doesn\'t support media download')
+            if validate is True:
+                if getattr(self, 'supportsMediaDownload', None) is not True:
+                    raise ValueError('download_file was provided while method doesn\'t support media download')
             media_download = MediaDownload(download_file)
         else:
             media_download = None
 
-        # Process upload file
+        # Process upload_file
         if upload_file:
 
             # Check if method supports media upload
-            if getattr(self, 'supportsMediaUpload') is not True:
+            # Will check wether validate is true or false
+            if self._method_specs.get('supportsMediaUpload') is not True:
                 raise ValueError('upload_file was provided while method doesn\'t support media upload')
             
             # If resumable, create resumable object
             resumable = None
             if _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable'):
-                resumable_url = self._base_url + self.mediaUpload['protocols']['resumable']['path']
+                resumable_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable', 'path') or ''
+                resumable_url = self._root_url[:-1] + resumable_upload_path
                 multipart = self.mediaUpload['protocols']['resumable'].get('multipart', False)
                 resumable = ResumableUpload(upload_file, multipart=multipart, upload_path=resumable_url)
             
-            # Create MediaUpload object
-            
-            media_upload_url = self._base_url + _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'simple', 'path')
+            # Create MediaUpload object and pass it the resumable object we just created
+            simple_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'simple', 'path') or ''
+            if simple_upload_path:
+                media_upload_url = self._root_url[:-1] + simple_upload_path
+            else:
+                media_upload_url = None 
             mime_range = _safe_getitem(self._method_specs, 'mediaUpload', 'accept')
-            media_upload = MediaUpload(upload_file, upload_path=media_upload_url, mime_range=mime_range, resumable=resumable)
+            multipart = self.mediaUpload['protocols']['simple'].get('multipart', False)
+            media_upload = MediaUpload(upload_file, upload_path=media_upload_url, mime_range=mime_range, multipart=multipart, resumable=resumable)
         else:
             media_upload = None
 
         return Request(
             method=self.httpMethod,
-            url=full_url,
+            url=uri,
             data=data,
             json=json,
             timeout=timeout,
@@ -282,12 +306,13 @@ class ResourceMethod:
 
 
 class Resource:
-    def __init__(self, name, resource_specs, global_parameters, schemas, base_url, validate):
+    def __init__(self, name, resource_specs, global_parameters, schemas, base_url, root_url, validate):
         self.name = name
         self._resource_specs = resource_specs
         self._global_parameters = global_parameters
         self._schemas = schemas
         self._base_url = base_url
+        self._root_url = root_url
         self._validate = validate
 
     @property
@@ -350,6 +375,7 @@ class Resource:
                 global_parameters=self._global_parameters,
                 schemas=self._schemas,
                 base_url=self._base_url,
+                root_url=self._root_url,
                 validate=self._validate
             )
         # 2. Search in methods
@@ -360,6 +386,7 @@ class Resource:
                 global_parameters=self._global_parameters,
                 schemas=self._schemas,
                 base_url=self._base_url,
+                root_url=self._root_url,
                 validate=self._validate
             )
         else:
@@ -375,6 +402,7 @@ class Resources:
         self._global_parameters = discovery_document.get('parameters')
         self._resources_specs = discovery_document.get('resources')
         self._base_url = discovery_document.get('baseUrl')
+        self._root_url = discovery_document.get('rootUrl')
         self._validate = validate
 
     def __getattr__(self, resource) -> Resource:
@@ -386,6 +414,7 @@ class Resources:
                 global_parameters=self._global_parameters,
                 schemas=self._schemas,
                 base_url= self._base_url,
+                root_url=self._root_url,
                 validate=self._validate
             )
         else:

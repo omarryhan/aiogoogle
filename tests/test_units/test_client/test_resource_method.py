@@ -3,7 +3,7 @@ import pytest
 import pprint
 from aiogoogle import DiscoveryClient
 from aiogoogle.models import Resource, Resources, ResourceMethod
-from ..globals import SOME_APIS
+from ...globals import SOME_APIS
 
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
@@ -60,6 +60,7 @@ def test_getattr():
         global_parameters='IRRELEVANT',
         schemas={'IRRELEVANT': 'IRRELEVANT'},
         base_url='IRRELEVANT',
+        root_url='IRRELEVANT',
         validate = False 
     )
 
