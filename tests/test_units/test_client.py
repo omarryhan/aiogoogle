@@ -15,7 +15,7 @@ def test_discovery_setter(open_discovery_document, name, version):
     client = DiscoveryClient(discovery_document=discovery_document)
     assert client.name == discovery_document.get('name')
     assert client.version == discovery_document.get('version')
-    assert client.auth == discovery_document.get('auth')
+    assert getattr(client, 'auth', None) == discovery_document.get('auth')
     assert isinstance(client.resources, Resources)
 
 @pytest.mark.parametrize('name,version', SOME_APIS)

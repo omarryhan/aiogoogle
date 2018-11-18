@@ -14,9 +14,9 @@ def main():
                 #'--fulltrace',
                 '-v',
                 '-s',
-                #'--maxfail=10',
+                '--maxfail=5',
                 #'-p no:warnings',
-                '--disable-warnings',
+                #'--disable-warnings',
                 '--cov',
                 'aiogoogle/',
                 'tests/test_units/',
@@ -31,7 +31,8 @@ def main():
             [
                 '-v',
                 '-s',
-                '--disable-warnings',
+                #'--disable-warnings',
+                #'--maxfail=5',
                 '--cov',
                 'aiogoogle/',
                 'tests/test_units/',
@@ -45,7 +46,8 @@ def main():
             [
                 '-v',
                 '-s',
-                '--disable-warnings',
+                #'--disable-warnings',
+                #'--maxfail=5',
                 '--cov',
                 'aiogoogle/',
                 'tests/test_units/'

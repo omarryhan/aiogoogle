@@ -25,7 +25,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                 if response.status == 204:  # If no content
                     response.content = None
                 else:
-                    response.content = await response.json(content_type=None)  # Not necessarily JSON. This assures it isn't in bytes
+                    response.content = await response.json(content_type=None)  # Any content type
             
             response.status_code = response.status
             return response

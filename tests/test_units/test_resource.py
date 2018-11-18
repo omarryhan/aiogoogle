@@ -35,7 +35,8 @@ def test_resource_resources_property():
         },
         global_parameters = None,
         schemas = None,
-        base_url = None
+        base_url = None,
+        validate = False
     )
     assert 'first_resource' in resource.resources
     assert 'second_resource' in resource.resources
@@ -55,7 +56,8 @@ def test_resource_methods_property():
         },
         global_parameters = None,
         schemas = None,
-        base_url = None
+        base_url = None,
+        validate = False
     )
     assert 'third_method' in resource.methods
     assert 'forth_method' in resource.methods
@@ -76,7 +78,8 @@ def test_resource_len():
         },
         global_parameters = None,
         schemas = None,
-        base_url = None
+        base_url = None,
+        validate = False
     )
     assert len(resource) == 2
 
@@ -131,3 +134,21 @@ def test_resource_resource_constructor(open_discovery_document, name, version):
         for nested_resource_name in resource.resources:
             nested_resource = getattr(resource, nested_resource_name)
             assert isinstance(nested_resource, Resource)
+
+@pytest.mark.parametrize('name,version', SOME_APIS)
+def test_calling_resource_fails(open_discovery_document, name, version):
+    discovery_document = open_discovery_document(name, version)
+    client = DiscoveryClient(discovery_document=discovery_document)
+    for resource_name, _ in discovery_document.get('resources').items():
+        resource = getattr(client.resources, resource_name)
+        with pytest.raises(TypeError):
+            resource()
+
+@pytest.mark.parametrize('name,version', SOME_APIS)
+def test_str_resource(open_discovery_document, name, version):
+    discovery_document = open_discovery_document(name, version)
+    client = DiscoveryClient(discovery_document=discovery_document)
+    for resource_name, _ in discovery_document.get('resources').items():
+        resource = getattr(client.resources, resource_name)
+        assert discovery_document['baseUrl'] in str(resource)
+        assert 'resource' in str(resource)

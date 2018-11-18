@@ -3,7 +3,11 @@ import warnings
 
 from jsonschema import validate, RefResolver, Draft3Validator, validators
 
-from .utils import _dict
+from .utils import _dict, _safe_getitem
+
+
+PRESERVED_KEYWORDS = ['validate', 'data', 'json', 'upload_file', 'download_file', 'timeout']
+
 
 class ResumableUpload:
     ''' Works in conjustion with media upload '''
@@ -25,7 +29,7 @@ class MediaUpload:
         mime_range: list of MIME Media Ranges for acceptable media uploads to this method.
         max_size: Maximum size of a media upload, such as "1MB", "2GB" or "3TB".
         multipart: True if this endpoint supports upload multipart media.
-        resumable: A resumable object
+        resumable: A ResumableUpload object
         '''
         self.file_path = file_path
         self.upload_path = upload_path
@@ -81,12 +85,9 @@ class Request:
         # https://developers.google.com/discovery/v1/batch
         raise NotImplementedError
 
-class Parameter:
-    def __init__(self):
-        pass
 
 class ResourceMethod:
-    def __init__(self, name, method_specs, global_parameters, schemas, base_url, validate=False):
+    def __init__(self, name, method_specs, global_parameters, schemas, base_url, validate):
         self.name = name
         self._method_specs = method_specs
         self._global_parameters = global_parameters
@@ -94,9 +95,13 @@ class ResourceMethod:
         self._base_url = base_url
         self._validate = validate
 
-        self._ref_resolver = RefResolver.from_schema(self._schemas)
-        self._draft_validator = Draft3Validator(self._schemas, resolver=self._ref_resolver)
-        self._validator = lambda instance, schema: validate(instance, schema, cls=self._draft_validator)
+    
+    @property
+    def _validator(self):
+        _ref_resolver = RefResolver.from_schema(self._schemas)
+        _draft_validator = Draft3Validator(self._schemas, resolver=_ref_resolver)
+        return lambda instance, schema: _draft_validator.validate(instance, schema)
+        #return lambda instance, schema: validate(instance, schema, cls=_draft_validator)
 
     @property
     def parameters(self) -> dict:
@@ -119,7 +124,7 @@ class ResourceMethod:
     
     @property
     def path_parameters(self) -> [str, str]:
-        return [param_name for param_name, param_info in self.parameters if param_info.get('location') == 'path'] if self.parameters else []
+        return [param_name for param_name, param_info in self.parameters.items() if param_info.get('location') == 'path'] if self.parameters else []
 
     @property
     def query_parameters(self) -> [str, str]:
@@ -140,13 +145,14 @@ class ResourceMethod:
         try:
             return self._method_specs[value]
         except KeyError:
-            raise KeyError(f'{self.name} method doesn\'nt have a {value} attribute.')
+            raise AttributeError(f'{self.name} method doesn\'t have a {value} attribute.')
 
-    def __call__(self, schema_validate=None, data=None, json=None, upload_file=None, download_file=None, timeout=None, **url_params) -> Request:
+    def __call__(self, validate=None, data=None, json=None, upload_file=None, 
+                download_file=None, timeout=None, **url_params) -> Request:
         ''' 
         Builds a request
 
-        schema_validate: Overrides DiscoveryClient.validate if not None
+        validate: Overrides DiscoveryClient.validate if not None
         json: Json body
         data: Data body (Bytes, text, www-url-form-encoded and others)
         upload_file: file to upload
@@ -154,9 +160,12 @@ class ResourceMethod:
         timeout: total timeout
         **url_params: (path and query) (required and optional) parameters
         '''
-        # Resolve validation intent
-        if schema_validate is not None:
-            self._validate = schema_validate
+        # if collisions were found between **url_params and explicit kwargs e.g. data, json etc., then 
+        # priority will be given to explicit kwargs
+        
+        # Resolve validation status
+        if not isinstance(validate, bool):
+            validate = self._validate
 
         # Ensure only one param for http req body.
         if json and data:
@@ -167,15 +176,15 @@ class ResourceMethod:
         
         # Build full url minus query & fragment
         if self.path_parameters:
-            # sort path params as sepcified in method_specs.parameterOrders
+            # sort path params as sepcified in method_specs.parameterOrder
             sorted_required_path_params = {}  # Dict order is guaranteed (by insertion) as of Python 3.6+
-            for param_name in self.parameterOrders:
+            for param_name in self.parameterOrder:
                 try:
                     sorted_required_path_params[param_name] = url_params.pop(param_name)
                 except KeyError:
                     raise KeyError(f'Missing URL path parameter: {param_name}')
             # Validate path params
-            if self._validate is True:
+            if validate is True:
                 for path_param_name, path_param_info in sorted_required_path_params.items():
                     self._validator(path_param_info, self.parameters[path_param_name])  # instance, schema
         # Build full path
@@ -185,36 +194,46 @@ class ResourceMethod:
 
         # Validate body
         body = json or data
-        if self._validate is True:
+        if validate is True:
             if body is not None:
                 self._validator(body, self.request)
 
         # Filter out query parameters from url_params that were passed to this method
         passed_query_params = {param_name: param_info for param_name, param_info in url_params.items() if param_name in self.query_parameters}
+        # pop url params consumes
+        for param_name, _ in passed_query_params.items():
+            del url_params[param_name]
         # Ensure all required query parameteters were passed
         for param in self.required_query_parameters:
             if param not in passed_query_params:
-                raise TypeError('Missing {param} query parameter')
+                raise TypeError(f'Missing query parameter: \"{param}\"')
 
         # Validate url query params
-        if self._validate is True:
+        if validate is True:
             if passed_query_params:
                 for param_name, passed_param in passed_query_params.items():
                     self._validator(passed_param, self.parameters[param_name])
 
+        # Make full path
+        if url_path:
+            full_path = self._base_url + url_path
+        else:
+            full_path = self._base_url
+
         # Join query params
         if passed_query_params:
-            full_url = url_path + '?' + urlencode(passed_query_params)
+            full_url = full_path + '?' + urlencode(passed_query_params)
         else:
-            full_url = url_path
+            full_url = full_path
 
         # Warn if not all url_params were consumed/popped
         if url_params:
-            warnings.warn(f'Parameters {str(url_params)} were not used and are being discarded. Check if they\'re valid parameters')
+            warnings.warn('Parameters {} were not used and are being discarded.'
+                          ' Check if they\'re valid parameters'.format(str(url_params)))
 
         # Process download_file
         if download_file:
-            if self.supportsMediaDownload is not True:
+            if getattr(self, 'supportsMediaDownload', None) is not True:
                 raise ValueError('download_file was provided while method doesn\'t support media download')
             media_download = MediaDownload(download_file)
         else:
@@ -222,13 +241,23 @@ class ResourceMethod:
 
         # Process upload file
         if upload_file:
-            if self.supportsMediaUpload is not True:
+
+            # Check if method supports media upload
+            if getattr(self, 'supportsMediaUpload') is not True:
                 raise ValueError('upload_file was provided while method doesn\'t support media upload')
-            if self.mediaUpload.protocols.resumable:
-                resumable_url = self._base_url + self.mediaUpload.protocols.resumable.path
-                resumable = ResumableUpload(upload_file, multipart=self.mediaUpload.protocols.resumable.multipart, upload_path=resumable_url)
-            media_upload_url = self._base_url + self.mediaUpload.protocols.simple.path
-            media_upload = MediaUpload(upload_file, upload_path=media_upload_url, mime_range=self.mediaUpload.accept, resumable=resumable)
+            
+            # If resumable, create resumable object
+            resumable = None
+            if _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable'):
+                resumable_url = self._base_url + self.mediaUpload['protocols']['resumable']['path']
+                multipart = self.mediaUpload['protocols']['resumable'].get('multipart', False)
+                resumable = ResumableUpload(upload_file, multipart=multipart, upload_path=resumable_url)
+            
+            # Create MediaUpload object
+            
+            media_upload_url = self._base_url + _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'simple', 'path')
+            mime_range = _safe_getitem(self._method_specs, 'mediaUpload', 'accept')
+            media_upload = MediaUpload(upload_file, upload_path=media_upload_url, mime_range=mime_range, resumable=resumable)
         else:
             media_upload = None
 
@@ -242,9 +271,18 @@ class ResourceMethod:
             media_upload=media_upload
         )
 
+    def __str__(self):
+        return self.id
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __len__(self):
+        return len(self.required_parameters) if self.required_parameters else 0
+
 
 class Resource:
-    def __init__(self, name, resource_specs, global_parameters, schemas, base_url, validate=False):
+    def __init__(self, name, resource_specs, global_parameters, schemas, base_url, validate):
         self.name = name
         self._resource_specs = resource_specs
         self._global_parameters = global_parameters
@@ -287,6 +325,12 @@ class Resource:
         resources_ = self._resource_specs.get('resources')
         return [k for k,v in resources_.items()] if resources_ else []
 
+    def __str__(self):
+        return self.name + ' resource @ ' + self._base_url
+
+    def __repr__(self):
+        return self.__str__()
+
     def __call__(self):
         raise TypeError('Only methods of resources are callables, not resources.'
                         ' e.g. client.resources.user.list() NOT client.resources.user().list()')
@@ -322,11 +366,11 @@ class Resource:
             raise AttributeError(f'Resource doesn\'t have a method or resource called: \"{method_or_resource}\".\n\nAvailable methods are: {self.methods} and available resources are: {self.resources}')
 
 class Resources:
-    def __init__(self, discovery_document, validate=False):
+    def __init__(self, discovery_document, validate):
         self.discovery_document = discovery_document
 
         # Set reusable parts to this object in order to minimize memory consumption
-        self._schemas = discovery_document.get('schemas')
+        self._schemas = discovery_document.get('schemas', {})  # josnschema validator will fail if schemas isn't a dict
         self._auth = discovery_document.get('auth')
         self._global_parameters = discovery_document.get('parameters')
         self._resources_specs = discovery_document.get('resources')

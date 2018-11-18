@@ -11,7 +11,8 @@ DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_ve
 
 
 class DiscoveryClient:
-    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None, service_account_creds=None, discovery_document={}, validate=False):
+    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None,
+                 service_account_creds=None, discovery_document={}, validate=True):
         '''
         Parameters:
 
@@ -49,9 +50,9 @@ class DiscoveryClient:
                 - whether or not to validate input when calling methods of resources
         '''
 
-        self.discovery_document = discovery_document
         self.session_factory = session_factory
         self.validate = validate
+        self.discovery_document = discovery_document
 
         # Auth managers
         self.api_key_manager = ApiKeyManager(self.session_factory)
@@ -181,7 +182,10 @@ class DiscoveryClient:
             return False
 
     def __getattr__(self, value):
-        return self.discovery_document.get(value)
+        try:
+            return self.discovery_document[value]
+        except KeyError:
+            raise AttributeError(f"Attribute/key \"{value}\" were not found in client and not in discovery document")
 
     def __repr__(self):
         return self.title or (self.name + '-' + self.version)

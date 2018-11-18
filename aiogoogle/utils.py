@@ -1,3 +1,11 @@
+def _safe_getitem(dct, *keys):
+    for key in keys:
+        try:
+            dct = dct[key]
+        except (KeyError):
+            return None
+    return dct
+
 class _dict(dict):  # pragma: no cover
     def __init__(self, *args, **kwargs):  # pragma: no cover
         super(_dict, self).__init__(*args, **kwargs)

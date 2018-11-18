@@ -5,6 +5,13 @@ from .utils import _create_secret
 from ..models import Request
 
 
+# NOTE:
+# - These are the default managers. They won't perform any file io.
+# - If you want auth managers with file io capabilities, then you'll have to 
+#   implement AbstractAuthManager's interface
+# - Creds must always be an instance of dict
+
+
 class Oauth2Manager:
 
     __metaclass__ = AbstractAuthManager
@@ -12,10 +19,11 @@ class Oauth2Manager:
     def __init__(self, session_factory):
         self.session_factory = session_factory
 
-    def authorize_request(self, request: Request, creds) -> Request:
-        pass
+    def authorize_request(self, request: Request, creds: dict) -> Request:
+        request.headers['Authorization'] = f'Bearer {creds["access_token"]}'
+        return request
 
-    def is_expired(self, creds) -> bool:
+    def is_expired(self, creds: dict) -> bool:
         pass
 
     async def refresh_creds(self, *user_creds, client_creds=None) -> dict:
@@ -35,7 +43,7 @@ class Oauth2Manager:
     async def _refresh_client_creds(self, client_creds) -> dict:
         pass
 
-    def build_oauth2_uri(self, client_creds, user_creds=UserCreds(), state=_create_secret(32)) -> str:
+    def build_oauth2_uri(self, client_creds, user_creds=UserCreds(), state=_create_secret(32)) -> (str, dict):
         ''' 
         First step of OAuth2 authoriztion code flow
 
@@ -48,11 +56,19 @@ class Oauth2Manager:
             Function:
 
                 1. Check state
-                2. Sends 
+                2. Creates an oauth URI
+
+            Returns: 
+                1. oauth_uri
+                2. instance of user_creds (with state in it)
+
+            e.g.
+
+                uri, user_creds = build_oauth2_uri()
         '''
         pass
 
-    async def build_user_creds_from_grant(self, grant, client_creds, user_creds, verify_state=True) -> dict:
+    async def build_user_creds(self, grant, client_creds, user_creds, verify_state=True) -> dict:
         '''
         Second step of Oauth2 authrization code flow
 
