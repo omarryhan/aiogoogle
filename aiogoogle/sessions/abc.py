@@ -19,14 +19,13 @@ class AbstractSession(ABC):
         return super(AbstractSession, cls).__new__(cls, *args, **kwargs)
 
     @abstractmethod
-    async def send(self, *requests, return_json_only=True, return_tasks=False):
+    async def send(self, *requests, timeout=None,  return_full_http_response=False):
         '''
         This method should accept
         args:
             *requests
         kwargs:
-            return_json = True  # by default, if F
-        
-        pass
+            timeout: total timeout for all the requests combined
+            return_full_http_resonse: Returns full response instead of its content 
         '''
         NotImplemented

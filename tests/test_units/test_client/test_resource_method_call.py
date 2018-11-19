@@ -5,7 +5,10 @@ import os
 import pytest
 
 from aiogoogle import DiscoveryClient
-from aiogoogle.models import Resource, Resources, ResourceMethod, Request
+from aiogoogle.resource import Resource, Resources
+from aiogoogle.models import Request, MediaDownload, MediaUpload, ResumableUpload
+from aiogoogle.method import ResourceMethod
+from aiogoogle.excs import ValidationError
 
 
 from ...globals import SOME_APIS
@@ -147,7 +150,7 @@ def test_download_file_unsupported_method_fails(create_client):
     DOWNLOAD_FILE = '/home/omar/Documents/captions.txt'
 
     youtube = create_client('youtube', 'v3')
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValidationError) as e:
         youtube.resources.videos.list(part='irrelevant', download_file=DOWNLOAD_FILE, validate=True)
         assert 'download_file' in str(e)
 
@@ -192,7 +195,7 @@ def test_upload_file_fails_unsupported_method(create_client):
     UPLAOD_FILE_NAME = '/home/omar/Videos/video.mp4'
 
     youtube = create_client('youtube', 'v3')
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValidationError) as e:
         youtube.resources.videos.list(
             part='snippet',
             upload_file=UPLAOD_FILE_NAME,

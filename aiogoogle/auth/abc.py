@@ -36,7 +36,7 @@ class AbstractOAuth2Manager(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def build_oauth2_uri(self, client_creds, user_creds=None, state=None)-> (str, dict):
+    def build_uri(self, client_creds, user_creds=None, state=None)-> (str, dict):
         ''' 
         First step of OAuth2 authoriztion code flow
 

@@ -43,7 +43,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
     async def _refresh_client_creds(self, client_creds) -> dict:
         pass
 
-    def build_oauth2_uri(self, client_creds, user_creds=UserCreds(), state=_create_secret(32)) -> (str, dict):
+    def build_uri(self, client_creds, user_creds=UserCreds(), state=_create_secret(32)) -> (str, dict):
         ''' 
         First step of OAuth2 authoriztion code flow
 
@@ -65,6 +65,20 @@ class Oauth2Manager(AbstractOAuth2Manager):
             e.g.
 
                 uri, user_creds = build_oauth2_uri()
+        '''
+        pass
+
+    async def build_client_creds(self, client_creds) -> dict:
+        '''
+        Performs OAuth2 client credentials flow
+        
+        Parameters:
+
+            client_creds: Client creds dict. Should have a client_id and client_secret
+
+        Returns:
+
+            client_creds: Returns the client_creds dict you pass + an access token item
         '''
         pass
 

@@ -5,7 +5,9 @@ import os
 import pytest
 
 from aiogoogle import DiscoveryClient
-from aiogoogle.models import Resource, Resources, ResourceMethod, Request
+from aiogoogle.resource import Resource, Resources
+from aiogoogle.method import ResourceMethod
+from aiogoogle.models import Request
 from aiogoogle.excs import ValidationError
 
 
@@ -34,7 +36,7 @@ def test_validates_url_query_params(create_client):
         youtube.resources.videos.list(part=('snippet'), validate=True)
 
 def test_validates_body_data(create_client):
-    # Also tests ref resolution as the Video schmea has nested refs that need to be resolved
+    # Also tests ref resolution as the Video schmea has nested $refs that need to be resolved
     youtube = create_client('youtube', 'v3')
     youtube.resources.videos.insert(
         autoLevels=True,
@@ -52,7 +54,7 @@ def test_validates_body_data(create_client):
         )
 
 def test_validates_body_json(create_client):
-    # Also tests ref resolution as the Video schmea has nested refs that need to be resolved
+    # Also tests ref resolution as the Video schmea has nested $refs that need to be resolved
     youtube = create_client('youtube', 'v3')
     youtube.resources.videos.insert(
         autoLevels=True,

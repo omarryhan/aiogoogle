@@ -2,7 +2,8 @@ from pprint import pprint
 import json
 
 from .utils import _dict
-from .models import Request, Resources
+from .models import Request
+from .resource import Resources
 from .auth.managers import Oauth2Manager, ServiceAccountManager, ApiKeyManager
 from .sessions.aiohttp_session import AiohttpSession
 
@@ -89,7 +90,7 @@ class DiscoveryClient:
 
     #-------- Send Requests ----------#
 
-    async def send_as_client(self, *requests, return_full_http_response=False):
+    async def send_as_client(self, *requests, timeout=None, return_full_http_response=False):
         ''' 
         Sends requests on behalf of self.client_creds
         Uses OAuth2
@@ -104,11 +105,11 @@ class DiscoveryClient:
 
         # Send authorized requests
         async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, return_full_http_response=return_full_http_response)
+            responses = await session.send(*authorized_requests, timeout=timeout, return_full_http_response=return_full_http_response)
         return responses
 
 
-    async def send_as_user(self, *requests, return_full_http_response=False):
+    async def send_as_user(self, *requests, timeout=None, return_full_http_response=False):
         '''
         Sends requests on behalf of self.user_creds
         Uses OAuth2
@@ -124,16 +125,16 @@ class DiscoveryClient:
 
         # Send authorized requests
         async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, return_full_http_response=return_full_http_response)
+            responses = await session.send(*authorized_requests, timeout=timeout, return_full_http_response=return_full_http_response)
         return responses
 
-    async def send_as_service_account(self, *requests, return_full_http_response=False):
+    async def send_as_service_account(self, *requests, timeout=None, return_full_http_response=False):
         '''
         Sends requests on behalf og self.service_account_creds
         '''
         raise NotImplementedError
 
-    async def send_as_api(self, *requests, return_full_http_response=False):
+    async def send_as_api(self, *requests, timeout=None, return_full_http_response=False):
         '''
         Sends requests on behalf of the owner of self.api_key
         '''
@@ -143,15 +144,15 @@ class DiscoveryClient:
 
         # Send authorized requests
         async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, return_full_http_response=return_full_http_response)
+            responses = await session.send(*authorized_requests, timeout=timeout, return_full_http_response=return_full_http_response)
         return responses
 
-    async def send_unauthorized(self, *requests, return_full_http_response=False):
+    async def send_unauthorized(self, *requests, timeout=None, return_full_http_response=False):
         '''
         Sends unauthorized requests
         '''
         async with self.session_factory() as session:
-            responses = await session.send(*requests, return_full_http_response=return_full_http_response)
+            responses = await session.send(*requests, timeout=timeout, return_full_http_response=return_full_http_response)
         return responses
 
     def user_authorized_for_method(self, resource_method, user_creds=None) -> bool:

@@ -2,7 +2,8 @@ import pytest
 
 import pprint
 from aiogoogle import DiscoveryClient
-from aiogoogle.models import Resource, Resources, ResourceMethod
+from aiogoogle.resource import Resource, Resources
+from aiogoogle.method import ResourceMethod
 from ...globals import SOME_APIS
 
 

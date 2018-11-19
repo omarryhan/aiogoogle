@@ -9,8 +9,8 @@ from ..excs import HTTPError
 
 class AiohttpSession(ClientSession, AbstractSession):
 
-    async def send(self, *requests, return_full_http_response=False):
-        # TODO: Implement etag caching
+    async def send(self, *requests, timeout=None, return_full_http_response=False):
+        # TODO: etag caching
 
         async def resolve_response(request, response):
             # If downloading file
@@ -71,6 +71,7 @@ class AiohttpSession(ClientSession, AbstractSession):
         #----------------- /coro runners ------------------#
 
         # 1. Create tasks
+        # TODO: pass timeout when creating tasks
         if return_full_http_response is True:
             tasks = [asyncio.create_task(get_response(request)) for request in requests]
         else:

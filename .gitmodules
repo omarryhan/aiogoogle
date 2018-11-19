@@ -1,0 +1,3 @@
+[submodule "aiogoogle/jsonschema"]
+	path = aiogoogle/jsonschema
+	url = git@github.com:omarryhan/jsonschema.git

@@ -1,7 +1,7 @@
 import pytest
 
 from aiogoogle import DiscoveryClient
-from aiogoogle.models import PRESERVED_KEYWORDS
+from aiogoogle.method import PRESERVED_KEYWORDS
 from ..globals import SOME_APIS
 from jsonschema import Draft4Validator, Draft3Validator
 
@@ -27,6 +27,30 @@ def test_schemas_adhering_jsonschema_v4(open_discovery_document, name, version):
     for _, schema in discovery_document.get('schemas', {}).items():
         Draft3Validator.check_schema(schema)
 
+
+@pytest.mark.parametrize('name,version', SOME_APIS)
+def test_methods_schemas_adhering_jsonschema_v4(open_discovery_document, name, version):
+
+    def check_schema(methods):
+        for _,method in methods.items():
+            if method.get('parameters'):
+                for _, parameter in method['parameters'].items():
+                    if parameter:
+                        Draft3Validator.check_schema(parameter)
+
+    def resolve_resource(resource):
+        if resource.get('methods'):
+            check_schema(resource['methods'])
+        if resource.get('resources'):
+            for _,resource in resource['resources'].items():
+                resolve_resource(resource)
+
+    discovery_document = open_discovery_document(name, version)
+    for _, resource in discovery_document['resources'].items():
+        resolve_resource(resource)
+
+
+
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_parameters_not_colliding_with_resource_method__call__(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
@@ -42,10 +66,10 @@ def test_parameters_not_colliding_with_resource_method__call__(open_discovery_do
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_parameters_not_colliding_with_resource_method__call__fails(open_discovery_document, name, version):
+    ''' asserts previous test catches collisions if any'''
 
     COLLIDING_PRESERVED_KEYWORDS = ['alt', 'part']
-    
-    ''' asserts previous test catches collisions if any'''
+
     class CollisionError(Exception):
         pass
     
