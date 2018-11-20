@@ -33,7 +33,7 @@ def test_user_authorized_for_method(open_discovery_document):
     discovery_document = open_discovery_document('youtube', 'v3')
     client = DiscoveryClient(discovery_document=discovery_document)
     assert client.user_authorized_for_method(
-        resource_method=client.resources.videos.list,
+        method=client.resources.videos.list,
         user_creds={
             'scopes': [
                 "https://www.googleapis.com/auth/youtube",
@@ -45,7 +45,7 @@ def test_user_authorized_for_method(open_discovery_document):
     ) is True
 
     assert client.user_authorized_for_method(
-        resource_method=client.resources.videos.list,
+        method=client.resources.videos.list,
         user_creds={
             'scopes': [
                 #"https://www.googleapis.com/auth/youtube",
@@ -57,7 +57,7 @@ def test_user_authorized_for_method(open_discovery_document):
     ) is False
 
     assert client.user_authorized_for_method(
-        resource_method=client.resources.videos.list,
+        method=client.resources.videos.list,
         user_creds={
             'scopes': [
                 "https://www.googleapis.com/auth/youtube",
@@ -70,7 +70,7 @@ def test_user_authorized_for_method(open_discovery_document):
     ) is True
 
     assert client.user_authorized_for_method(
-        resource_method=client.resources.videos.list,
+        method=client.resources.videos.list,
         user_creds={
             'scopes': []
         }
@@ -78,7 +78,7 @@ def test_user_authorized_for_method(open_discovery_document):
 
     with pytest.raises(TypeError) as e:
         client.user_authorized_for_method(
-            resource_method=client.resources.videos.list,
+            method=client.resources.videos.list,
             user_creds={
                 'scopes': None
             }

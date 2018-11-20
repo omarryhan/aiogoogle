@@ -15,14 +15,20 @@ class DiscoveryClient:
     def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None,
                  service_account_creds=None, discovery_document={}, validate=True):
         '''
-        Parameters:
+        Arguments:
 
             session_factory:
 
-                - A factory that produces sessions. (Or just a callable object)
-                    - You can choose from the many implementations of AbstractSession in the sessions module
-                    - In case you want to instantiate a custom session with initial parameters, you can pass an anonymous factory. e.g.: `lambda: Session(default_timeout=7)`
-                - Session should implement google_async.sessions.abc.AbstractSession
+                - A factory that produces session object conforming to aiogoogle.sessions.abc.AbstractSession interface.
+
+                    - You can choose from the few implementations of AbstractSession in the aiogoogle.sessions module
+
+                    - In case you want to instantiate a custom session with initial parameters, you can either:
+
+                        - Pass an anonymous factory. e.g.: `lambda: Session(your_custom_kwarg=True)`
+                          aiogoogle will not pass any arguments to the session factory.
+
+                        - Implement your own session factory
 
             api_key: 
             
@@ -40,18 +46,18 @@ class DiscoveryClient:
             
                 - Service account credentials dict for the service account manager
 
-            discovery_document:
+            discovery_document (dict):
 
                 - Optional
-                - Should be a dict.
                 - You can download and set a discovery doc after instantiating a DiscoveryClient by calling self.discover()
 
             validate:
 
-                - whether or not to validate input when calling methods of resources
+                - whether or not to validate input when calling methods
         '''
 
         self.session_factory = session_factory
+        self.active_session = None
         self.validate = validate
         self.discovery_document = discovery_document
 
@@ -82,18 +88,49 @@ class DiscoveryClient:
     async def _download_discovery_document(self, api_name, api_version):
         url = DISCOVERY_URL.format(api_name=api_name, api_version=api_version)
         request = Request(method='GET', url=url)
-        return await self.send_unauthorized(request)
+        
+        if self.active_session is None:
+            async with self:
+                discovery_docuemnt = await self.as_anon(request)
+        else:
+            discovery_docuemnt = await self.as_anon(request)
+        return discovery_docuemnt
 
     async def discover(self, api_name, api_version):
-        ''' Downloads discovery document and sets it to self '''
+        ''' 
+        
+        Donwloads and sets a discovery document from: 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_version}/rest'
+        Makes this a object client to {api_name} + " " + {api_version}
+        
+        Arguments:
+
+            api_name: API name to discover. e.g.: "youtube"
+            
+            api_version: API version to discover e.g.: "v3" NOT 3
+
+        '''
+
         self.discovery_document = await self._download_discovery_document(api_name, api_version)
 
     #-------- Send Requests ----------#
 
-    async def send_as_client(self, *requests, timeout=None, return_full_http_response=False):
+    async def as_client(self, *requests, timeout=None, full_resp=False):
         ''' 
-        Sends requests on behalf of self.client_creds
-        Uses OAuth2
+        Sends requests on behalf of self.client_creds (OAuth2)
+        
+        Arguments:
+
+            *requests:
+
+                Requests from client.resources.resource.method()
+
+            timeout:
+
+                Total timeout for all the requests being sent
+
+            full_resp:
+
+                If True, returns full HTTP response object instead of returning it's content
         '''
         # Refresh credentials
         self.client_creds = self.oauth2_manager.refresh_creds(
@@ -104,15 +141,26 @@ class DiscoveryClient:
         authorized_requests = [self.oauth2_manager.authorize_request(request, self.client_creds) for request in requests]
 
         # Send authorized requests
-        async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, timeout=timeout, return_full_http_response=return_full_http_response)
-        return responses
+        return await self.active_session.send(*authorized_requests, timeout=timeout, return_full_http_response=full_resp)
 
 
-    async def send_as_user(self, *requests, timeout=None, return_full_http_response=False):
-        '''
-        Sends requests on behalf of self.user_creds
-        Uses OAuth2
+    async def as_user(self, *requests, timeout=None, full_resp=False):
+        ''' 
+        Sends requests on behalf of self.user_creds (OAuth2)
+        
+        Arguments:
+
+            *requests:
+
+                Requests from client.resources.resource.method()
+
+            timeout:
+
+                Total timeout for all the requests being sent
+
+            full_resp:
+
+                If True, returns full HTTP response object instead of returning it's content
         '''
         # Refresh credentials
         self.user_creds = self.oauth2_manager.refresh_creds(
@@ -124,51 +172,97 @@ class DiscoveryClient:
         authorized_requests = [self.oauth2_manager.authorize_request(request, self.user_creds) for request in requests]
 
         # Send authorized requests
-        async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, timeout=timeout, return_full_http_response=return_full_http_response)
-        return responses
+        return await self.active_session.send(*authorized_requests, timeout=timeout, return_full_http_response=full_resp)
 
-    async def send_as_service_account(self, *requests, timeout=None, return_full_http_response=False):
+    async def as_service_account(self, *requests, timeout=None, full_resp=False):
         '''
+        NotImplented
         Sends requests on behalf og self.service_account_creds
         '''
         raise NotImplementedError
 
-    async def send_as_api(self, *requests, timeout=None, return_full_http_response=False):
-        '''
-        Sends requests on behalf of the owner of self.api_key
+    async def as_api(self, *requests, timeout=None, full_resp=False):
+        ''' 
+        Sends requests on behalf of self.api_key (OAuth2)
+        
+        Arguments:
+
+            *requests:
+
+                Requests from client.resources.resource.method()
+
+            timeout:
+
+                Total timeout for all the requests being sent
+
+            full_resp:
+
+                If True, returns full HTTP response object instead of returning it's content
         '''
 
         # Authorize requests
         authorized_requests = [self.api_key_manager.authorize_request(request, self.api_key) for request in requests]
 
         # Send authorized requests
-        async with self.session_factory() as session:
-            responses = await session.send(*authorized_requests, timeout=timeout, return_full_http_response=return_full_http_response)
-        return responses
+        return await self.active_session.send(*authorized_requests, timeout=timeout, return_full_http_response=full_resp)
 
-    async def send_unauthorized(self, *requests, timeout=None, return_full_http_response=False):
-        '''
-        Sends unauthorized requests
-        '''
-        async with self.session_factory() as session:
-            responses = await session.send(*requests, timeout=timeout, return_full_http_response=return_full_http_response)
-        return responses
+    async def as_anon(self, *requests, timeout=None, full_resp=False):
+        ''' 
+        Sends an unauthorized request
+        
+        Arguments:
 
-    def user_authorized_for_method(self, resource_method, user_creds=None) -> bool:
-        '''
-            - Checks if oauth2 user creds have sufficient scopes for a method of a resource i.e. ResourceMethod
-        However, Doesn't check whether creds are refreshed or valid. As this is done automatically before each request
+            *requests:
 
-        e.g. input:
-                youtube = DiscoveryClient(discovery_document=doc)
-                is_authorized = youtube.user_authorized_for_resource(
-                    youtube.resources.video.list  # NOT youtube.resources.video.list() AND NOT youtube.resources.videos
-                )
+                Requests from client.resources.resource.method()
+
+            timeout:
+
+                Total timeout for all the requests being sent
+
+            full_resp:
+
+                If True, returns full HTTP response object instead of returning it's content
+        '''
+        return await self.active_session.send(*requests, timeout=timeout, return_full_http_response=full_resp)
+
+    def user_authorized_for_method(self, method, user_creds=None) -> bool:
+        '''
+        Checks if oauth2 user_creds object has sufficient scopes for a method call
+        However, Doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
+
+
+        Arguments:
+
+            Method: 
+            
+                - Method to be checked
+                
+                e.g.:
+
+                    Correct:
+                 
+                        youtube = DiscoveryClient(discovery_document=ytb_doc)
+                        is_authorized = youtube.user_authorized_for_resource(
+                            youtube.resources.video.list
+                        )
+                    
+                    NOT correct:
+
+                        is_authorized = youtube.user_authorized_for_resource(
+                            youtube.resources.video.list()
+                        )
+
+                    AND NOT correct:
+
+                        is_authorized = youtube.user_authorized_for_resource(
+                            youtube.resources.videos
+                        )
+
         '''
         if user_creds is None:
             user_creds = self.user_creds
-        method_scopes = getattr(resource_method, 'scopes', []) 
+        method_scopes = getattr(method, 'scopes', []) 
         if not method_scopes:
             return True
         
@@ -187,6 +281,13 @@ class DiscoveryClient:
             return self.discovery_document[value]
         except KeyError:
             raise AttributeError(f"Attribute/key \"{value}\" were not found in client and not in discovery document")
+
+    async def __aenter__(self):
+        self.active_session = await self.session_factory().__aenter__()
+        return self
+
+    async def __aexit__(self, *args, **kwargs):
+        await self.active_session.__aexit__(*args, **kwargs)
 
     def __repr__(self):
         return self.title or (self.name + '-' + self.version)

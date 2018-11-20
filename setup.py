@@ -30,7 +30,7 @@ setuptools.setup(
     url='https://github.com/omarryhan/aiogoogle',
     packages=setuptools.find_packages(),
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",
     ],
 )

@@ -24,7 +24,7 @@ async def test_save_docs_as_json(name, version):
     # Download discovery document
     await discovery_client.discover(name, version)
 
-    # Create new .data/ dir if it doesn't exists
+    # Create new .data/ dir if one doesn't exists
     current_dir = os.getcwd()
     data_dir_name = current_dir + '/tests/data/'
     try:

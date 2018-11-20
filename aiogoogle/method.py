@@ -9,8 +9,8 @@ from .excs import ValidationError
 from .models import MediaDownload, MediaUpload, ResumableUpload, Request
 
 
-# Those are hard-coded kwargs for ResourceMethod.__call__
-# They're used for testing whether those names will collide with any of the url_parameters that are provided by any of the discovery docs
+# Those are the hard-coded kwargs in ResourceMethod.__call__
+# They're used for testing whether those names will collide with any of the url parameters that are provided by any of the discovery docs.
 # If collisions were to be found, that would mean that the user won't be able to pass a url_parameter that shares the same name with any of the PRESERVED_KEYWORDS.
 PRESERVED_KEYWORDS = ['validate', 'data', 'json', 'upload_file', 'download_file', 'timeout']
 
@@ -122,8 +122,6 @@ class ResourceMethod:
         timeout: total timeout
         **uri_params: (path and query) (required and optional) parameters
         '''
-        # This is where most of the magic happens. Carefull, evil witch and minions ahead.
-
         # If collisions are found between the 'key' of **uri_params and explicit kwargs e.g. data, json etc., then 
         # priority will be given to explicit kwargs. With that said, it's not likely there will be any.
         # If you want to double check if there are any collisions,
@@ -209,7 +207,6 @@ class ResourceMethod:
             media_download=media_download,
             media_upload=media_upload
         )
-
 
     def _build_url(self, uri_params, validate):
         if self.path_parameters:
