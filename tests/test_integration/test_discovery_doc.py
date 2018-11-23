@@ -1,25 +1,27 @@
 import pytest
 
-from aiogoogle import DiscoveryClient
-from aiogoogle.method import PRESERVED_KEYWORDS
+from aiogoogle import Aiogoogle
+from aiogoogle.resource import RESERVED_KEYWORDS, GoogleAPI
 from ..globals import SOME_APIS
-from jsonschema import Draft4Validator, Draft3Validator
+
+from jsonschema import Draft3Validator
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_parameters_not_included_twice(open_discovery_document, name, version):
     ''' 
     I was curious whether global parameters might have identical names
-    to ResourceMethod.parameters.
-    Fails if collision found
+    with Method.parameters.
+    Fails if similarities found
     '''
     discovery_document = open_discovery_document(name, version)
-    client = DiscoveryClient(discovery_document=discovery_document)
+    google_api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get('resources').items():
-        resource = getattr(client.resources, resource_name)
+        resource = getattr(google_api, resource_name)
         for method_name in resource.methods:
-            resource_method = getattr(resource, method_name)
-            for parameter_name, _ in resource_method._method_specs.get('parameters', {}).items():
-                assert parameter_name not in resource_method._global_parameters
+            method = getattr(resource, method_name)
+            local_params = method['parameters'] or {}
+            for parameter_name, _ in local_params.items():
+                assert parameter_name not in method._global_parameters
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_schemas_adhering_jsonschema_v4(open_discovery_document, name, version):
@@ -50,40 +52,39 @@ def test_methods_schemas_adhering_jsonschema_v4(open_discovery_document, name, v
         resolve_resource(resource)
 
 
-
 @pytest.mark.parametrize('name,version', SOME_APIS)
-def test_parameters_not_colliding_with_resource_method__call__(open_discovery_document, name, version):
+def test_parameters_not_colliding_with_google_api__call__(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
-    client = DiscoveryClient(discovery_document=discovery_document)
+    google_api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get('resources').items():
-        resource = getattr(client.resources, resource_name)
+        resource = getattr(google_api, resource_name)
         for method_name in resource.methods:
-            resource_method = getattr(resource, method_name)
-            params = resource_method.parameters
+            method = getattr(resource, method_name)
+            params = method.parameters
             for param_name, _ in params.items():
-                assert param_name not in PRESERVED_KEYWORDS
+                assert param_name not in RESERVED_KEYWORDS
 
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
-def test_parameters_not_colliding_with_resource_method__call__fails(open_discovery_document, name, version):
+def test_parameters_not_colliding_with_google_api__call__fails(open_discovery_document, name, version):
     ''' asserts previous test catches collisions if any'''
 
-    COLLIDING_PRESERVED_KEYWORDS = ['alt', 'part']
+    COLLIDING_RESERVED_KEYWORDS = ['alt', 'part']
 
     class CollisionError(Exception):
         pass
     
     def check_collision(param_name):
-        if param_name in COLLIDING_PRESERVED_KEYWORDS:
+        if param_name in COLLIDING_RESERVED_KEYWORDS:
             raise CollisionError()
 
     discovery_document = open_discovery_document(name, version)
-    client = DiscoveryClient(discovery_document=discovery_document)
+    google_api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get('resources').items():
-        resource = getattr(client.resources, resource_name)
+        resource = getattr(google_api, resource_name)
         for method_name in resource.methods:
-            resource_method = getattr(resource, method_name)
-            params = resource_method.parameters
+            method = getattr(resource, method_name)
+            params = method.parameters
             with pytest.raises(CollisionError):
                 for param_name, _ in params.items():
                     check_collision(param_name)

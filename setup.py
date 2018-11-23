@@ -17,6 +17,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
+
     name='aiogoogle',
     version="0.0.1a",
     author='Omar Ryhan',
@@ -33,4 +34,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",
     ],
+    extras_require={
+        'curio_asks': ["asks"]
+    },
 )

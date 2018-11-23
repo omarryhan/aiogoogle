@@ -1,3 +1,8 @@
+from urllib.parse import urlparse, parse_qsl, urlunparse
+from urllib.parse import urlencode
+from dataclasses import dataclass
+
+
 class ResumableUpload:
     ''' Works in conjustion with media upload '''
     def __init__(self, file_path, multipart=None, upload_path=None):
@@ -36,7 +41,7 @@ class MediaDownload:
 
 class Request:
     '''
-    Request class for the whole library. Auth Managers, Resources and Sessions should all use this
+    Request class for the whole library. Auth Managers, GoogleAPI and Sessions should all use this
     '''
 
     def __init__(
@@ -68,8 +73,37 @@ class Request:
         self.media_download = media_download
         self.timeout = timeout
 
+    def _add_query_param(self, query: dict):
+        if not self.url:
+            raise TypeError('no url to query to')
+
+        url = list(urlparse(self.url))
+        url_query = dict(parse_qsl(url[4]))
+        url_query.update(query)
+        url[4] = url_query
+        self.url = urlunparse(url)
 
     @classmethod
     def batch_requests(cls, *requests):
         # https://developers.google.com/discovery/v1/batch
         raise NotImplementedError
+
+    @classmethod
+    def from_response(cls, response):
+        return Request(
+            url = response.url,
+            headers = response.headers,
+            json = response.json,
+            data = response.data
+        )
+
+@dataclass
+class Response:
+    status_code: int
+    headers: dict
+    url: str
+    json: dict = None
+    data: any = None
+    content: any = None
+    download_file: str = None
+    upload_file: str = None

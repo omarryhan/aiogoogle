@@ -3,17 +3,16 @@ import json
 
 from .utils import _dict
 from .models import Request
-from .resource import Resources
-from .auth.managers import Oauth2Manager, ServiceAccountManager, ApiKeyManager
+from .resource import GoogleAPI
+from .auth.managers import Oauth2Manager, ApiKeyManager
 from .sessions.aiohttp_session import AiohttpSession
 
 
 DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_version}/rest'
 
 
-class DiscoveryClient:
-    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None,
-                 service_account_creds=None, discovery_document={}, validate=True):
+class Aiogoogle:
+    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, timeout=None):
         '''
         Arguments:
 
@@ -38,52 +37,24 @@ class DiscoveryClient:
             
                 - User credentials dict for the oauth2 manager
 
-            client_creds:
+            timeout:
                 
-                - Client credentials dict for the oauth2 manager
-
-            service_account_creds:
-            
-                - Service account credentials dict for the service account manager
-
-            discovery_document (dict):
-
-                - Optional
-                - You can download and set a discovery doc after instantiating a DiscoveryClient by calling self.discover()
-
-            validate:
-
-                - whether or not to validate input when calling methods
+                - Timeout for the async context manager
         '''
 
         self.session_factory = session_factory
+        self.timeout = timeout
         self.active_session = None
-        self.validate = validate
-        self.discovery_document = discovery_document
 
         # Keys
         self.api_key = api_key
         self.user_creds = user_creds
-        self.client_creds = client_creds
-        self.service_account_creds = service_account_creds
 
         # Auth managers
-        self.api_key_manager = ApiKeyManager(self.session_factory)
-        self.service_account_manager = ServiceAccountManager(self.session_factory)
-        self.oauth2_manager = Oauth2Manager(self.session_factory)
+        self.api_key_manager = ApiKeyManager()
+        self.oauth2 = Oauth2Manager(self.session_factory)
 
     #-------- Discovery Document ---------#
-
-    @property
-    def discovery_document(self):
-        return self._discovery_document
-
-    @discovery_document.setter
-    def discovery_document(self, discovery_document):
-        self._discovery_document = discovery_document
-
-        # Make a gateway object that will be responsible for creating requests that access resources from google's apis.
-        self.resources = Resources(self._discovery_document, validate=self.validate)
 
     async def _download_discovery_document(self, api_name, api_version):
         url = DISCOVERY_URL.format(api_name=api_name, api_version=api_version)
@@ -96,7 +67,7 @@ class DiscoveryClient:
             discovery_docuemnt = await self.as_anon(request)
         return discovery_docuemnt
 
-    async def discover(self, api_name, api_version):
+    async def discover(self, api_name, api_version, validate=True):
         ''' 
         
         Donwloads and sets a discovery document from: 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_version}/rest'
@@ -110,39 +81,10 @@ class DiscoveryClient:
 
         '''
 
-        self.discovery_document = await self._download_discovery_document(api_name, api_version)
+        disc_doc_dict = await self._download_discovery_document(api_name, api_version)
+        return GoogleAPI(disc_doc_dict, validate)
 
     #-------- Send Requests ----------#
-
-    async def as_client(self, *requests, timeout=None, full_resp=False):
-        ''' 
-        Sends requests on behalf of self.client_creds (OAuth2)
-        
-        Arguments:
-
-            *requests:
-
-                Requests from client.resources.resource.method()
-
-            timeout:
-
-                Total timeout for all the requests being sent
-
-            full_resp:
-
-                If True, returns full HTTP response object instead of returning it's content
-        '''
-        # Refresh credentials
-        self.client_creds = self.oauth2_manager.refresh_creds(
-            client_creds=self.client_creds
-        )
-
-        # Authorized requests
-        authorized_requests = [self.oauth2_manager.authorize_request(request, self.client_creds) for request in requests]
-
-        # Send authorized requests
-        return await self.active_session.send(*authorized_requests, timeout=timeout, return_full_http_response=full_resp)
-
 
     async def as_user(self, *requests, timeout=None, full_resp=False):
         ''' 
@@ -163,25 +105,18 @@ class DiscoveryClient:
                 If True, returns full HTTP response object instead of returning it's content
         '''
         # Refresh credentials
-        self.user_creds = self.oauth2_manager.refresh_creds(
+        self.user_creds = self.oauth2.refresh(
             self.user_creds,
             client_creds=self.client_creds
         )
 
         # Authroize requests
-        authorized_requests = [self.oauth2_manager.authorize_request(request, self.user_creds) for request in requests]
+        authorized_requests = [self.oauth2.authorize(request, self.user_creds) for request in requests]
 
         # Send authorized requests
         return await self.active_session.send(*authorized_requests, timeout=timeout, return_full_http_response=full_resp)
 
-    async def as_service_account(self, *requests, timeout=None, full_resp=False):
-        '''
-        NotImplented
-        Sends requests on behalf og self.service_account_creds
-        '''
-        raise NotImplementedError
-
-    async def as_api(self, *requests, timeout=None, full_resp=False):
+    async def as_api_key(self, *requests, timeout=None, full_resp=False):
         ''' 
         Sends requests on behalf of self.api_key (OAuth2)
         
@@ -201,7 +136,7 @@ class DiscoveryClient:
         '''
 
         # Authorize requests
-        authorized_requests = [self.api_key_manager.authorize_request(request, self.api_key) for request in requests]
+        authorized_requests = [self.api_key_manager.authorize(request, self.api_key) for request in requests]
 
         # Send authorized requests
         return await self.active_session.send(*authorized_requests, timeout=timeout, return_full_http_response=full_resp)
@@ -231,10 +166,9 @@ class DiscoveryClient:
         Checks if oauth2 user_creds object has sufficient scopes for a method call
         However, Doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
 
-
         Arguments:
 
-            Method: 
+            method (RequestMethod): 
             
                 - Method to be checked
                 
@@ -242,7 +176,7 @@ class DiscoveryClient:
 
                     Correct:
                  
-                        youtube = DiscoveryClient(discovery_document=ytb_doc)
+                        youtube = Aiogoogle(discovery_document=ytb_doc)
                         is_authorized = youtube.user_authorized_for_resource(
                             youtube.resources.video.list
                         )
@@ -262,7 +196,7 @@ class DiscoveryClient:
         '''
         if user_creds is None:
             user_creds = self.user_creds
-        method_scopes = getattr(method, 'scopes', []) 
+        method_scopes = method['scopes'] or []
         if not method_scopes:
             return True
         
@@ -276,27 +210,37 @@ class DiscoveryClient:
         else:
             return False
 
-    def __getattr__(self, value):
-        try:
-            return self.discovery_document[value]
-        except KeyError:
-            raise AttributeError(f"Attribute/key \"{value}\" were not found in client and not in discovery document")
-
     async def __aenter__(self):
-        self.active_session = await self.session_factory().__aenter__()
+        self.active_session = await self.session_factory(timeout=self.timeout).__aenter__()
         return self
 
     async def __aexit__(self, *args, **kwargs):
         await self.active_session.__aexit__(*args, **kwargs)
+        self.active_session = None
 
-    def __repr__(self):
-        return self.title or (self.name + '-' + self.version)
 
-    def __str__(self):
-        return self.__repr__()
+def next_page(token=None, response=None, json_req=False, req_token_name='pageToken', res_token_name='nextPageToken') -> Request:
+    '''
+    Function given a token **or** a json response returns a request that requests the next resource
 
-    def __len__(self):
-        try:
-            return len(self.resources)
-        except AttributeError:
-            return 0
+    Arguments:
+
+        token (str): one of ('pageToken', 'nextPageToken') that should be found in your response
+        
+        response (dict): full response not just json
+
+        json_req (dict): Normally, nextPageTokens should be sent in URL query params. If you want it in A json body, set this to True
+
+    Response:
+
+        a request object (Request)
+    '''
+    res_token = response.json.get(res_token_name, None)
+    if not res_token:
+        return
+    request = Request.from_response(response)
+    if json_req:
+        request.json[req_token_name] = res_token
+    else:
+        request._add_query_param(dict(req_token_name=res_token))
+    return request

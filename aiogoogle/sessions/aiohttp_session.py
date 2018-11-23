@@ -1,34 +1,65 @@
 import asyncio
 
 from aiohttp import ClientSession
+from aiohttp import ClientTimeout
 from aiohttp.client_exceptions import ClientResponseError
 import aiofiles
 
+from ..models import Response
 from .abc import AbstractSession
 from ..excs import HTTPError
 
 class AiohttpSession(ClientSession, AbstractSession):
+    def __init__(self, *args, **kwargs):
+        if kwargs.get('timeout') is not None:
+            kwargs['timeout'] = ClientTimeout(total=kwargs['timeout'])
+        else:
+            kwargs.pop('timeout')
+        super().__init__(*args, **kwargs)
 
     async def send(self, *requests, timeout=None, return_full_http_response=False):
         # TODO: etag caching
-
         async def resolve_response(request, response):
-            # If downloading file
-            if request.media_download: 
-                async with aiofiles.open(request.media_download.file_path, 'wb+') as download_file:
+
+            data = None
+            json = None
+            content = None
+            download_file = None
+            upload_file = None
+
+
+            # If downloading file:
+            if request.media_download:
+                download_file = request.media_download.file_path
+                async with aiofiles.open(download_file, 'wb+') as download_file_fs:
                     while True:
                         chunk = await response.content.read()
                         if not chunk:
                             break
-                        download_file.write(chunk)
+                        download_file_fs.write(chunk)
             else:
-                if response.status == 204:  # If no content
-                    response.content = None
-                else:
+                if response.status != 204:  # If no (no content)
                     response.content = await response.json(content_type=None)  # Any content type
+                    if isinstance(response.content, dict):
+                        json = response.content
+                        content = json
+                    else:
+                        data = response.content
+                        content = data
             
-            response.status_code = response.status
-            return response
+            if request.media_upload:
+                upload_file = request.media_upload.file_path
+
+            return Response(
+                url = str(response.url),
+                headers = response.headers,
+                status_code = response.status,
+                json = json,
+                data = data,
+                content = content,
+                download_file = download_file,
+                upload_file = upload_file
+            )
 
         def raise_for_status(response):
             try:

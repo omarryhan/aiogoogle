@@ -4,25 +4,25 @@ import json
 
 import pytest
 
-from aiogoogle import DiscoveryClient
+from aiogoogle import Aiogoogle
 from ..globals import SOME_APIS
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('name,version', SOME_APIS)
-async def test_download_discovery_client(name, version):
-    discovery_client = DiscoveryClient()
-    await discovery_client.discover(name, version)
-    assert isinstance(discovery_client.discovery_document, dict)
-    assert len(discovery_client.discovery_document) >= 1
+async def test_download_aiogoogle(name, version):
+    aiogoogle = Aiogoogle()
+    google_api = await aiogoogle.discover(name, version)
+    assert google_api.discovery_document
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('name,version', SOME_APIS)
 async def test_save_docs_as_json(name, version):
-    discovery_client = DiscoveryClient()
+    #TODO: Change this to be a conftest
+    aiogoogle = Aiogoogle()
 
     # Download discovery document
-    await discovery_client.discover(name, version)
+    google_api = await aiogoogle.discover(name, version)
 
     # Create new .data/ dir if one doesn't exists
     current_dir = os.getcwd()
@@ -37,7 +37,7 @@ async def test_save_docs_as_json(name, version):
     # Save discovery docuemnt as .json file to the newly created data dir
     file_name = current_dir + '/tests/data/' + name + '_' + version + '_discovery_doc.json'
     with open(file_name, 'w') as discovery_file:
-        json.dump(discovery_client.discovery_document, discovery_file)
+        json.dump(google_api.discovery_document, discovery_file)
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_load_docs_as_dict(open_discovery_document, name, version):

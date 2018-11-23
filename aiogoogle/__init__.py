@@ -1,8 +1,9 @@
 __all__ = [
-    'DiscoveryClient'
+    'Aiogoogle',
+    'GoogleAPI',
+    'auth',
+    'sessions'
 ]
 
-from . import _jsonschema
-_jsonschema.patch()
-
-from .client import DiscoveryClient
+from .client import Aiogoogle
+from .resource import GoogleAPI

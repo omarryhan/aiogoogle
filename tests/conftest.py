@@ -4,7 +4,8 @@ import json
 import pytest
 
 from aiogoogle.models import Request
-from aiogoogle import DiscoveryClient
+from aiogoogle import Aiogoogle
+from aiogoogle.resource import GoogleAPI
 
 
 @pytest.fixture('function')
@@ -18,9 +19,8 @@ def open_discovery_document():
     return wrapped
 
 @pytest.fixture('function')
-def create_client(open_discovery_document):
+def create_api(open_discovery_document):
     def wrapped(name, version):
         disc_doc = open_discovery_document(name, version)
-        client = DiscoveryClient(discovery_document=disc_doc)
-        return client
+        return GoogleAPI(discovery_document=disc_doc)
     return wrapped

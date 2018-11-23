@@ -16,7 +16,7 @@ class AbstractSession(ABC):
                 raise RuntimeError(f'{child_method} must be a coroutine')
 
         # Resume with normal behavior of a Python constructor
-        return super(AbstractSession, cls).__new__(cls, *args, **kwargs)
+        return super(AbstractSession, cls).__new__(cls)
 
     @abstractmethod
     async def send(self, *requests, timeout=None,  return_full_http_response=False):
