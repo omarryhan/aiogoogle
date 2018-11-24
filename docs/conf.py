@@ -89,6 +89,9 @@ pygments_style = None
 # documentation.
 #
 
+sys.path.insert(0, os.path.abspath('.'))
+import sphinx_nameko_theme
+html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
 html_theme = 'nameko'
 #html_theme = 'alabaster'
 #html_theme = 'sphinx_rtd_theme'

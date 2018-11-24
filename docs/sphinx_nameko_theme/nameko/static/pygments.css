@@ -1,4 +1,4 @@
-.highlight .hll { background-color: #8a8a8a }
+.highlight .hll { background-color: #ffffcc }
 .highlight  { background: #f8f8f8; }
 .highlight .c { color: #888 } /* Comment */
 .highlight .err { color: #a40000; border: 1px solid #ef2929 } /* Error */
@@ -68,5 +68,3 @@
 .highlight .vg { color: #000000 } /* Name.Variable.Global */
 .highlight .vi { color: #000000 } /* Name.Variable.Instance */
 .highlight .il { color: #990000 } /* Literal.Number.Integer.Long */
-
-.indexwrapper {background-color: #888888}
