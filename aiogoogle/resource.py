@@ -49,19 +49,6 @@ MEDIA_MIME_TYPE_PARAMETER_DEFAULT_VALUE = {
 
 
 class Method:
-    '''
-    Method Class
-
-    Arguments:
-
-        name (str): sd
-
-    Todo:
-        
-        * Add defaults
-        
-        * Add enum and enum description properties both to docstring and __call__
-    '''
     def __init__(self, name, method_specs, global_parameters, schemas, base_url, root_url, service_path, validate):
         # Replaces '-'s with '_'s and preserve old names to revert back to them after this method is called
         global_parameters = self._rm_dash_params(global_parameters)
@@ -75,12 +62,6 @@ class Method:
         self._root_url = root_url
         self._service_path = service_path
         self._should_validate = validate
-
-        # TODO: add docstring to call here
-        # self.__call__.__doc__ = 'wattt?'  # won't work
-        # self.__call__.__doc__ = self.__call__.__doc__.format('watt')  # Won't work
-        # global_function.__call__.__doc__ = 'wattt'  # won't work
-        # global_function.__call__.__doc__ = fucntion.__call__.__doc__.format('watt')  # WILL work
 
 #---- Change URL parameters with a "-" to "_" -----#
 
@@ -135,6 +116,13 @@ class Method:
 
     @property
     def parameters(self) -> dict:
+        ''' 
+        Parameters property
+
+        Returns:
+
+            dict: All parameters that this method can take as described in the discovery document
+        '''
         if not self._global_parameters and not self['parameters']:
             return {}
         elif not self._global_parameters:
@@ -146,65 +134,114 @@ class Method:
 
     @property
     def optional_parameters(self) -> [str, str]:
+        '''
+        Optional Parameters
+
+        Returns:
+
+            list: List of the names of optional parameters this method takes
+        '''
         return [parameter_name for parameter_name, parameter_info in self.parameters.items() if parameter_info.get('required') is not True] if self.parameters else []
 
     @property
     def required_parameters(self) -> [str, str]:
+        '''
+        Required Parameters
+
+        Returns:
+
+            list: List of the names of required parameters this method takes
+        '''
         return [parameter_name for parameter_name, parameter_info in self.parameters.items() if parameter_info.get('required') is True] if self.parameters else []
     
     @property
     def path_parameters(self) -> [str, str]:
+        '''
+        Path Parameters
+
+        Returns:
+
+            list: List of the names of path parameters this method takes
+        '''
         return [param_name for param_name, param_info in self.parameters.items() if param_info.get('location') == 'path'] if self.parameters else []
 
     @property
     def query_parameters(self) -> [str, str]:
+        '''
+        Query Parameters
+
+        Returns:
+
+            list: List of the names of Query parameters this method takes
+        '''
         return [param_name for param_name, param_info in self.parameters.items() if param_info.get('location') == 'query'] if self.parameters else []
 
     @property
     def required_query_parameters(self) -> [str, str]:
+        '''
+        Required Query Parameters
+
+        Returns:
+
+            list: List of the names of required query parameters this method takes
+        '''
         return [param_name for param_name in self.query_parameters if param_name in self.required_parameters] if self.query_parameters else []
 
     @property
     def optional_query_parameters(self) -> [str, str]:
+        '''
+        Optional Query Parameters
+
+        Returns:
+
+            list: List of the names of optional query parameters this method takes
+        '''
         return [param_name for param_name in self.query_parameters if param_name in self.optional_parameters] if self.query_parameters else []
     
     def __getitem__(self, key):
         '''
-
         Possible additional attributes from the discovery doc
 
-            Arguments:
+        Examples:
 
-                description: method description
+            description (str): method description
 
-                scopes: method's required scopes
+            scopes (str): method's required scopes
 
-                supportsMediaDownload
+            supportsMediaDownload (str): Whether or not this method supports media upload
 
-                supportsMediaUpload
+            supportsMediaUpload (str): Whether or not this method supports media upload
         '''
         return self._method_specs.get(key)
 
     def _validate(self, instance, schema):
         return validate__(instance, schema, self._schemas)
-        #try:
-        #    return validate_(instance, schema, cls=Draft3Validator)
-        #except ValidationError_ as e:
-        #    raise ValidationError(e)
 
     @_toggle2x_dashed_params
     def __call__(self, validate=None, data=None, json=None, upload_file=None, 
                 download_file=None, timeout=None, **uri_params) -> Request:
         ''' 
-        Builds a request
+        Builds a request from this method
 
-        validate: Overrides Aiogoogle.validate if not None
-        json: Json body
-        data: Data body (Bytes, text, www-url-form-encoded and others)
-        upload_file: file to upload
-        download_file: file to download to
-        timeout: total timeout
-        **uri_params: (path and query) (required and optional) parameters
+        Arguments:
+
+            validate (bool): Overrides :param: aiogoogle.Aiogoole.validate if not None
+            
+            json (dict): Json body
+            
+            data (any): Data body (Bytes, text, www-url-form-encoded and others)
+            
+            upload_file (str): full path of file to upload
+            
+            download_file (str): full path of file to download to
+            
+            timeout (str): total timeout for this request
+            
+            **uri_params (dict): path and query, required and optional parameters
+
+        Returns:
+
+            aiogoogle.models.Request: An unsent request object
         '''
         # If collisions are found between the 'key' of **uri_params and explicit kwargs e.g. data, json etc., then 
         # priority will be given to explicit kwargs. With that said, it's not likely there will be any.
@@ -381,12 +418,15 @@ class Resource:
 
     @property
     def methods(self) -> [str, str]:
+        '''
+        Returns methods provided by this resource
+        '''
         return [k for k,v in self['methods'].items()] if self['methods'] else []
 
     @property
     def resources(self) -> [str, str]:
         '''
-        Checks if there's any nested resources in the discovery document
+        Returns nested resources in a given API if any
         '''
         return [k for k,v in self['resources'].items()] if self['resources'] else []
 
@@ -411,7 +451,11 @@ class Resource:
 
     def __getattr__(self, method_or_resource):
         '''
-        Will first check for nested resources then will check for methods on main resource
+        Returns either a method or a nested resource
+
+        Note:
+            
+            This method will first check in nested resources then will check in methods.
         '''
         # 1. Search in nested resources
         if method_or_resource in self.resources:
