@@ -1,6 +1,5 @@
 from urllib.parse import urlparse, parse_qsl, urlunparse
 from urllib.parse import urlencode
-from dataclasses import dataclass
 
 
 class ResumableUpload:

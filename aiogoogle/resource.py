@@ -49,8 +49,19 @@ MEDIA_MIME_TYPE_PARAMETER_DEFAULT_VALUE = {
 
 
 class Method:
-    # TODO: Add defaults
-    # TODO: Add enum and enum description properties both to docstring and __call__
+    '''
+    Method Class
+
+    Arguments:
+
+        name (str): sd
+
+    Todo:
+        
+        * Add defaults
+        
+        * Add enum and enum description properties both to docstring and __call__
+    '''
     def __init__(self, name, method_specs, global_parameters, schemas, base_url, root_url, service_path, validate):
         # Replaces '-'s with '_'s and preserve old names to revert back to them after this method is called
         global_parameters = self._rm_dash_params(global_parameters)
@@ -433,6 +444,15 @@ class Resource:
                                 ''')
 
 class GoogleAPI:
+    '''
+    Creetes a representation of Google API given a discovery document
+    
+    Arguments:
+
+        discovery_document (dict): A discovery document
+
+        validate (bool): Whther or not to validate user input again the schema defined in the discovery document
+    '''
     def __init__(self, discovery_document, validate=True):
         self.discovery_document = self._add_extra_params(discovery_document)
         self._validate = validate
@@ -447,7 +467,22 @@ class GoogleAPI:
         return discovery_document
 
     def __getattr__(self, resource) -> Resource:
-        # If resource is found in the "resources" in the discovery document
+        '''
+        Returns resources from an API
+
+        Example:
+
+            ::
+
+                >>> google_service = GoogleAPI(google_service_discovery_doc)
+                >>> google_service.user
+
+                user resource @ google_service.com/api/
+
+        Returns:
+
+            aiogoogle.resource.Resource: A Resource Object
+        '''
         if resource in self['resources']:
             return Resource(
                 name=resource,
@@ -464,6 +499,22 @@ class GoogleAPI:
             raise AttributeError(f"Resource doesn't exist. Check: {documentation_link} for more info")
 
     def __getitem__(self, k):
+        '''
+        Returns items from the discovery document
+
+        Example:
+
+            ::
+
+                >>> google_service = GoogleAPI(youtube_discovery_doc)
+                >>> google_service['name']
+
+                'youtube'
+
+        Returns:
+
+            dict: Discovery Document Item
+        '''
         return self.discovery_document.get(k)
 
     def __contains__(self, item):

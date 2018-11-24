@@ -1,6 +1,4 @@
-__all__ = [
-    'next_page'
-]
+__all__ = []
 
 from functools import wraps
 from .models import Request, Response
@@ -41,6 +39,7 @@ def _safe_getitem(dct, *keys):
     return dct
 
 class _dict(dict):  # pragma: no cover
+    ''' A simple dict subclass. Nothing special '''
     def __init__(self, *args, **kwargs):  # pragma: no cover
         super(_dict, self).__init__(*args, **kwargs)
         for arg in args:

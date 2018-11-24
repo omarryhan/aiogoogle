@@ -415,21 +415,21 @@ Oauth2 serves as an authentication and authorization framework. It supports four
 
 1. **Authorization code flow**:
     
-    - (Only one supported by aiogoogle)
+    - Only one supported by aiogoogle
     - `RFC6749 section 4.1  <https://tools.ietf.org/html/rfc6749#section-4.1>`_.
 
 2. **Client Credentials Flow**:
 
-    - (Similar to API_KEY authentication so use API key authentication instead)
+    - Similar to API_KEY authentication so use API key authentication instead
     - `RFC6749 section 4.4  <https://tools.ietf.org/html/rfc6749#section-4.4>`_.
 
 3. **Implicit Grant Flow**:
-    - (Not supported)  
+    - Not supported  
     - `RFC6749 section 4.2  <https://tools.ietf.org/html/rfc6749#section-4.2>`_.
 
 4. **Resource Owner Password Credenitals Flow**:
     
-    - (Not supported)
+    - Not supported
     - `RFC6749 section 4.3  <https://tools.ietf.org/html/rfc6749#section-4.2>`_.
 
 Since Aiogoogle only supports Authorization Code Flow, let's get a little in to it:
@@ -662,10 +662,23 @@ Aiogoogle
 GoogleAPI
 ----------
 
-Discovery Document Entry Point
-................................
+.. autoclass:: aiogoogle.resource.GoogleAPI
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. autoclass:: aiogoogle.client.GoogleAPI
+Resource
+-----------
+
+.. autoclass:: aiogoogle.resource.Resource
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Method
+---------
+
+.. autoclass:: aiogoogle.resource.Method
     :members:
     :undoc-members:
     :show-inheritance:
@@ -693,14 +706,6 @@ API Key Manager
 ................
 
 .. autoclass:: aiogoogle.auth.managers.ApiKeyManager
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Utils
-------
-
-.. automodule:: aiogoogle.utils
     :members:
     :undoc-members:
     :show-inheritance:

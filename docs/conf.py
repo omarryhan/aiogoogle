@@ -47,6 +47,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.asyncio',
     'sphinx.ext.napoleon',
+    'sphinx.ext.todo'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -206,3 +207,7 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+# -- Options for napoleon --------------------------------------------------
+
+napoleon_include_special_with_doc = True
