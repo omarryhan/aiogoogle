@@ -1,3 +1,4 @@
 aiohttp
 aiofiles
 jsonschema
+sphinxcontrib-httpdomain 
