@@ -1,4 +1,4 @@
 aiohttp
 aiofiles
 jsonschema
-sphinxcontrib-httpdomain 
+sphinxcontrib-asyncio
