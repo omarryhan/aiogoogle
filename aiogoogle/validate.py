@@ -1,8 +1,6 @@
-# A simple instance validation module for Discovery schemas.
-# Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
-# As a result, using an external library to validate Discovery schemas will raise lots of errors.
-# I tried to modify the popular: https://github.com/Julian/jsonschema to make it work with Google's version,
-# but it was just too complicated for the relatively simple task on our hands
+__all__ = [
+	'validate'
+]
 
 import datetime
 import re
@@ -146,41 +144,49 @@ def validate_pattern(instance, schema):
         if match is None:
             raise ValidationError(instance, f'Match this pattern: {pattern}')
 
+def resolve(name, schemas):
+	if name in schemas:
+		pass
 
 def validate(instance, schema, schemas):
-    '''
-    Arguments:
+	'''
+	Arguments:
 
-        Instance: Instance to validate
-    
-        schema: schema to validate instance against (top level schema)
-    
-        schemas: Full schamas dict to resolve refs if any
-    '''
-    
-    validate_type(instance, schema)
-    validate_format(instance, schema)
-    validate_range(instance, schema)
-    validate_pattern(instance, schema)
-    # Resolve $ref
+		Instance: Instance to validate
 
-    # First instance must always be resolved
+		schema: schema to validate instance against (top level schema)
 
-    # Validate the following:
-    # 1. DONE type (str) jsonschema types
-    # 2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
-    # 3. DONE minimum (str)
-    # 4. DONE maximum (str)
-    # 5. DONE pattern (str)
+		schemas: Full schamas dict to resolve refs if any
+	'''
 
-    # 6. required (bool)
-    # 7. properties (dict): of nested schemas. Not to be confused with:
-    #   I. "item" (a regular key in objects)
-    #   II. "parameter" (??)
-    # 8. TODO: repeated: Whether this parameter may appear multiple times
+	# A simple instance validation module for Discovery schemas.
+	# Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
+	# As a result, using an external library to validate Discovery schemas will raise lots of errors.
+	# I tried to modify the popular: https://github.com/Julian/jsonschema to make it work with Google's version,
+	# but it was just too complicated for the relatively simple task on our hands
 
-    # Possible values for schema
-    # 1. Schema dict
-    # 2. Parameter dict
-    # 3. Request dict
-    # 4. Response dict
+	# Validate the following:
+	# 1. DONE type (str) jsonschema types
+	# 2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
+	# 3. DONE minimum (str)
+	# 4. DONE maximum (str)
+	# 5. DONE pattern (str)
+
+	# 6. required (bool)
+	# 7. properties (dict): of nested schemas. Not to be confused with:
+	#   I. "item" (a regular key in objects)
+	#   II. "parameter" (isn't part of json schema, but part of method description)
+	# 8. TODO: repeated: Whether this parameter may appear multiple times
+	# 9. TODO: Support media upload/download validation without doing file io
+	# 10.
+
+	if isinstance(instance, dict):
+		# Check for recursion
+		for k, v in instance.items():
+			#validate
+			pass
+	else:
+		validate_type(instance, schema)
+		validate_format(instance, schema)
+		validate_range(instance, schema)
+		validate_pattern(instance, schema)

@@ -8,4 +8,4 @@
 
 # Aiogoogle
 
-### Still alpha, API might break and expect it to be buggy.
+### Still in alpha, API might break and expect it to be buggy.

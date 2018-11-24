@@ -1,3 +1,10 @@
+__all__ = [
+    'ApiKey',
+    'UserCreds',
+    'ClientCreds'
+]
+
+
 from ..utils import _dict
 
 
@@ -5,6 +12,9 @@ class ApiKey(str):
     pass
 
 class UserCreds(_dict):
+    '''
+    
+    '''
     def __init__(
         self,
         access_token=None,
@@ -23,6 +33,9 @@ class UserCreds(_dict):
         # token_uri?
 
 class ClientCreds(_dict):
+    '''
+
+    '''
     def __init__(self, client_id=None, client_secret=None, scopes=None):
         self.client_id = client_id
         self.client_secret = client_secret

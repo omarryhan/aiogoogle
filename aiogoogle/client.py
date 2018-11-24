@@ -1,3 +1,8 @@
+__all__ = [
+    'Aiogoogle'
+]
+
+
 from pprint import pprint
 import json
 
@@ -8,39 +13,32 @@ from .auth.managers import Oauth2Manager, ApiKeyManager
 from .sessions.aiohttp_session import AiohttpSession
 
 
+
 DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_version}/rest'
 
 
 class Aiogoogle:
-    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, timeout=None):
-        '''
-        Arguments:
+    '''
+    Arguments:
 
-            session_factory:
+        session_factory (aiogoogle.sessions.abc.AbstractSession): AbstractSession Implementation. Defaults to ``aiogoogle.sessions.aiohttp_session.AiohttpSession``
 
-                - A factory that produces session object conforming to aiogoogle.sessions.abc.AbstractSession interface.
+        api_key (aiogoogle.auth.creds.ApiKey): Google API key
+        
+        user_creds (aiogoogle.auth.creds.UserCreds): OAuth2 User Credentials 
 
-                    - You can choose from the few implementations of AbstractSession in the aiogoogle.sessions module
-
-                    - In case you want to instantiate a custom session with initial parameters, you can either:
-
-                        - Pass an anonymous factory. e.g.: `lambda: Session(your_custom_kwarg=True)`
-                          aiogoogle will not pass any arguments to the session factory.
-
-                        - Implement your own session factory
-
-            api_key: 
+        client_creds (aiogoogle.auth.creds.ClientCreds): OAuth2 Client Credentials
+        
+        timeout (int): Timeout for this class's async context manager
             
-                - Google API key
+    Hint: 
+    
+        In case you want to instantiate a custom session with initial parameters, you can:
 
-            user_creds: 
-            
-                - User credentials dict for the oauth2 manager
+            - Pass an anonymous factory. e.g.: ``lambda: Session(your_custome_arg, your_custom_kwarg=True)``
+    '''
 
-            timeout:
-                
-                - Timeout for the async context manager
-        '''
+    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None, timeout=None):
 
         self.session_factory = session_factory
         self.timeout = timeout
@@ -49,6 +47,7 @@ class Aiogoogle:
         # Keys
         self.api_key = api_key
         self.user_creds = user_creds
+        self.client_creds = client_creds
 
         # Auth managers
         self.api_key_manager = ApiKeyManager()
@@ -70,14 +69,17 @@ class Aiogoogle:
     async def discover(self, api_name, api_version, validate=True):
         ''' 
         
-        Donwloads and sets a discovery document from: 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_version}/rest'
-        Makes this a object client to {api_name} + " " + {api_version}
+        Donwloads a discovery document from Google's Discovery Service V1 and sets it a ``aiogoogle.resource.GoogleAPI``
         
         Arguments:
 
-            api_name: API name to discover. e.g.: "youtube"
+            api_name (str): API name to discover. *e.g.: "youtube"*
             
-            api_version: API version to discover e.g.: "v3" NOT 3
+            api_version (str): API version to discover *e.g.: "v3" not "3" and not 3*
+            
+        Returns:
+
+            aiogoogle.resource.GoogleAPI: An object that will then be used to create ``<api_name><api_version>`` requests
 
         '''
 
@@ -88,21 +90,25 @@ class Aiogoogle:
 
     async def as_user(self, *requests, timeout=None, full_resp=False):
         ''' 
-        Sends requests on behalf of self.user_creds (OAuth2)
+        Sends requests on behalf of ``self.user_creds`` (OAuth2)
         
         Arguments:
 
-            *requests:
+            *requests (aiogoogle.models.Request):
 
-                Requests from client.resources.resource.method()
+                Requests objects typically created by ``aiogoogle.resource.Method.__call__``
 
-            timeout:
+            timeout (int):
 
                 Total timeout for all the requests being sent
 
-            full_resp:
+            full_resp (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
+
+        Returns:
+
+            aiogoogle.models.Response:
         '''
         # Refresh credentials
         self.user_creds = self.oauth2.refresh(
@@ -118,21 +124,25 @@ class Aiogoogle:
 
     async def as_api_key(self, *requests, timeout=None, full_resp=False):
         ''' 
-        Sends requests on behalf of self.api_key (OAuth2)
+        Sends requests on behalf of ``self.api_key`` (OAuth2)
         
         Arguments:
 
-            *requests:
+            *requests (aiogoogle.models.Request):
 
-                Requests from client.resources.resource.method()
+                Requests objects typically created by ``aiogoogle.resource.Method.__call__``
 
-            timeout:
+            timeout (int):
 
                 Total timeout for all the requests being sent
 
-            full_resp:
+            full_resp (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
+
+        Returns:
+
+            aiogoogle.models.Response:
         '''
 
         # Authorize requests
@@ -147,51 +157,68 @@ class Aiogoogle:
         
         Arguments:
 
-            *requests:
+            *requests (aiogoogle.models.Request):
 
-                Requests from client.resources.resource.method()
+                Requests objects typically created by ``aiogoogle.resource.Method.__call__``
 
-            timeout:
+            timeout (int):
 
                 Total timeout for all the requests being sent
 
-            full_resp:
+            full_resp (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
+
+        Returns:
+
+            aiogoogle.models.Response:
         '''
         return await self.active_session.send(*requests, timeout=timeout, return_full_http_response=full_resp)
 
     def user_authorized_for_method(self, method, user_creds=None) -> bool:
         '''
-        Checks if oauth2 user_creds object has sufficient scopes for a method call
-        However, Doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
+        Checks if oauth2 user_creds object has sufficient scopes for a method call.
+        
+        .. note:: 
+        
+            This method doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
+
+        e.g.
+
+            **Correct:**
+
+            .. code-block:: python3
+        
+                is_authorized = youtube.user_authorized_for_resource(
+                    youtube.resources.video.list
+                )
+            
+            **NOT correct:**
+
+            .. code-block:: python3
+
+                is_authorized = youtube.user_authorized_for_resource(
+                    youtube.resources.video.list()
+                )
+
+            **AND NOT correct:**
+
+            .. code-block:: python3
+
+                is_authorized = youtube.user_authorized_for_resource(
+                    youtube.resources.videos
+                )
+
 
         Arguments:
 
-            method (RequestMethod): 
-            
-                - Method to be checked
-                
-                e.g.:
+            method (aiogoogle.resource.Method): Method to be checked
 
-                    Correct:
-                 
-                        youtube = Aiogoogle(discovery_document=ytb_doc)
-                        is_authorized = youtube.user_authorized_for_resource(
-                            youtube.resources.video.list
-                        )
-                    
-                    NOT correct:
+            user_credentials (aiogoogle.auth.creds.UserCreds, dict): User Credentials
 
-                        is_authorized = youtube.user_authorized_for_resource(
-                            youtube.resources.video.list()
-                        )
+        Returns:
 
-                    AND NOT correct:
-
-                        is_authorized = youtube.user_authorized_for_resource(
-                            youtube.resources.videos
-                        )
+            bool:
 
         '''
         if user_creds is None:
@@ -217,30 +244,3 @@ class Aiogoogle:
     async def __aexit__(self, *args, **kwargs):
         await self.active_session.__aexit__(*args, **kwargs)
         self.active_session = None
-
-
-def next_page(token=None, response=None, json_req=False, req_token_name='pageToken', res_token_name='nextPageToken') -> Request:
-    '''
-    Function given a token **or** a json response returns a request that requests the next resource
-
-    Arguments:
-
-        token (str): one of ('pageToken', 'nextPageToken') that should be found in your response
-        
-        response (dict): full response not just json
-
-        json_req (dict): Normally, nextPageTokens should be sent in URL query params. If you want it in A json body, set this to True
-
-    Response:
-
-        a request object (Request)
-    '''
-    res_token = response.json.get(res_token_name, None)
-    if not res_token:
-        return
-    request = Request.from_response(response)
-    if json_req:
-        request.json[req_token_name] = res_token
-    else:
-        request._add_query_param(dict(req_token_name=res_token))
-    return request

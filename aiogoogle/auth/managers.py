@@ -1,17 +1,26 @@
+'''
+.. note::
+
+    - These are the default auth managers. They won't perform any file io.
+    - If you want auth managers with file io capabilities, then you'll have to 
+    implement AbstractAuthManager's interface or inherent from this module's classes.
+    - Creds will always be an instance of dict in order to be easily serialized for io operations
+'''
+
+
+__all__ = [
+    'Oauth2Manager',
+    'ApiKeyManager'
+]
+
+
 from urllib import parse
 
 from .abc import AbstractOAuth2Manager, AbstractAPIKeyManager
 from .creds import UserCreds, ClientCreds
 from .utils import _create_secret
-
 from ..models import Request
 
-
-# NOTE:
-# - These are the default managers. They won't perform any file io.
-# - If you want auth managers with file io capabilities, then you'll have to 
-#   implement AbstractAuthManager's interface or maybe inherit from this class?
-# - Creds will always be an instance of dict in order to be easily serialized to json
 
 
 class Oauth2Manager(AbstractOAuth2Manager):
@@ -47,13 +56,14 @@ class Oauth2Manager(AbstractOAuth2Manager):
             state = _create_secret(32)
         pass
 
-    async def build_user_creds(self, grant, client_creds, user_creds, verify_state=True) -> dict:
+    async def build_user_creds(self, grant, client_creds, user_creds=None, verify_state=True) -> dict:
         pass
 
 class ApiKeyManager(AbstractAPIKeyManager):
 
     def authorize(self, request, key: str) -> Request:
         url = request.url
+        # TODO: Do this using urllib
 
         # TODO:
         # if url has fragment, seperate it

@@ -1,5 +1,36 @@
-from functools import wraps
+__all__ = [
+    'next_page'
+]
 
+from functools import wraps
+from .models import Request, Response
+
+
+def _toggle2x_dashed_params(f):
+    @wraps(f)
+    def wrapper(self, validate=None, data=None, json=None, upload_file=None, 
+                download_file=None, timeout=None, **uri_params):
+        '''
+        Momentarily adds back '-' to url parameters and passed uri_params
+        in order to be processed correctly and comply with the disc doc
+        Reverts back to '_' after wrapped function is done
+        '''
+        # unfix urls
+        uri_params = self._add_dash_user_uri_params(uri_params)
+        
+        # unfix params
+        self._method_specs['parameters'] = self._add_dash_params(self._method_specs.get('parameters'))
+        self._global_parameters = self._add_dash_params(self._global_parameters)
+
+        # Run function
+        results = f(self, validate, data, json, upload_file, download_file, timeout, **uri_params)
+
+        # fix params again
+        self._method_specs['parameters'] = self._rm_dash_params(self._method_specs.get('parameters'))
+        self._global_parameters = self._rm_dash_params(self._global_parameters)
+
+        return results
+    return wrapper
 
 def _safe_getitem(dct, *keys):
     for key in keys:
@@ -37,30 +68,3 @@ class _dict(dict):  # pragma: no cover
     def __delitem__(self, key):  # pragma: no cover
         super(_dict, self).__delitem__(key)
         del self.__dict__[key]
-
-def _add_rm_dash_params(f):
-    @wraps(f)
-    def wrapper(self, validate=None, data=None, json=None, upload_file=None, 
-                download_file=None, timeout=None, **uri_params):
-        '''
-        Momentarily adds back '-' to url parameters and passed uri_params
-        in order to be processed correctly and comply with the disc doc
-        Reverts back to '_' after wrapped function is done
-        '''
-        # unfix urls
-        uri_params = self._add_dash_user_uri_params(uri_params)
-        
-        # unfix params
-        self._method_specs['parameters'] = self._add_dash_params(self._method_specs.get('parameters'))
-        self._global_parameters = self._add_dash_params(self._global_parameters)
-
-        # Run function
-        results = f(self, validate, data, json, upload_file, download_file, timeout, **uri_params)
-
-        # fix params again
-        self._method_specs['parameters'] = self._rm_dash_params(self._method_specs.get('parameters'))
-        self._global_parameters = self._rm_dash_params(self._global_parameters)
-
-        return results
-    return wrapper
-

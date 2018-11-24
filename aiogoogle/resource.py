@@ -1,12 +1,18 @@
+__all__ = [
+    'GoogleAPI',
+    'Resource',
+    'Method'
+]
+
 import warnings
 from urllib.parse import urlencode
-
-from jsonschema import validate as validate_, Draft3Validator, ValidationError as ValidationError_
+from functools import wraps
 
 from .excs import ValidationError
-from .utils import _dict, _safe_getitem, _add_rm_dash_params
+from .utils import _dict, _safe_getitem, _toggle2x_dashed_params
 from .excs import ValidationError
 from .models import MediaDownload, MediaUpload, ResumableUpload, Request
+from .validate import validate as validate__
 
 
 # These are the hard-coded kwargs in Method.__call__
@@ -169,12 +175,13 @@ class Method:
         return self._method_specs.get(key)
 
     def _validate(self, instance, schema):
-        try:
-            return validate_(instance, schema, cls=Draft3Validator)
-        except ValidationError_ as e:
-            raise ValidationError(e)
+        return validate__(instance, schema, self._schemas)
+        #try:
+        #    return validate_(instance, schema, cls=Draft3Validator)
+        #except ValidationError_ as e:
+        #    raise ValidationError(e)
 
-    @_add_rm_dash_params
+    @_toggle2x_dashed_params
     def __call__(self, validate=None, data=None, json=None, upload_file=None, 
                 download_file=None, timeout=None, **uri_params) -> Request:
         ''' 
@@ -304,25 +311,13 @@ class Method:
     def _validate_body(self, req):
         request_schema = self._method_specs.get('request')
         if request_schema is not None:
-
-            # If there's a reference resolve
             if '$ref' in request_schema:
-                request_schema = self._schemas.get('$ref')
-            
-            # Check if request schema isn't not from the previous step
-            if request_schema is not None:
-                
-                # Iterate over req and validate every param passed in req
-                for k,v in req.items():
-
-                    sub_schema_to_check_against = _safe_getitem(request_schema, 'properties', k)
-                    
-                    if sub_schema_to_check_against:
-
-                        self._validate(v, sub_schema_to_check_against)
+                request_schema = self._schemas[request_schema['$ref']]
+            self._validate(req, request_schema)
+        else:
+            raise ValidationError('Body should\'ve been validated, but wasn\'t because a schema body wasn\'nt found')
 
     def _build_upload_media(self, upload_file):
-        # Check if method supports media upload
         # Will check wether validate is true or false
         if self['supportsMediaUpload'] is not True:
             raise ValidationError('upload_file was provided while method doesn\'t support media upload')
@@ -332,8 +327,6 @@ class Method:
         
         # Create MediaUpload object and pass it the resumable object we just created
         simple_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'simple', 'path')
-        #media_upload_url = self._root_url[:-1] + simple_upload_path
-        #media_upload_url = self._root_url + 'upload/' + self._service_path + simple_upload_path
         media_upload_url = self._root_url[:-1] + simple_upload_path
         mime_range = _safe_getitem(self._method_specs, 'mediaUpload', 'accept')
         multipart = self['mediaUpload']['protocols']['simple'].get('multipart', False)
@@ -343,8 +336,6 @@ class Method:
 
     def _build_resumeable_media(self, upload_file):
             resumable_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable', 'path')
-            #resumable_url = self._root_url[:-1] + resumable_upload_path
-            #resumable_url = self._root_url + 'upload/' + self._service_path + resumable_upload_path
             resumable_url = self._root_url[:-1] + resumable_upload_path
             multipart = self['mediaUpload']['protocols']['resumable'].get('multipart', False)
             return ResumableUpload(upload_file, multipart=multipart, upload_path=resumable_url)

@@ -1,3 +1,7 @@
+__all__ = [
+    'AiohttpSession'
+]
+
 import asyncio
 
 from aiohttp import ClientSession
@@ -23,7 +27,6 @@ class AiohttpSession(ClientSession, AbstractSession):
 
             data = None
             json = None
-            content = None
             download_file = None
             upload_file = None
 
@@ -42,10 +45,8 @@ class AiohttpSession(ClientSession, AbstractSession):
                     response.content = await response.json(content_type=None)  # Any content type
                     if isinstance(response.content, dict):
                         json = response.content
-                        content = json
                     else:
                         data = response.content
-                        content = data
             
             if request.media_upload:
                 upload_file = request.media_upload.file_path
@@ -56,7 +57,6 @@ class AiohttpSession(ClientSession, AbstractSession):
                 status_code = response.status,
                 json = json,
                 data = data,
-                content = content,
                 download_file = download_file,
                 upload_file = upload_file
             )

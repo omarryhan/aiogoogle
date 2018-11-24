@@ -6,11 +6,15 @@ from ..models import Request
 
 class AbstractOAuth2Manager(ABC):
     '''
-    OAuth2 manager that only supports:
-        
-        - Authorization Code Flow (https://tools.ietf.org/html/rfc6749#section-1.3.1)
+    OAuth2 manager that only supports Authorization Code Flow (https://tools.ietf.org/html/rfc6749#section-1.3.1)
+
+    Arguments:
+
+        session_factory (aiogoogle.sessions.AbstractSession): A session implementation
     
-    * For a flow similar to the Client Credentials Flow (https://tools.ietf.org/html/rfc6749#section-1.3.4) use an api_key
+    .. note::
+    
+        For a flow similar to Client Credentials Flow (https://tools.ietf.org/html/rfc6749#section-1.3.4) use an ``api_key``
     '''
 
     def __new__(cls, *args, **kwargs):
@@ -29,54 +33,41 @@ class AbstractOAuth2Manager(ABC):
 
     @abstractmethod
     def __init__(self, session_factory):
-        '''
-        Arguments:
-
-            session_factory:
-
-                A session object that can be called with an asynchronous context manager
-        
-        Returns:
-
-            None
-        '''
         raise NotImplementedError
 
     @abstractmethod
     def authorize(self, request, creds) -> Request:
-        ''' 
+        '''
+        Adds OAuth2 authorization headers to requests given user creds
+
         Arguments:
 
-            Request:
+            request (aiogoogle.models.Request):
 
                 Request to authorize
 
-            Creds:
+            creds (aiogoogle.auth.creds.UserCreds):
 
                 user_creds to refresh with
 
         Returns:
 
-            Request:
-
-                Request with valid OAuth2 authorizaion header
+            aiogoogle.models.Request: Request with OAuth2 authorization header
         '''
         raise NotImplementedError
 
     @abstractmethod
     def is_expired(self, user_creds):
         '''
-        Checks if user_creds are expired
+        Checks if user_creds expired
 
         Arguments:
         
-            user_creds (dict):
-
-                user_creds dict with ['expiry'] and ['created_at'] items
+            user_creds (aiogoogle.auth.creds.UserCreds): User Credentials
 
         Returns:
 
-            (bool)
+            bool:
 
         '''
         raise NotImplementedError
@@ -88,78 +79,90 @@ class AbstractOAuth2Manager(ABC):
         
         Arguments:
 
-            user_creds:
+            user_creds (aiogoogle.auth.creds.UserCreds): User Credentials
 
-                dict with ['refresh_token'] item
+            client_creds (aiogoogle.auth.creds.ClientCreds): Client Credentials
 
-            
+        Returns:
+
+            aiogoogle.creds.UserCreds: Refreshed user credentials
+
+        Raises:
+
+            aiogoogle.excs.AuthError: Auth Error
         '''
         raise NotImplementedError
 
     @abstractmethod
-    def build_auth_uri(self, client_creds, user_creds=None, state=None)-> (str, dict):
+    def build_auth_uri(self, client_creds, state=None)-> (str, dict):
         ''' 
-        First step of OAuth2 authoriztion code flow
+        First step of OAuth2 authoriztion code flow.
 
-            Arguments:
+        Creates an OAuth2 authorization URI.
 
-                client_creds: An instance of ClientCreds
-                user_creds: An instance of UserCreds (Needed to store parameter:state)
-                state: A csrf token. Leaving it empty will create a random secret
+        If no state is passed, this method will generate and add a secret token to ``user_creds['state']``.
+        
+        e.g. ::
 
-            Function:
+            auth_uri, user_creds = self.build_auth_uri(client_creds, state='A CSRF token')
+    
 
-                1. Check state
-                2. Creates an oauth URI
+        Arguments:
 
-            Returns: 
-                1. oauth_uri
-                2. instance of user_creds (with state in it)
+            client_creds (aiogoogle.auth.creds.ClientCreds): Client Creds
+            
+            state (str): A CSRF token
 
-            e.g.
+        Returns:
 
-                uri, user_creds = build_oauth2_uri()
+            (str, aiogoogle.auth.creds.UserCreds): If no state was passed, A new state item will be found in ``UserCreds``
+
         '''
         raise NotImplementedError
 
     @abstractmethod
-    async def build_user_creds(self, grant, client_creds, user_creds, verify_state=True) -> dict:
+    async def build_user_creds(self, grant, client_creds, user_creds, verify_state=True):
         '''
         Second step of Oauth2 authrization code flow
 
-        Parameters:
+        Creates a User Creds object with access and refresh token
+
+        User Credentials dict return should contain these items:
+
+            - access_token
+            - refresh_token
+            - expiry  i.e. "expires in"
+            - created_at (datetime json_format)
+            - id_token
+            - scopes
+
+        Arguments:
 
             grant (str):
             
                 - Aka: "code". 
                 - The code received at your redirect URI
 
-            client_creds (dict):
+            client_creds (aiogoogle.auth.creds.ClientCreds):
 
                 - Dict with client_id, client_secret items
 
-            user_creds (dict):
+            user_creds (aiogoogle.auth.creds.UserCreds):
 
-                - Instance of UserCreds
                 - This will be used for verifying the state. (A CSRF token)
                 - It will then be populated with user's new access token, expires_in etc..
 
-            verify_state:
+            verify_state (bool):
 
-                - Whether or not to verify state 
+                - Whether or not to verify state.
 
         Returns:
 
-            An dict representing credentials of a user.
-            Credentials will contain the following items
+            aiogoogle.auth.creds.UserCreds: User Credentials
 
-                - access_token
-                - refresh_token
-                - expiry  i.e. "expires in"
-                - created_at (datetime json_format)
-                - id_token
-                - scopes
+        Raises:
 
+            aiogoogle.excs.AuthError: Auth Error
         '''
         raise NotImplementedError
 
@@ -168,17 +171,20 @@ class AbstractAPIKeyManager(ABC):
     @abstractmethod
     def authorize(self, request, api_key):
         '''
-        Adds API key as a url query parameter
+        Adds API Key authorization query argument to URL of a request given an API key
 
         Arguments:
 
-            request: request instance defined in aiogoogle.models
+            request (aiogoogle.models.Request):
 
-            api_key: api_key from Google's dev console. aka: Developer's Key
+                Request to authorize
+
+            creds (aiogoogle.auth.creds.ApiKey):
+
+                ApiKey to refresh with
 
         Returns:
 
-            Same request object passed with the developer's key in its url arguments
-
+            aiogoogle.models.Request: Request with API key in URL
         '''
         raise NotImplementedError

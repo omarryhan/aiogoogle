@@ -1,8 +1,14 @@
+__all__ = ['AbstractSession']
+
+
 from abc import ABC, abstractproperty, abstractmethod, abstractclassmethod, abstractstaticmethod
 import inspect
 
 
 class AbstractSession(ABC):
+    '''
+    Object with `` async def send`` method. Should represent an HTTP session that has an asynchronous context manager
+    '''
 
     def __new__(cls, *args, **kwargs):
         # Get all coros of this the abstract class
@@ -21,11 +27,27 @@ class AbstractSession(ABC):
     @abstractmethod
     async def send(self, *requests, timeout=None,  return_full_http_response=False):
         '''
-        This method should accept
-        args:
-            *requests
-        kwargs:
-            timeout: total timeout for all the requests combined
-            return_full_http_resonse: Returns full response instead of its content 
+        Main entry point of session. Takes requests, sends them, returns response contents or full http responses as defined in models
+        
+        Arguments:
+            
+            *requests (aiogoogle.models.Request):
+
+                Request objects from aiogoogle.models
+            
+            timeout (int):
+
+                Total timeout for *requests
+
+            return_full_http_response (bool)
+
+        Returns:
+
+            aiogoogle.models.Response
+
+        Raises:
+
+            aiogoogle.excs.HTTPError
+
         '''
         NotImplemented

@@ -30,7 +30,7 @@ Google Account Setup
 1. **Create a project:** `Google's APIs and Services dashboard <https://console.cloud.google.com/projectselector/apis/dashboard>`_.
 2. **Enable an API:** `API Library <https://console.cloud.google.com/apis/library>`_.
 3. **Create credentials:** `Credenitals wizard <https://console.cloud.google.com/apis/credentials/wizard?>`_.
-4. **Pick an API:** from `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_ 
+4. **Pick an API:** `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_ 
 
     .. note:: After choosing an API, get the API's *name* and *version* from the URL as they will be needed later.
 
@@ -61,11 +61,9 @@ Assuming you chose the Urlshortener-v1 API:
 
     >>> url_shortener['resources']
 
-**this prints**
 
 .. code-block:: python3
 
-    # Resources and their methods
     {
         'url': {
 
@@ -79,7 +77,7 @@ Assuming you chose the Urlshortener-v1 API:
 1. Browse an API
 -----------------
 
-Following up on the previous example, let's browse a resource:
+**Now, let's browse a resource**
 
 .. code-block:: python3
 
@@ -89,7 +87,7 @@ Following up on the previous example, let's browse a resource:
 
     ['get', 'insert', 'list']
 
-Sometimes resources have nested resources
+**Sometimes resources have nested resources**
 
 .. code-block:: python3
 
@@ -97,7 +95,7 @@ Sometimes resources have nested resources
 
     []
 
-Now, let's inspect a method of a resource
+**Let's inspect a method of a resource**
 
 .. code-block:: python3
 
@@ -115,7 +113,7 @@ Now, let's inspect a method of a resource
 
     []
 
-Let's check out what the ``start_token`` parameter is and how it should look like
+**Let's check out what the ``start_token`` parameter is and how it should look like**
 
 .. code-block:: python3
 
@@ -128,7 +126,7 @@ Let's check out what the ``start_token`` parameter is and how it should look lik
     }
 
 
-Finally let's create a request, that we'll then send with Aiogoogle
+**Finally let's create a request, that we'll then send with Aiogoogle**
 
 .. code-block:: python3
 
@@ -142,10 +140,11 @@ Finally let's create a request, that we'll then send with Aiogoogle
      
     'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
 
+
 2. Send a Request
 ------------------
 
-Let's make coroutine that shortens URLs:
+**Let's create a coroutine that shortens URLs**
 
 .. code-block:: python3
 
@@ -153,7 +152,7 @@ Let's make coroutine that shortens URLs:
     from aiogoogle import Aiogoogle
     from pprint import pprint
 
-    async def shorten_url(long_url):
+    async def shorten_urls(long_url):
 
         async with Aiogoogle() as google:
 
@@ -167,10 +166,8 @@ Let's make coroutine that shortens URLs:
 
         return short_url
 
-    short_url = asyncio.run(shorten_url('https://www.example.com'))
+    short_url = asyncio.run(shorten_urls('https://www.example.com'))
     pprint(short_url)
-
-**This prints:**
 
 .. code-block:: python
 
@@ -183,7 +180,7 @@ Let's make coroutine that shortens URLs:
 3. Send Requests Concurrently:
 -------------------------------
 
-Now let's shorten two URLs at the same time
+**Now let's shorten two URLs at the same time**
 
 .. code-block:: python
 
@@ -212,8 +209,6 @@ Now let's shorten two URLs at the same time
         )
     )
     pprint(short_urls)
-
-**This prints:**
 
 .. code-block:: python
 
@@ -263,9 +258,7 @@ Now let's shorten two URLs at the same time
     )
     pprint(translation)
 
-**This prints**
-
-.. code-block:: python3
+.. code-block:: bash
 
     {
         "data": {
@@ -310,9 +303,7 @@ Now let's shorten two URLs at the same time
     user_events = asyncio.run(get_calendar_events())
     pprint(user_events)
 
-**This prints**
-
-.. code-block:: python3
+.. code-block:: bash
 
     {
         "kind": "calendar#events",
@@ -631,17 +622,6 @@ Install sanic
         )
         app.run(host=LOCAL_ADDRESS, port=str(LOCAL_PORT), debug=True)
 
-
-API
-===
-
-.. automodule:: aiogoogle.client
-
-.. autoclass:: aiogoogle.client.Aiogoogle
-
-    Noodle's doc
-
-
 Design
 =======
 
@@ -666,6 +646,85 @@ If you want to use Curio instead of Asyncio:
 
     curio.run(main)
 
+
+Quick Reference
+================
+
+Aiogoogle
+----------
+
+.. autoclass:: aiogoogle.client.Aiogoogle
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+GoogleAPI
+----------
+
+Discovery Document Entry Point
+................................
+
+.. autoclass:: aiogoogle.client.GoogleAPI
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Creds
+------
+
+.. automodule:: aiogoogle.auth.creds
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Auth Managers
+--------------
+
+OAuth2 Manager
+................
+
+.. autoclass:: aiogoogle.auth.managers.Oauth2Manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+API Key Manager
+................
+
+.. autoclass:: aiogoogle.auth.managers.ApiKeyManager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Utils
+------
+
+.. automodule:: aiogoogle.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Exceptions
+-----------
+
+.. automodule:: aiogoogle.excs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Full Reference
+===============
+
+:ref:`genindex`
+:ref:`modindex`
+:ref:`search`
+
+.. toctree::
+    :maxdepth: 6
+
+    modules
+
 Contribute
 ===========
 
@@ -675,14 +734,3 @@ Contributors
 ============
 
 -
-
-Indices and tables
-==================
-
-:ref:`genindex`
-:ref:`modindex`
-:ref:`search`
-
-.. toctree::
-   :maxdepth: 2
-

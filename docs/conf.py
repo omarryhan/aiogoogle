@@ -14,7 +14,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../'))
 from aiogoogle.client import Aiogoogle, GoogleAPI
 from aiogoogle.auth.managers import Oauth2Manager, ApiKeyManager
 
@@ -41,11 +41,12 @@ release = '0.0.1a'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosectionlabel',
+    'sphinx.ext.autodoc',
     'sphinxcontrib.asyncio',
+    'sphinx.ext.napoleon',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -82,18 +83,18 @@ pygments_style = None
 # a list of builtin themes.
 #
 
-html_theme = 'alabaster'
-#html_theme = 'sphinx_rtd_theme'
-html_favicon = '_static/google_logo.png'
-
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
 
-import sphinx_nameko_theme
-html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
 html_theme = 'nameko'
+#html_theme = 'alabaster'
+#html_theme = 'sphinx_rtd_theme'
+
+html_favicon = '_static/google_logo.png'
+html_logo = '_static/google_logo.png'
+
 
 html_theme_options = {
 #    # Basics
