@@ -3,13 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-==========
 Aiogoogle
 ==========
 
------------------------------------------------
 An **Asynchronous** Discovery Service Client
------------------------------------------------
 
 Discovery Service?
 ==================
@@ -653,8 +650,8 @@ If you want to use Curio instead of Asyncio:
     curio.run(main)
 
 
-Main API
-=========
+API
+=====
 
 Aiogoogle
 ----------
@@ -689,8 +686,8 @@ Method
     :undoc-members:
     :show-inheritance:
 
-Creds
-------
+Credenitals
+--------------
 
 .. automodule:: aiogoogle.auth.creds
     :members:
@@ -718,6 +715,47 @@ Exceptions
     :undoc-members:
     :show-inheritance:
 
+
+Models
+---------
+
+.. automodule:: aiogoogle.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Utils
+---------
+
+.. automodule:: aiogoogle.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Validate
+----------
+
+.. automodule:: aiogoogle.validate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Sessions
+-----------
+
+.. automodule:: aiogoogle.sessions.aiohttp_session
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: aiogoogle.sessions.curio_asks_session
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 More
 =====
 
@@ -730,17 +768,7 @@ More
 
     then checkout `Overview of the discovery document <https://developers.google.com/discovery/v1/reference/apis>`_.
 
-Package Tree
-=============
 
-:ref:`genindex`
-:ref:`modindex`
-:ref:`search`
-
-.. toctree::
-    :maxdepth: 6
-
-    modules
 
 Contribute
 ===========
@@ -751,3 +779,9 @@ Contributors
 ============
 
 -
+
+
+:ref:`genindex`
+:ref:`modindex`
+:ref:`search`
+

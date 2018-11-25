@@ -1,5 +1,6 @@
 __all__ = [
-	'validate'
+	'validate',
+	'resolve'
 ]
 
 import datetime
@@ -116,7 +117,7 @@ def maximum_validator(value, maximum):
     if value > int(maximum):
         raise ValidationError(make_validation_error(value, f'Not less than {maximum}'))
 
-#----- EXECUTORS ------#
+#-- Executors ---------------------------
 
 def validate_type(instance, schema):
     type_validator_name = schema['type']
@@ -144,11 +145,30 @@ def validate_pattern(instance, schema):
         if match is None:
             raise ValidationError(instance, f'Match this pattern: {pattern}')
 
+#-- Main Validator ---------------
+
+def validate_all(instance, schema):
+	validate_type(instance, schema)
+	validate_format(instance, schema)
+	validate_range(instance, schema)
+	validate_pattern(instance, schema)
+
+#-- API --------------------
+
 def resolve(name, schema, schemas):
 	if name in schemas:
 		pass
 
-def _validate(instance, schema, schemas):
+def validate(instance, schema, schemas):
+	'''
+	Arguments:
+
+		Instance: Instance to validate
+
+		schema: schema to validate instance against (top level schema)
+
+		schemas: Full schamas dict to resolve refs if any
+	'''
 	# A simple instance validation module for Discovery schemas.
 	# Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
 	# As a result, using an external library to validate Discovery schemas will raise lots of errors.
@@ -169,6 +189,8 @@ def _validate(instance, schema, schemas):
 	# 8. TODO: repeated: Whether this parameter may appear multiple times
 	# 9. TODO: Support media upload/download validation without doing file io
 	# 10.
+	if not isinstance(schema, dict):
+		raise TypeError('Schema should always be a dict')
 
 	if isinstance(instance, dict):
 		for k, v in instance.items():
@@ -180,21 +202,4 @@ def _validate(instance, schema, schemas):
 				raise ValidationError(f'Couldn\'t find a schema for {instance}.')
 			validate(v, corresponding_schema, schemas)
 	else:
-		validate_type(instance, schema)
-		validate_format(instance, schema)
-		validate_range(instance, schema)
-		validate_pattern(instance, schema)
-
-def validate(instance, schema, schemas):
-	'''
-	Arguments:
-
-		Instance: Instance to validate
-
-		schema: schema to validate instance against (top level schema)
-
-		schemas: Full schamas dict to resolve refs if any
-	'''
-	errors = _validate(instance, schema, schemas)
-	if errors:
-		raise ValidationError(errors)
+		validate_all(instance, schema)

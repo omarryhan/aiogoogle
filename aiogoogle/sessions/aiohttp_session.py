@@ -1,3 +1,7 @@
+# TODO: etag caching
+# TODO: Multipart https://aiohttp.readthedocs.io/en/stable/multipart.html#aiohttp-multipart
+# TODO: Create tasks with timeouts
+
 __all__ = [
     'AiohttpSession'
 ]
@@ -22,7 +26,6 @@ class AiohttpSession(ClientSession, AbstractSession):
         super().__init__(*args, **kwargs)
 
     async def send(self, *requests, timeout=None, return_full_http_response=False):
-        # TODO: etag caching
         def call_callback(request, response):
             if request.callback is not None:
                 response.content = request.callback(response.content)
@@ -112,7 +115,6 @@ class AiohttpSession(ClientSession, AbstractSession):
         #----------------- /coro runners ------------------#
 
         # 1. Create tasks
-        # TODO: pass timeout when creating tasks
         if return_full_http_response is True:
             tasks = [asyncio.create_task(get_response(request)) for request in requests]
         else:

@@ -90,7 +90,7 @@ class Request:
         
         timeout (int): Individual timeout for this request
 
-        callback (callable): Callable that takes the content of the response as the only argument and should return content
+        callback (callable): Synchronous callback that takes the content of the response as the only argument. Should also return content.
         '''
     def __init__(
         self, method=None, url=None, headers=None, json=None, data=None,

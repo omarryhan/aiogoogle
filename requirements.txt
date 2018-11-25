@@ -1,4 +1,2 @@
 aiohttp
 aiofiles
-jsonschema
-sphinxcontrib-asyncio

@@ -7,7 +7,7 @@ import inspect
 
 class AbstractSession(ABC):
     '''
-    Object with `` async def send`` method. Should represent an HTTP session that has an asynchronous context manager
+    Object with ``async def send`` method. Should represent an HTTP session that has an asynchronous context manager
     '''
 
     def __new__(cls, *args, **kwargs):
@@ -31,7 +31,7 @@ class AbstractSession(ABC):
         
         Arguments:
             
-            *requests (aiogoogle.models.Request):
+            requests (aiogoogle.models.Request):
 
                 Request objects from aiogoogle.models
             

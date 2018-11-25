@@ -15,8 +15,6 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
-from aiogoogle.client import Aiogoogle, GoogleAPI
-from aiogoogle.auth.managers import Oauth2Manager, ApiKeyManager
 
 
 # -- Project information -----------------------------------------------------
@@ -42,12 +40,11 @@ release = '0.0.1a'
 # ones.
 extensions = [
     'sphinx.ext.viewcode',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.autosectionlabel',
+    #'sphinx.ext.autosectionlabel',
     'sphinx.ext.autodoc',
     'sphinxcontrib.asyncio',
     'sphinx.ext.napoleon',
-    'sphinx.ext.todo'
+    #'sphinx.ext.todo'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
