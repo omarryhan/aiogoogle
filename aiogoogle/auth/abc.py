@@ -12,7 +12,7 @@ class AbstractOAuth2Manager(ABC):
 
         session_factory (aiogoogle.sessions.AbstractSession): A session implementation
     
-    .. note::
+    Note:
     
         For a flow similar to Client Credentials Flow (https://tools.ietf.org/html/rfc6749#section-1.3.4) use an ``api_key``
     '''
@@ -121,7 +121,7 @@ class AbstractOAuth2Manager(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def build_user_creds(self, grant, client_creds, user_creds, verify_state=True):
+    async def build_user_creds(self, grant, client_creds, user_creds=None, state=None):
         '''
         Second step of Oauth2 authrization code flow
 
@@ -149,12 +149,16 @@ class AbstractOAuth2Manager(ABC):
 
             user_creds (aiogoogle.auth.creds.UserCreds):
 
+                - Optional
+                - You should prefferably pass this method the UserCreds instance returned from``build_auth_uri`` method
                 - This will be used for verifying the state. (A CSRF token)
+                - a "state" should be found in user_creds
                 - It will then be populated with user's new access token, expires_in etc..
 
-            verify_state (bool):
+            state (str):
 
-                - Whether or not to verify state.
+                - Should be the state query argument found in the user's OAuth2 callback.
+                - This keyword argument must be used with the user_creds kwarg.
 
         Returns:
 

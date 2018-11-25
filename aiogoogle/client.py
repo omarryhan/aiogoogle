@@ -3,8 +3,9 @@ __all__ = [
 ]
 
 
-from pprint import pprint
 import json
+from pprint import pprint
+from urllib.parse import urlencode
 
 from .utils import _dict
 from .models import Request
@@ -14,7 +15,8 @@ from .sessions.aiohttp_session import AiohttpSession
 
 
 
-DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_version}/rest'
+GETREST_DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_version}/rest'
+LIST_DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis?name={name}'
 
 
 class Aiogoogle:
@@ -31,11 +33,12 @@ class Aiogoogle:
         
         timeout (int): Timeout for this class's async context manager
             
-    Hint: 
+    Note: 
     
-        In case you want to instantiate a custom session with initial parameters, you can:
-
-            - Pass an anonymous factory. e.g.: ``lambda: Session(your_custome_arg, your_custom_kwarg=True)``
+        In case you want to instantiate a custom session with initial parameters, you can pass an anonymous factory. e.g. ::
+        
+            >>> sess = lambda: Session(your_custome_arg, your_custom_kwarg=True)
+            >>> aiogoogle = Aiogoogle(session_factory=sess)
     '''
 
     def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None, timeout=None):
@@ -56,7 +59,7 @@ class Aiogoogle:
     #-------- Discovery Document ---------#
 
     async def _download_discovery_document(self, api_name, api_version):
-        url = DISCOVERY_URL.format(api_name=api_name, api_version=api_version)
+        url = GETREST_DISCOVERY_URL.format(api_name=api_name, api_version=api_version)
         request = Request(method='GET', url=url)
         
         if self.active_session is None:
@@ -66,22 +69,118 @@ class Aiogoogle:
             discovery_docuemnt = await self.as_anon(request)
         return discovery_docuemnt
 
-    async def discover(self, api_name, api_version, validate=True):
-        ''' 
+    async def list_api(self, name, preffered=None, fields=None):
+        '''
+        https://developers.google.com/discovery/v1/reference/apis/list
+
+        The discovery.apis.list method returns the list all APIs supported by the Google APIs Discovery Service.
         
+        The data for each entry is a subset of the Discovery Document for that API, and the list provides a directory of supported APIs.
+        
+        If a specific API has multiple versions, each of the versions has its own entry in the list.
+
+        Example:
+
+            ::
+
+                >>> await aiogoogle.list_api('youtube')
+
+                {
+                    "kind": "discovery#directoryList",
+                    "discoveryVersion": "v1",
+                    "items": [
+                        {
+                            "kind": "discovery#directoryItem",
+                            "id": "youtube:v3",
+                            "name": "youtube",
+                            "version": "v3",
+                            "title": "YouTube Data API",
+                            "description": "Supports core YouTube features, such as uploading videos, creating and managing playlists, searching for content, and much more.",
+                            "discoveryRestUrl": "https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest",
+                            "discoveryLink": "./apis/youtube/v3/rest",
+                            "icons": {
+                                "x16": "https://www.google.com/images/icons/product/youtube-16.png",
+                                "x32": "https://www.google.com/images/icons/product/youtube-32.png"
+                            },
+                            "documentationLink": "https://developers.google.com/youtube/v3",
+                            "preferred": true
+                        }
+                    ]
+                }
+
+        Arguments:
+
+            name (str): Only include APIs with the given name.
+
+            preffered (bool): Return only the preferred version of an API.  "false" by default.
+
+            fields (str): Selector specifying which fields to include in a partial response.
+
+        Returns:
+
+            dict:
+
+        Raises:
+
+            aiogoogle.excs.HTTPError
+        '''
+        if preffered and fields:
+            url = LIST_DISCOVERY_URL.format(name=name) +  f'&{urlencode(dict(preffered=preffered))}&{urlencode(dict(fields=fields))}'
+        elif fields:
+            url = LIST_DISCOVERY_URL.format(name=name) +  f'&{urlencode(dict(fields=fields))}'
+        elif preffered:
+            url = LIST_DISCOVERY_URL.format(name=name) +  f'&{urlencode(dict(preffered=preffered))}'
+        else:
+            url = LIST_DISCOVERY_URL.format(name=name)
+
+        request = Request(method='GET', url=url)
+
+        if self.active_session is None:
+            async with self:
+                res = await self.as_anon(request)
+        else:
+            res = await self.as_anon(request)
+        return res
+
+    async def discover(self, api_name, api_version=None, validate=True):
+        ''' 
         Donwloads a discovery document from Google's Discovery Service V1 and sets it a ``aiogoogle.resource.GoogleAPI``
+
+        Note:
+
+            It is recommended that you explicitly specify an API version.
+            
+            When you leave the API version to None, Aiogoogle uses the ``list_api`` method to search for the best fit version of the given API name.
+            
+            The problem is that Google's discovery service sometimes does not return the latest version of a given API. Rather, returns the "preffered" one.
         
         Arguments:
 
             api_name (str): API name to discover. *e.g.: "youtube"*
             
             api_version (str): API version to discover *e.g.: "v3" not "3" and not 3*
+
+            validate (bool): Set this to False to disallow input validation on calling methods
             
         Returns:
 
-            aiogoogle.resource.GoogleAPI: An object that will then be used to create ``<api_name><api_version>`` requests
+            aiogoogle.resource.GoogleAPI: An object that will then be used to create API requests
+
+        Raises:
+
+            aiogoogle.excs.HTTPError
 
         '''
+
+        if api_version is None:
+            # Search for name in self.list_api and return best match
+            discovery_list = await self.list_api(api_name, preffered=True)
+
+            if discovery_list['items']:
+                api_name = discovery_list['items'][0]['name']
+                api_version = discovery_list['items'][0]['version']
+            else:
+                raise ValueError('Invalid API name')
 
         disc_doc_dict = await self._download_discovery_document(api_name, api_version)
         return GoogleAPI(disc_doc_dict, validate)

@@ -3,17 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-=====================================
-Welcome to Aiogoogle's documentation!
-=====================================
+==========
+Aiogoogle
+==========
 
-Aiogoogle is an **asynchronous** Discovery Service client that exposes many of Google's APIs. (Youtube, Gmail, Google Analytics, Calendar etc.)
+-----------------------------------------------
+An **Asynchronous** Discovery Service Client
+-----------------------------------------------
 
 Discovery Service?
 ==================
 
-Most of Google's public APIs are served by a single API called the Discovery Service.
-It provides machine readable specifications known as discovery documents. `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
+Most of Google's public APIs are served by a single API called the Discovery Service. e.g. (Youtube, Gmail, Google Analytics, Calendar etc.)
+
+Google's Discovery Serivce provides machine readable specifications known as discovery documents. `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
+
+In it's essence, Aiogoogle is a smiple, yet feature-rich Pythonic wrapper for discovery documents.
+
 For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
 
 
@@ -41,7 +47,7 @@ Now that *Aiogoogle* and your Google account are set up, let's start!
 
 Assuming you chose the Urlshortener-v1 API:
 
-0. Create a Google API instance
+Create a Google API instance
 --------------------------------
 
 .. code-block:: python3
@@ -74,7 +80,7 @@ Assuming you chose the Urlshortener-v1 API:
                 'list': ...
     }
 
-1. Browse an API
+Browse an API
 -----------------
 
 **Now, let's browse a resource**
@@ -141,7 +147,7 @@ Assuming you chose the Urlshortener-v1 API:
     'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
 
 
-2. Send a Request
+Send a Request
 ------------------
 
 **Let's create a coroutine that shortens URLs**
@@ -177,7 +183,7 @@ Assuming you chose the Urlshortener-v1 API:
         "longUrl": "https://www.example.com/"
     }
 
-3. Send Requests Concurrently:
+Send Requests Concurrently:
 -------------------------------
 
 **Now let's shorten two URLs at the same time**
@@ -226,7 +232,7 @@ Assuming you chose the Urlshortener-v1 API:
     ]
 
 
-4. Send As Client
+Send As Client
 ------------------
 
 .. code-block:: python
@@ -272,7 +278,7 @@ Assuming you chose the Urlshortener-v1 API:
         }
     }
 
-5. Send As User (`Authorization Code Flow`_)
+Send As User (`Authorization Code Flow`_)
 --------------------------------------------------------
 
 .. code-block:: python
@@ -647,8 +653,8 @@ If you want to use Curio instead of Asyncio:
     curio.run(main)
 
 
-Quick Reference
-================
+Main API
+=========
 
 Aiogoogle
 ----------
@@ -694,16 +700,10 @@ Creds
 Auth Managers
 --------------
 
-OAuth2 Manager
-................
-
 .. autoclass:: aiogoogle.auth.managers.Oauth2Manager
     :members:
     :undoc-members:
     :show-inheritance:
-
-API Key Manager
-................
 
 .. autoclass:: aiogoogle.auth.managers.ApiKeyManager
     :members:
@@ -718,8 +718,20 @@ Exceptions
     :undoc-members:
     :show-inheritance:
 
-Full Reference
-===============
+More
+=====
+
+1. For a more efficient use of your quota use `partial responses <https://developers.google.com/discovery/v1/performance#partial-response>`_.
+2. Discovery Document:
+    
+    One of the main objectives of this library is to act as a layer of abstraction over discovery documents.
+
+    If you find any leaks in this abstraction and find yourself wanting to know more about the discovery document and how it's structured:
+
+    then checkout `Overview of the discovery document <https://developers.google.com/discovery/v1/reference/apis>`_.
+
+Package Tree
+=============
 
 :ref:`genindex`
 :ref:`modindex`

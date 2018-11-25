@@ -144,21 +144,11 @@ def validate_pattern(instance, schema):
         if match is None:
             raise ValidationError(instance, f'Match this pattern: {pattern}')
 
-def resolve(name, schemas):
+def resolve(name, schema, schemas):
 	if name in schemas:
 		pass
 
-def validate(instance, schema, schemas):
-	'''
-	Arguments:
-
-		Instance: Instance to validate
-
-		schema: schema to validate instance against (top level schema)
-
-		schemas: Full schamas dict to resolve refs if any
-	'''
-
+def _validate(instance, schema, schemas):
 	# A simple instance validation module for Discovery schemas.
 	# Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
 	# As a result, using an external library to validate Discovery schemas will raise lots of errors.
@@ -181,12 +171,30 @@ def validate(instance, schema, schemas):
 	# 10.
 
 	if isinstance(instance, dict):
-		# Check for recursion
 		for k, v in instance.items():
-			#validate
-			pass
+			# Get next instance of schema
+			if not isinstance(schema, dict):
+				raise ValidationError(f'Invalid sub schema {schema}')
+			corresponding_schema = schema.get(k)
+			if not corresponding_schema:
+				raise ValidationError(f'Couldn\'t find a schema for {instance}.')
+			validate(v, corresponding_schema, schemas)
 	else:
 		validate_type(instance, schema)
 		validate_format(instance, schema)
 		validate_range(instance, schema)
 		validate_pattern(instance, schema)
+
+def validate(instance, schema, schemas):
+	'''
+	Arguments:
+
+		Instance: Instance to validate
+
+		schema: schema to validate instance against (top level schema)
+
+		schemas: Full schamas dict to resolve refs if any
+	'''
+	errors = _validate(instance, schema, schemas)
+	if errors:
+		raise ValidationError(errors)

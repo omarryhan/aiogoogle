@@ -7,6 +7,13 @@ import pytest
 from aiogoogle import Aiogoogle
 from ..globals import SOME_APIS
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize('name,version', SOME_APIS)
+async def test_download_aiogoogle_without_version(name, version):
+    aiogoogle = Aiogoogle()
+    google_api = await aiogoogle.discover(name)
+    assert google_api.discovery_document['name'] == name
+    #assert google_api.discovery_document['version'] == version
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('name,version', SOME_APIS)

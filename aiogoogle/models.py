@@ -96,7 +96,10 @@ class Request:
         media_upload=None, media_download=None, timeout=None):
         self.method = method
         self.url = url
-        self.headers = headers
+        if headers is None:
+            self.headers = {}
+        else:
+            self.headers = headers
         self.data = data
         self.json = json
         self.media_upload = media_upload
@@ -105,7 +108,7 @@ class Request:
 
     def _add_query_param(self, query: dict):
         if not self.url:
-            raise TypeError('no url to query to')
+            raise TypeError('no url to add query to')
 
         url = list(urlparse(self.url))
         url_query = dict(parse_qsl(url[4]))

@@ -49,11 +49,11 @@ class Oauth2Manager(AbstractOAuth2Manager):
     async def refresh(self, *user_creds, client_creds=None) -> dict:
         pass
 
-    def build_auth_uri(self, client_creds, user_creds=None, state=None) -> (str, dict):
-        if user_creds is None:
-            user_creds = UserCreds()
+    def build_auth_uri(self, client_creds, state=None) -> (str, dict):
+        user_creds = UserCreds()
         if state is None:
             state = _create_secret(32)
+        user_creds['state'] = state
         pass
 
     async def build_user_creds(self, grant, client_creds, user_creds=None, verify_state=True) -> dict:
@@ -62,26 +62,18 @@ class Oauth2Manager(AbstractOAuth2Manager):
 class ApiKeyManager(AbstractAPIKeyManager):
 
     def authorize(self, request, key: str) -> Request:
-        url = request.url
-        # TODO: Do this using urllib
-
-        # TODO:
-        # if url has fragment, seperate it
-        # fragment = ...
-        # url -= fragment
-
-        if '?' not in url:
-            if url.endswith('/'):
-                url = url[:-1]
-            url += '?'
+        if 'key=' in request.url:
+            # Don't add a key if it has already been added
+            return request
         else:
-            url += '&'
-
-        url += f'key={key}'
-
-        # TODO:
-        # readd fragment
-        # url += fragment
-
-        request.url = url
-        return request
+            url = request.url
+            # TODO: Do this using urllib
+            if '?' not in url:
+                if url.endswith('/'):
+                    url = url[:-1]
+                url += '?'
+            else:
+                url += '&'
+            url += f'key={key}'
+            request.url = url
+            return request

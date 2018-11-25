@@ -68,6 +68,8 @@ class AiohttpSession(ClientSession, AbstractSession):
                 raise HTTPError(e)
 
         async def fire_request(request):
+            # Add accept gzip header
+            request.headers['Accept-Encoding'] = 'gzip'
             # If uploading file
             if request.media_upload:
                 async with aiofiles.open(request.media_upload.file_path, 'rb') as data:
