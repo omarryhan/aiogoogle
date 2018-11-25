@@ -23,6 +23,11 @@ class AiohttpSession(ClientSession, AbstractSession):
 
     async def send(self, *requests, timeout=None, return_full_http_response=False):
         # TODO: etag caching
+        def call_callback(request, response):
+            if request.callback is not None:
+                response.content = request.callback(response.content)
+            return response
+
         async def resolve_response(request, response):
 
             data = None
@@ -95,11 +100,14 @@ class AiohttpSession(ClientSession, AbstractSession):
         async def get_response(request):
             response = await fire_request(request)
             raise_for_status(response)
-            return await resolve_response(request, response)
+            response = await resolve_response(request, response)
+            response = call_callback(request, response)
+            return response
         async def get_content(request):
             response = await fire_request(request)
             raise_for_status(response)
             response = await resolve_response(request, response)
+            response = call_callback(request, response)
             return response.content
         #----------------- /coro runners ------------------#
 

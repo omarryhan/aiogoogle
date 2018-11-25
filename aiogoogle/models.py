@@ -90,10 +90,11 @@ class Request:
         
         timeout (int): Individual timeout for this request
 
-    '''
+        callback (callable): Callable that takes the content of the response as the only argument and should return content
+        '''
     def __init__(
         self, method=None, url=None, headers=None, json=None, data=None,
-        media_upload=None, media_download=None, timeout=None):
+        media_upload=None, media_download=None, timeout=None, callback=None):
         self.method = method
         self.url = url
         if headers is None:
@@ -105,6 +106,7 @@ class Request:
         self.media_upload = media_upload
         self.media_download = media_download
         self.timeout = timeout
+        self.callback = callback
 
     def _add_query_param(self, query: dict):
         if not self.url:

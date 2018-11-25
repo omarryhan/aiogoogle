@@ -330,7 +330,8 @@ class Method:
             json=json,
             timeout=timeout,
             media_download=media_download,
-            media_upload=media_upload
+            media_upload=media_upload,
+            callback=lambda resp: self._validate_response(resp, validate)
         )
 
     def _build_url(self, uri_params, validate):
@@ -363,7 +364,7 @@ class Method:
                 request_schema = self._schemas[request_schema['$ref']]
             self._validate(req, request_schema)
         else:
-            raise ValidationError('Body should\'ve been validated, but wasn\'t because a schema body wasn\'nt found')
+            raise ValidationError('Request body should\'ve been validated, but wasn\'t because a schema body wasn\'nt found')
 
     def _build_upload_media(self, upload_file):
         # Will check wether validate is true or false
@@ -388,9 +389,18 @@ class Method:
             multipart = self['mediaUpload']['protocols']['resumable'].get('multipart', False)
             return ResumableUpload(upload_file, multipart=multipart, upload_path=resumable_url)
 
-    def _validate_response(self, resp):
-        ''' Maybe add this as a callback that a session should call after it fetches the content of the response? '''
-        pass
+    def _validate_response(self, resp, validate):
+        # TODO: validate response
+        if validate:
+            response_schema = self._method_specs.get('response')
+            if response_schema is not None:
+                if '$ref' in response_schema:
+                    response_schema = self._schemas[response_schema['$ref']]
+                self._validate(resp, response_schema)
+            else:
+                raise ValidationError('Response body should\'ve been validated, but wasn\'t because a schema body wasn\'nt found')
+            self._validate(resp, response_schema)
+        return resp
 
     def __contains__(self, item):
         return item in self.parameters
