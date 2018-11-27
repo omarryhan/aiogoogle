@@ -3,7 +3,7 @@ import pytest
 import pprint
 from aiogoogle import Aiogoogle
 from aiogoogle.resource import Resource, GoogleAPI, Method, STACK_QUERY_PARAMETER_DEFAULT_VALUE, STACK_QUERY_PARAMETERS
-from ...globals import SOME_APIS
+from ..globals import SOME_APIS
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_resource_constructor(open_discovery_document, name, version):
@@ -37,7 +37,8 @@ def test_resources_property():
         schemas = None,
         base_url = None,
         root_url = None,
-        validate = False
+        validate = False,
+        service_path = None
     )
     assert 'first_resource' in resource.resources
     assert 'second_resource' in resource.resources
@@ -59,7 +60,8 @@ def test_methods_property():
         schemas = None,
         base_url = None,
         root_url = None,
-        validate = False
+        validate = False,
+        service_path = None
     )
     assert 'third_method' in resource.methods
     assert 'forth_method' in resource.methods
@@ -82,7 +84,8 @@ def test_resource_len():
         schemas = None,
         base_url = None,
         root_url = None,
-        validate = False
+        validate = False,
+        service_path = None
     )
     assert len(resource) == 2
 

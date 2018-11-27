@@ -15,7 +15,7 @@ Most of Google's public APIs are served by a single API called the Discovery Ser
 
 Google's Discovery Serivce provides machine readable specifications known as discovery documents. `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
 
-In it's essence, Aiogoogle is a smiple, yet feature-rich Pythonic wrapper for discovery documents.
+In it's essence, Aiogoogle is a feature-rich yet easy to use Pythonic wrapper for discovery documents.
 
 For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
 
@@ -697,15 +697,11 @@ Credenitals
 Auth Managers
 --------------
 
-.. autoclass:: aiogoogle.auth.managers.Oauth2Manager
+.. automodule:: aiogoogle.auth.managers
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. autoclass:: aiogoogle.auth.managers.ApiKeyManager
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 Exceptions
 -----------
@@ -745,14 +741,10 @@ Validate
 Sessions
 -----------
 
-.. automodule:: aiogoogle.sessions.aiohttp_session
-    :members:
-    :undoc-members:
+.. autoclass:: aiogoogle.sessions.aiohttp_session.AiohttpSession
     :show-inheritance:
 
-.. automodule:: aiogoogle.sessions.curio_asks_session
-    :members:
-    :undoc-members:
+.. autoclass:: aiogoogle.sessions.curio_asks_session.CurioAsksSession
     :show-inheritance:
 
 

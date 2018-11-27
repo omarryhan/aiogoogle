@@ -79,7 +79,7 @@ class AbstractOAuth2Manager(ABC):
         
         Arguments:
 
-            user_creds (aiogoogle.auth.creds.UserCreds): User Credentials
+            user_creds (aiogoogle.auth.creds.UserCreds): User Credentials with ``refresh_token`` item
 
             client_creds (aiogoogle.auth.creds.ClientCreds): Client Credentials
 
@@ -94,79 +94,245 @@ class AbstractOAuth2Manager(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def build_auth_uri(self, client_creds, state=None)-> (str, dict):
+    def build_auth_uri(self, client_creds, state=None, access_type=None, include_granted_scopes=None, login_hint=None, prompt=None)-> str:
         ''' 
-        First step of OAuth2 authoriztion code flow.
-
-        Creates an OAuth2 authorization URI.
-
-        If no state is passed, this method will generate and add a secret token to ``user_creds['state']``.
-        
-        e.g. ::
-
-            auth_uri, user_creds = self.build_auth_uri(client_creds, state='A CSRF token')
-    
+        First step of OAuth2 authoriztion code flow. Creates an OAuth2 authorization URI.
 
         Arguments:
 
-            client_creds (aiogoogle.auth.creds.ClientCreds): Client Creds
+            client_creds (aiogoogle.auth.creds.ClientCreds):  A client_creds object/dictionary containing the following items:
+
+                * client_id
+
+                * scopes
+
+                * redirect_uri
+
             
             state (str): A CSRF token
 
+                * Optional
+
+                * Specifies any string value that your application uses to maintain state between your authorization request and the authorization server's response.
+                
+                * The server returns the exact value that you send as a name=value pair in the hash (#) fragment of the redirect_uri after the user consents to or denies your application's access request.
+
+                * You can use this parameter for several purposes, such as:
+                
+                    * Directing the user to the correct resource in your application
+                    
+                    * Sending nonces
+                    
+                    * Mitigating cross-site request forgery.
+
+                * If no state is passed, this method will generate and add a secret token to ``user_creds['state']``.
+                    
+                * Since your redirect_uri can be guessed, using a state value can increase your assurance that an incoming connection is the result of an authentication request.
+                
+                * If you generate a random string or encode the hash of a cookie or another value that captures the client's state, you can validate the response to additionally ensure that the request and response originated in the same browser, providing protection against attacks such as cross-site request forgery.
+
+            access_type (str): Indicates whether your application can refresh access tokens when the user is not present at the browser. Options:
+
+                * Optional
+
+                * ``"online"`` *Default*
+
+                * ``"offline"`` Choose this for a refresheable/long-term access token
+
+            include_granted_scopes (bool):
+            
+                * Optional
+                
+                * Enables applications to use incremental authorization to request access to additional scopes in context.
+                
+                * If you set this parameter's value to ``True`` and the authorization request is granted, then the new access token will also cover any scopes to which the user previously granted the application access.
+
+            login_hint (str):
+            
+                * Optional
+                
+                * If your application knows which user is trying to authenticate, it can use this parameter to provide a hint to the Google Authentication Server.
+                
+                * The server uses the hint to simplify the login flow either by prefilling the email field in the sign-in form or by selecting the appropriate multi-login session.
+
+                * Set the parameter value to an email address or sub identifier, which is equivalent to the user's Google ID.
+
+            prompt (str):
+
+                * Optional
+                
+                * A space-delimited, case-sensitive list of prompts to present the user.
+                
+                * If you don't specify this parameter, the user will be prompted only the first time your app requests access.
+                
+                * Possible values are:
+
+                    * ``None`` : Do not display any authentication or consent screens. Must not be specified with other values.
+
+                    * ``'consent'`` : Prompt the user for consent.
+
+                    * ``'select_account'`` : Prompt the user to select an account.
+
+        Note:
+
+            It is highly recommended that you don't leave ``state`` as ``None`` in production
+
+            To effortlessly create a random secret to pass it as a state token, you can use ``aiogoogle.utils.create_secret()``
+
+        Note:
+
+            A Note About Scopes:
+
+            * For a list of all of Google's available scopes: https://developers.google.com/identity/protocols/googlescopes
+
+            * It is recommended that your application requests access to authorization scopes in context whenever possible.
+            
+            * By requesting access to user data in context, via incremental authorization, you help users to more easily understand why your application needs the access it is requesting.
+
+        Warning:
+
+            * When listening for a callback after redirecting a user to the URL returned from this method, consider:
+            
+                * If your response endpoint renders an HTML page, any resources on that page will be able to see the authorization code in the URL.
+                
+                * Scripts can read the URL directly, and the URL in the Referer HTTP header may be sent to any or all resources on the page.
+
+                * Carefully consider whether you want to send authorization credentials to all resources on that page (especially third-party scripts such as social plugins and analytics).
+                
+                * To avoid this issue, it's recommend that the server first handle the request, then redirect to another URL that doesn't include the response parameters.
+
+        Example:
+
+            ::
+
+                from aiogoogle.utils import create_secret
+                from aiogoogle import ClinetCreds
+
+                client_creds = ClientCreds(
+                    client_id='a_client_id',
+                    scopes=['first.scope', 'second.scope'],
+                    redirect_uri='http://localhost:8080'
+                )
+
+                state = create_secret()
+
+                auth_uri = oauth2.build_auth_uri(
+                    client_creds=client_creds,
+                    state=state,
+                    access_type='offline',
+                    include_granted_scopes=True,
+                    login_hint='example@gmail.com',
+                    prompt='select_account'
+                    )
+
         Returns:
 
-            (str, aiogoogle.auth.creds.UserCreds): If no state was passed, A new state item will be found in ``UserCreds``
-
+            (str): An Authorization URI
         '''
         raise NotImplementedError
 
     @abstractmethod
-    async def build_user_creds(self, grant, client_creds, user_creds=None, state=None):
+    async def build_user_creds(self, grant, client_creds):
         '''
-        Second step of Oauth2 authrization code flow
-
-        Creates a User Creds object with access and refresh token
-
-        User Credentials dict return should contain these items:
-
-            - access_token
-            - refresh_token
-            - expiry  i.e. "expires in"
-            - created_at (datetime json_format)
-            - id_token
-            - scopes
+        Second step of Oauth2 authrization code flow. Creates a User Creds object with access and refresh token
 
         Arguments:
 
             grant (str):
             
-                - Aka: "code". 
-                - The code received at your redirect URI
+                * Aka: "code". 
+                
+                * The code received at your redirect URI from the auth callback
 
             client_creds (aiogoogle.auth.creds.ClientCreds):
 
-                - Dict with client_id, client_secret items
-
-            user_creds (aiogoogle.auth.creds.UserCreds):
-
-                - Optional
-                - You should prefferably pass this method the UserCreds instance returned from``build_auth_uri`` method
-                - This will be used for verifying the state. (A CSRF token)
-                - a "state" should be found in user_creds
-                - It will then be populated with user's new access token, expires_in etc..
-
-            state (str):
-
-                - Should be the state query argument found in the user's OAuth2 callback.
-                - This keyword argument must be used with the user_creds kwarg.
+                * Dict with client_id and client_secret items
 
         Returns:
 
-            aiogoogle.auth.creds.UserCreds: User Credentials
+            aiogoogle.auth.creds.UserCreds: User Credentials with the following items:
+
+                * ``access_token``
+
+                * ``refresh_token``
+
+                * ``expires_in`` (JSON format ISO 8601)
+
+                * ``token_type`` always set to bearer
+
+                * ``scopes``
 
         Raises:
 
             aiogoogle.excs.AuthError: Auth Error
+        '''
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def revoke(self, user_creds):
+        '''
+        Revokes user_creds
+
+        In some cases a user may wish to revoke access given to an application. A user can revoke access by visiting Account Settings.
+        It is also possible for an application to programmatically revoke the access given to it.
+        Programmatic revocation is important in instances where a user unsubscribes or removes an application.
+        In other words, part of the removal process can include an API request to ensure the permissions granted to the application are removed.
+
+        Arguments:
+
+            user_creds (aiogoogle.auth.Creds): UserCreds with an ``access_token`` item
+
+        Returns:
+
+            None:
+
+        Raises:
+
+            aiogoogle.excs.AuthError:
+        '''
+        raise NotImplementedError
+
+
+    @abstractmethod
+    def authorized_for_method(self, method, user_creds) -> bool:
+        '''
+        Checks if oauth2 user_creds object has sufficient scopes for a method call.
+        
+        .. note:: 
+        
+            This method doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
+
+        e.g.
+
+            **Correct:**
+
+            .. code-block:: python3
+        
+                is_authorized = authorized_for_method(youtube.resources.video.list)
+            
+            **NOT correct:**
+
+            .. code-block:: python3
+
+                is_authorized = authorized_for_method(youtube.resources.video.list())
+
+            **AND NOT correct:**
+
+            .. code-block:: python3
+
+                is_authorized = authorized_for_method(youtube.resources.videos)
+
+
+        Arguments:
+
+            method (aiogoogle.resource.Method): Method to be checked
+
+            user_credentials (aiogoogle.auth.creds.UserCreds): User Credentials with scopes item
+
+        Returns:
+
+            bool:
+
         '''
         raise NotImplementedError
 

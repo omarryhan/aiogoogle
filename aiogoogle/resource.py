@@ -63,7 +63,9 @@ class Method:
         self._service_path = service_path
         self._should_validate = validate
 
-#---- Change URL parameters with a "-" to "_" -----#
+#---- Changes URL parameters with a "-" to "_" -----# 
+
+# Depends on how you view it, but this section also changes robots with small mouths to big ones
 
     def _rm_dash_params(self, param_set) -> dict:
         if param_set:
@@ -94,7 +96,7 @@ class Method:
                         del uri_params[k]
         return uri_params
 
-#---- / Change URL parameters with a "-" to "_" -----#
+#---- / Changes URL parameters with a "-" to "_" -----#
 
     @property
     def request(self) -> dict:
@@ -200,17 +202,38 @@ class Method:
     
     def __getitem__(self, key):
         '''
-        Possible additional attributes from the discovery doc
-
         Examples:
 
-            description (str): method description
+            ::
 
-            scopes (str): method's required scopes
+                >>> self['description'] 
+                
+                "method description"
 
-            supportsMediaDownload (str): Whether or not this method supports media upload
+                >>> self['scopes']
+                
+                ['returns', 'scopes', 'required', 'by', 'this', 'method', 'in', 'a', 'list']
 
-            supportsMediaUpload (str): Whether or not this method supports media upload
+                >>> self['supportsMediaDownload']
+                
+                False
+
+                >>> self['supportsMediaUpload']
+
+                True
+
+                >>> self['httpMethod']
+
+                'GET'
+
+        Hint:
+
+
+            Using this method with ``scopes`` as an argument can be useful for incremental authorization. (Requesting scopes when needed. As opposed to requesting them at once)
+
+            for more: https://developers.google.com/identity/protocols/OAuth2WebServer#incrementalAuth
+
+
         '''
         return self._method_specs.get(key)
 
@@ -406,7 +429,7 @@ class Method:
         return item in self.parameters
 
     def __str__(self):
-        return self['id']
+        return self['id'] + ' method @ ' + self._base_url
 
     def __repr__(self):
         return self.__str__()
@@ -429,14 +452,14 @@ class Resource:
     @property
     def methods(self) -> [str, str]:
         '''
-        Returns methods provided by this resource
+        Returns names of the methods that this resource provides
         '''
         return [k for k,v in self['methods'].items()] if self['methods'] else []
 
     @property
     def resources(self) -> [str, str]:
         '''
-        Returns nested resources in a given API if any
+        Returns names of the nested resources in this resource
         '''
         return [k for k,v in self['resources'].items()] if self['resources'] else []
 
@@ -463,9 +486,22 @@ class Resource:
         '''
         Returns either a method or a nested resource
 
+        Arguments:
+
+            method_or_resource: Name of the method or resource desired.
+
+        Returns:
+
+            aiogoogle.resource.Resource, aiogoogle.resource.Methods: A Resource or a Method
+
+
         Note:
             
             This method will first check in nested resources then will check in methods.
+
+        Raises:
+
+            AttributeError:
         '''
         # 1. Search in nested resources
         if method_or_resource in self.resources:
@@ -492,10 +528,11 @@ class Resource:
                 validate=self._validate
             )
         else:
-            raise AttributeError(f'''Resource doesn\'t have a method or resource called:
-                                    \"{method_or_resource}\".\n\nAvailable methods are:
-                                    {self.methods} and available resources are: {self.resources}
-                                ''')
+            raise AttributeError(f"""Resource/Method {method_or_resource} doesn't exist.
+                                 Check: https://developers.google.com/ for more info. 
+                                 \nAvailable resources are: 
+                                 {self.resources}\n
+                                 Available methods are {self.methods}""")
 
 class GoogleAPI:
     '''
@@ -520,9 +557,31 @@ class GoogleAPI:
             discovery_document['parameters'] = extra_params
         return discovery_document
 
-    def __getattr__(self, resource) -> Resource:
+    @property
+    def methods(self) -> [str, str]:
+        '''
+        Returns names of the methods provided by this resource
+        '''
+        return [k for k,v in self['methods'].items()] if self['methods'] else []
+
+    @property
+    def resources(self) -> [str, str]:
+        '''
+        Returns names of the resources in a given API if any
+        '''
+        return [k for k,v in self['resources'].items()] if self['resources'] else []
+
+    def __getattr__(self, method_or_resource) -> Resource:
         '''
         Returns resources from an API
+
+        Note:
+            
+            This method will first check in resources then will check in methods.
+
+        Arguments:
+
+            method_or_resource (str): name of the top level method or resource
 
         Example:
 
@@ -535,12 +594,27 @@ class GoogleAPI:
 
         Returns:
 
-            aiogoogle.resource.Resource: A Resource Object
+            aiogoogle.resource.Resource, aiogoogle.resource.Methods: A Resource or a Method
+
+        Raises:
+
+            AttributeError:
         '''
-        if resource in self['resources']:
+        if method_or_resource in self.resources:
             return Resource(
-                name=resource,
-                resource_specs=self['resources'][resource],
+                name=method_or_resource,
+                resource_specs=self['resources'][method_or_resource],
+                global_parameters=self['parameters'],
+                schemas=self['schemas'] or {},  # josnschema validator will fail if schemas isn't a dict
+                base_url= self['baseUrl'],
+                root_url=self['rootUrl'],
+                service_path=self['servicePath'],
+                validate=self._validate
+            )
+        elif method_or_resource in self.methods:
+            return Method(
+                name=method_or_resource,
+                method_specs=self['methods'][method_or_resource],
                 global_parameters=self['parameters'],
                 schemas=self['schemas'] or {},  # josnschema validator will fail if schemas isn't a dict
                 base_url= self['baseUrl'],
@@ -550,7 +624,11 @@ class GoogleAPI:
             )
         else:
             documentation_link = self.discovery_document.get('documentationLink') or 'https://developers.google.com/'
-            raise AttributeError(f"Resource doesn't exist. Check: {documentation_link} for more info")
+            raise AttributeError(f"""Resource/Method {method_or_resource} doesn't exist.
+                                 Check: {documentation_link} for more info. 
+                                 \nAvailable resources are: 
+                                 {self.resources}\n
+                                 Available methods are {self.methods}""")
 
     def __getitem__(self, k):
         '''
@@ -560,10 +638,30 @@ class GoogleAPI:
 
             ::
 
-                >>> google_service = GoogleAPI(youtube_discovery_doc)
+                >>> google_service = GoogleAPI(google_books_discovery_doc)
                 >>> google_service['name']
 
-                'youtube'
+                'books'
+
+                >>> google_service['id']
+
+                'books:v1'
+
+                >>> google_service['version']
+
+                'v1'
+
+                >>> google_service['documentationLink']
+
+                'https://developers.google.com/books/docs/v1/getting_started'                
+                
+                >>> google_service['oauth2']['scopes']
+
+                https://www.googleapis.com/auth/books: {
+                    
+                    description: "Manage your books"
+                
+                }
 
         Returns:
 
@@ -572,18 +670,16 @@ class GoogleAPI:
         return self.discovery_document.get(k)
 
     def __contains__(self, item):
-        return item in self['resources']
+        return (item in self.resources) or (item in self.methods)
     
     def __repr__(self):
-        available_resources_names = [k for k,v in self['resources'].items()] if self['resources'] else []
-        client_info = self.discovery_document['name'] + '-' + self.discovery_document['version']
-        return client_info + '\n\n' + 'Available resources: ' +'\n' + str(available_resources_names)
+        return self.discovery_document['name'] + '-' + self.discovery_document['version'] + ' API @ ' + self['baseUrl']
 
     def __str__(self):
         return self.__repr__()
 
     def __len__(self):
-        return len(self['resources']) if self['resources'] else 0
+        return len(self.resources) + len(self.methods)
 
     def __call__(self):
         raise TypeError('Only methods are callables, not resources.'

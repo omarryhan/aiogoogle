@@ -98,17 +98,6 @@ html_logo = '_static/google_logo.png'
 
 
 html_theme_options = {
-#    # Basics
-#    'logo': 'google_logo.png',
-#    'logo_name': 'google',
-#    #'touch_icon': 'google_logo.png',
-#
-#    # CSS
-#    #'page_width': '100%',
-#    'sidebar_width': '30%',
-#    'sidebar_collapse': 'false',
-#    #'extra_nav_links': 'true',
-#
 #    # Badges
 #    'description': "Asynchronous wrapper for Google's Discovery Service",
 #    'github_user': 'omarryhan',

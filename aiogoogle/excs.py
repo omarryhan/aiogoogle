@@ -1,7 +1,4 @@
 class AiogoogleError(Exception):
-    '''
-    Base class for all of Aiogoogle's errors
-    '''
     pass
 
 class ValidationError(AiogoogleError):
@@ -11,13 +8,7 @@ class ValidationError(AiogoogleError):
     pass
 
 class HTTPError(AiogoogleError):
-    '''
-    HTTP related error
-    '''
     pass
 
 class AuthError(HTTPError):
-    '''
-    Authentication error. Inherits from HTTPError
-    '''
     pass

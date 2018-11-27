@@ -1,6 +1,8 @@
 __all__ = []
 import secrets
+import hashlib
+import os
 
 
 def _create_secret(bytes_length=32):  # pragma: no cover
-    return secrets.base64.standard_b64encode(secrets.token_bytes(bytes_length)).decode('utf-8')
+    return hashlib.sha256(os.urandom(1024)).hexdigest()

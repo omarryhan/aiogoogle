@@ -26,15 +26,18 @@ def test_getattr(open_discovery_document, name, version):
 def test_repr(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
-    available_resources_names = [k for k,v in discovery_document.get('resources').items()] if discovery_document.get('resources') else None
-    assert str(available_resources_names) in str(api)
+    name = discovery_document.get('name')
+    version = discovery_document.get('version')
+    base_url = discovery_document.get('baseUrl')
+    assert name in str(api) and version in str(api) and base_url in str(api)
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_len(open_discovery_document, name, version):
-    discovery_document = open_discovery_document(name, version)
-    api = GoogleAPI(discovery_document=discovery_document)
-    true_len = len(discovery_document.get('resources')) if discovery_document.get('resources') else 0
-    assert len(api) == true_len
+	discovery_document = open_discovery_document(name, version)
+	api = GoogleAPI(discovery_document=discovery_document)
+	methods_len = len(discovery_document.get('methods')) if discovery_document.get('methods') else 0
+	resources_len = len(discovery_document.get('resources')) if discovery_document.get('resources') else 0
+	assert len(api) == methods_len + resources_len
 
 @pytest.mark.parametrize('name,version', SOME_APIS)
 def test_resources_getattr_fails_on_unknown_resource(open_discovery_document, name, version):
@@ -45,6 +48,3 @@ def test_resources_getattr_fails_on_unknown_resource(open_discovery_document, na
 
     with pytest.raises(AttributeError) as e:
         getattr(api, nonexistent_resource)
-
-    documentation_link = api.discovery_document.get('documentationLink') or 'https://developers.google.com/'
-    assert f"Resource doesn't exist. Check: {documentation_link} for more info" in str(e)

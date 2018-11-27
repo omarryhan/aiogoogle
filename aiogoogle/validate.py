@@ -1,6 +1,6 @@
 __all__ = [
-	'validate',
-	'resolve'
+    'validate',
+    'resolve'
 ]
 
 import datetime
@@ -85,11 +85,11 @@ def uint64_validator(value):
 
 def double_validator(value):
     if not isinstance(value, float):
-        raise ValidationError(make_validation_error(value, 'Double type'))   
+        raise ValidationError(make_validation_error(value, 'Double type'))
 
 def float_validator(value):
     if not isinstance(value, float):
-        raise ValidationError(make_validation_error(value, 'Float type'))   
+        raise ValidationError(make_validation_error(value, 'Float type'))
 
 def byte_validator(value):
     if not isinstance(value, bytes):
@@ -107,7 +107,7 @@ def null_validator(value):
     if value is not None:
         raise ValidationError(make_validation_error(value, 'None (null)'))
 
-# Other Validators 
+# Other Validators
 
 def minimum_validator(value, minimum):
     if value < int(minimum):
@@ -148,58 +148,60 @@ def validate_pattern(instance, schema):
 #-- Main Validator ---------------
 
 def validate_all(instance, schema):
-	validate_type(instance, schema)
-	validate_format(instance, schema)
-	validate_range(instance, schema)
-	validate_pattern(instance, schema)
+    validate_type(instance, schema)
+    validate_format(instance, schema)
+    validate_range(instance, schema)
+    validate_pattern(instance, schema)
 
 #-- API --------------------
 
 def resolve(name, schema, schemas):
-	if name in schemas:
-		pass
+    if name in schemas:
+        pass
 
 def validate(instance, schema, schemas):
-	'''
-	Arguments:
+    '''
+    Arguments:
 
-		Instance: Instance to validate
+        Instance: Instance to validate
 
-		schema: schema to validate instance against (top level schema)
+        schema: schema to validate instance against (top level schema)
 
-		schemas: Full schamas dict to resolve refs if any
-	'''
-	# A simple instance validation module for Discovery schemas.
-	# Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
-	# As a result, using an external library to validate Discovery schemas will raise lots of errors.
-	# I tried to modify the popular: https://github.com/Julian/jsonschema to make it work with Google's version,
-	# but it was just too complicated for the relatively simple task on our hands
+        schemas: Full schamas dict to resolve refs if any
+    '''
+    # A simple instance validation module for Discovery schemas.
+    # Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
+    # As a result, using an external library to validate Discovery schemas will raise lots of errors.
+    # I tried to modify the popular: https://github.com/Julian/jsonschema to make it work with Google's version,
+    # but it was just too complicated for the relatively simple task on our hands
 
-	# Validate the following:
-	# 1. DONE type (str) jsonschema types
-	# 2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
-	# 3. DONE minimum (str)
-	# 4. DONE maximum (str)
-	# 5. DONE pattern (str)
+    # Validate the following:
+    # 1. DONE type (str) jsonschema types
+    # 2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
+    # 3. DONE minimum (str)
+    # 4. DONE maximum (str)
+    # 5. DONE pattern (str)
 
-	# 6. required (bool)
-	# 7. properties (dict): of nested schemas. Not to be confused with:
-	#   I. "item" (a regular key in objects)
-	#   II. "parameter" (isn't part of json schema, but part of method description)
-	# 8. TODO: repeated: Whether this parameter may appear multiple times
-	# 9. TODO: Support media upload/download validation without doing file io
-	# 10.
-	if not isinstance(schema, dict):
-		raise TypeError('Schema should always be a dict')
+    # 6. required (bool)
+    # 7. properties (dict): of nested schemas. Not to be confused with:
+    #   I. "item" (a regular key in objects)
+    #   II. "parameter" (isn't part of json schema, but part of method description)
+    # 8. TODO: repeated: Whether this parameter may appear multiple times
+    # 9. TODO: Support media upload/download validation without doing file io
+    # 10.
+    if not isinstance(schema, dict):
+        raise TypeError('Schema should always be a dict')
 
-	if isinstance(instance, dict):
-		for k, v in instance.items():
-			# Get next instance of schema
-			if not isinstance(schema, dict):
-				raise ValidationError(f'Invalid sub schema {schema}')
-			corresponding_schema = schema.get(k)
-			if not corresponding_schema:
-				raise ValidationError(f'Couldn\'t find a schema for {instance}.')
-			validate(v, corresponding_schema, schemas)
-	else:
-		validate_all(instance, schema)
+    if isinstance(instance, dict):
+        for k, v in instance.items():
+            # Get next instance of schema
+            if not isinstance(schema, dict):
+                raise ValidationError(f'Invalid sub schema {schema}')
+            corresponding_schema = schema.get(k)
+            if not corresponding_schema:
+                raise ValidationError(f'Couldn\'t find a schema for {instance}.')
+            validate(v, corresponding_schema, schemas)
+    elif isinstance(instance, (list, tuple)):
+        pass
+    else:
+        validate_all(instance, schema)

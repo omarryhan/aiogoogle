@@ -274,68 +274,6 @@ class Aiogoogle:
         '''
         return await self.active_session.send(*requests, timeout=timeout, return_full_http_response=full_resp)
 
-    def user_authorized_for_method(self, method, user_creds=None) -> bool:
-        '''
-        Checks if oauth2 user_creds object has sufficient scopes for a method call.
-        
-        .. note:: 
-        
-            This method doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
-
-        e.g.
-
-            **Correct:**
-
-            .. code-block:: python3
-        
-                is_authorized = youtube.user_authorized_for_resource(
-                    youtube.resources.video.list
-                )
-            
-            **NOT correct:**
-
-            .. code-block:: python3
-
-                is_authorized = youtube.user_authorized_for_resource(
-                    youtube.resources.video.list()
-                )
-
-            **AND NOT correct:**
-
-            .. code-block:: python3
-
-                is_authorized = youtube.user_authorized_for_resource(
-                    youtube.resources.videos
-                )
-
-
-        Arguments:
-
-            method (aiogoogle.resource.Method): Method to be checked
-
-            user_credentials (aiogoogle.auth.creds.UserCreds, dict): User Credentials
-
-        Returns:
-
-            bool:
-
-        '''
-        if user_creds is None:
-            user_creds = self.user_creds
-        method_scopes = method['scopes'] or []
-        if not method_scopes:
-            return True
-        
-        if not isinstance(user_creds['scopes'], (list, set, tuple)):
-            raise TypeError('Scopes should be an instance of list, set or tuple')
-        
-        if set(method_scopes).issubset(
-            set(user_creds['scopes'])
-        ):
-            return True
-        else:
-            return False
-
     async def __aenter__(self):
         self.active_session = await self.session_factory(timeout=self.timeout).__aenter__()
         return self
