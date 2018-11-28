@@ -27,7 +27,11 @@ class AbstractSession(ABC):
     @abstractmethod
     async def send(self, *requests, timeout=None,  return_full_http_response=False):
         '''
-        Main entry point of session. Takes requests, sends them, returns response contents or full http responses as defined in models
+        Takes requests, sends them, returns contents of responses or full http responses.
+
+        Note:
+
+            Given more than one request this method should return responses as a list. However if only given one, it will return a single response object
         
         Arguments:
             
@@ -39,7 +43,15 @@ class AbstractSession(ABC):
 
                 Total timeout for *requests
 
-            return_full_http_response (bool)
+            return_full_http_response (bool):
+
+                Return full HTTP response with headers, status code
+
+            raise_for_status (bool):
+
+                * Whether or not to raise an HTTP error if status code is >= 400
+
+                * Default: True
 
         Returns:
 
@@ -50,4 +62,4 @@ class AbstractSession(ABC):
             aiogoogle.excs.HTTPError
 
         '''
-        NotImplemented
+        raise NotImplementedError

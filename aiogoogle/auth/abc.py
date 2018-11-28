@@ -11,6 +11,8 @@ class AbstractOAuth2Manager(ABC):
     Arguments:
 
         session_factory (aiogoogle.sessions.AbstractSession): A session implementation
+
+        verify (bool): whether or not to verify tokens fetched
     
     Note:
     
@@ -36,6 +38,14 @@ class AbstractOAuth2Manager(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def __aenter__(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __aexit__(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
     def authorize(self, request, creds) -> Request:
         '''
         Adds OAuth2 authorization headers to requests given user creds
@@ -53,43 +63,6 @@ class AbstractOAuth2Manager(ABC):
         Returns:
 
             aiogoogle.models.Request: Request with OAuth2 authorization header
-        '''
-        raise NotImplementedError
-
-    @abstractmethod
-    def is_expired(self, user_creds):
-        '''
-        Checks if user_creds expired
-
-        Arguments:
-        
-            user_creds (aiogoogle.auth.creds.UserCreds): User Credentials
-
-        Returns:
-
-            bool:
-
-        '''
-        raise NotImplementedError
-
-    @abstractmethod
-    async def refresh(self, user_creds, client_creds):
-        '''
-        Refreshes user_creds
-        
-        Arguments:
-
-            user_creds (aiogoogle.auth.creds.UserCreds): User Credentials with ``refresh_token`` item
-
-            client_creds (aiogoogle.auth.creds.ClientCreds): Client Credentials
-
-        Returns:
-
-            aiogoogle.creds.UserCreds: Refreshed user credentials
-
-        Raises:
-
-            aiogoogle.excs.AuthError: Auth Error
         '''
         raise NotImplementedError
 
@@ -142,7 +115,7 @@ class AbstractOAuth2Manager(ABC):
             include_granted_scopes (bool):
             
                 * Optional
-                
+
                 * Enables applications to use incremental authorization to request access to additional scopes in context.
                 
                 * If you set this parameter's value to ``True`` and the authorization request is granted, then the new access token will also cover any scopes to which the user previously granted the application access.
@@ -167,7 +140,7 @@ class AbstractOAuth2Manager(ABC):
                 
                 * Possible values are:
 
-                    * ``None`` : Do not display any authentication or consent screens. Must not be specified with other values.
+                    * ``None`` : Default: Do not display any authentication or consent screens. Must not be specified with other values.
 
                     * ``'consent'`` : Prompt the user for consent.
 
@@ -177,7 +150,7 @@ class AbstractOAuth2Manager(ABC):
 
             It is highly recommended that you don't leave ``state`` as ``None`` in production
 
-            To effortlessly create a random secret to pass it as a state token, you can use ``aiogoogle.utils.create_secret()``
+            To effortlessly create a random secret to pass it as a state token, you can use ``aiogoogle.auth.utils.create_secret()``
 
         Note:
 
@@ -191,7 +164,7 @@ class AbstractOAuth2Manager(ABC):
 
         Warning:
 
-            * When listening for a callback after redirecting a user to the URL returned from this method, consider:
+            * When listening for a callback after redirecting a user to the URL returned from this method, take the following into consideration:
             
                 * If your response endpoint renders an HTML page, any resources on that page will be able to see the authorization code in the URL.
                 
@@ -205,7 +178,7 @@ class AbstractOAuth2Manager(ABC):
 
             ::
 
-                from aiogoogle.utils import create_secret
+                from aiogoogle.auth.utils import create_secret
                 from aiogoogle import ClinetCreds
 
                 client_creds = ClientCreds(
@@ -267,6 +240,44 @@ class AbstractOAuth2Manager(ABC):
             aiogoogle.excs.AuthError: Auth Error
         '''
         raise NotImplementedError
+
+    @abstractmethod
+    def is_expired(self, user_creds):
+        '''
+        Checks if user_creds expired
+
+        Arguments:
+        
+            user_creds (aiogoogle.auth.creds.UserCreds): User Credentials
+
+        Returns:
+
+            bool:
+
+        '''
+        raise NotImplementedError
+
+    @abstractmethod
+    async def refresh(self, user_creds, client_creds):
+        '''
+        Refreshes user_creds
+        
+        Arguments:
+
+            user_creds (aiogoogle.auth.creds.UserCreds): User Credentials with ``refresh_token`` item
+
+            client_creds (aiogoogle.auth.creds.ClientCreds): Client Credentials
+
+        Returns:
+
+            aiogoogle.creds.UserCreds: Refreshed user credentials
+
+        Raises:
+
+            aiogoogle.excs.AuthError: Auth Error
+        '''
+        raise NotImplementedError
+
     
     @abstractmethod
     async def revoke(self, user_creds):
@@ -289,50 +300,6 @@ class AbstractOAuth2Manager(ABC):
         Raises:
 
             aiogoogle.excs.AuthError:
-        '''
-        raise NotImplementedError
-
-
-    @abstractmethod
-    def authorized_for_method(self, method, user_creds) -> bool:
-        '''
-        Checks if oauth2 user_creds object has sufficient scopes for a method call.
-        
-        .. note:: 
-        
-            This method doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
-
-        e.g.
-
-            **Correct:**
-
-            .. code-block:: python3
-        
-                is_authorized = authorized_for_method(youtube.resources.video.list)
-            
-            **NOT correct:**
-
-            .. code-block:: python3
-
-                is_authorized = authorized_for_method(youtube.resources.video.list())
-
-            **AND NOT correct:**
-
-            .. code-block:: python3
-
-                is_authorized = authorized_for_method(youtube.resources.videos)
-
-
-        Arguments:
-
-            method (aiogoogle.resource.Method): Method to be checked
-
-            user_credentials (aiogoogle.auth.creds.UserCreds): User Credentials with scopes item
-
-        Returns:
-
-            bool:
-
         '''
         raise NotImplementedError
 

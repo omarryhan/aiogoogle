@@ -54,9 +54,9 @@ class UserCreds(_dict):
         self.id_token = id_token
         self.id_token_jwt = id_token_jwt
         
-        self.token_type = token_type,
-        self.token_uri = token_uri,
-        self.token_info_uri = token_info_uri,
+        self.token_type = token_type
+        self.token_uri = token_uri
+        self.token_info_uri = token_info_uri
         self.revoke_uri = revoke_uri
 
 class ClientCreds(_dict):

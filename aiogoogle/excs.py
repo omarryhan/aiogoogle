@@ -8,7 +8,10 @@ class ValidationError(AiogoogleError):
     pass
 
 class HTTPError(AiogoogleError):
-    pass
+    def __init__(self, msg, req=None, res=None):
+        self.req = req
+        self.res = res
+        super().__init__(msg)
 
 class AuthError(HTTPError):
     pass

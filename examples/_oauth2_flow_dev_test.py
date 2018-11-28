@@ -6,7 +6,7 @@ sys.path.append('..')
 from sanic import Sanic, response
 from sanic.exceptions import ServerError
 
-from aiogoogle import Aiogoogle
+from aiogoogle import Aiogoogle, GoogleAPI, AuthError
 from aiogoogle.auth.utils import create_secret
 
 try:
@@ -16,6 +16,8 @@ except Exception as e:
     print('Rename _keys.yaml to keys.yaml')
     raise e
 
+print(config['client_scope'])
+
 EMAIL = config.get('email')
 CLIENT_CREDS = {
     'client_id': config['client_id'],
@@ -23,7 +25,7 @@ CLIENT_CREDS = {
     'scopes': config['client_scope'],
     'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
 }
-state = create_secret()  # Shouldn't be a global hardcoded variable.
+state = create_secret()
 
 
 LOCAL_ADDRESS = 'localhost'
@@ -32,11 +34,16 @@ LOCAL_PORT = '5000'
 app = Sanic(__name__)
 aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
 
-#----------------------------------------#
-#                                        #
-# **Step A (Check OAuth2 figure above)** #
-#                                        #
-#----------------------------------------#
+async def refresh(full_user_creds):
+    return await aiogoogle.oauth2.refresh(full_user_creds, CLIENT_CREDS)
+
+def expire_creds_then_refresh(full_user_creds):
+    import datetime
+    full_user_creds['expires_at'] = (datetime.datetime.fromisoformat(full_user_creds['expires_at']) - datetime.timedelta(seconds=3480)).isoformat()
+    assert aiogoogle.oauth2.is_expired(full_user_creds) is True
+
+async def revoke(full_user_creds):
+    return await aiogoogle.oauth2.revoke(full_user_creds)
 
 @app.route('/authorize')
 def authorize(request):
@@ -44,40 +51,16 @@ def authorize(request):
         uri = aiogoogle.oauth2.build_auth_uri(
             client_creds=CLIENT_CREDS, state=state, access_type='offline', include_granted_scopes=True, login_hint=EMAIL, prompt='select_account'
         )
-        # Step A
         return response.redirect(uri)
     else:
         raise ServerError(
             "Client doesn't have enough info for Oauth2"
         )
 
-#----------------------------------------------#
-#                                              #
-# **Step B (Check OAuth2 figure above)**       #
-#                                              #
-#----------------------------------------------#
-# NOTE:                                        #
-#  you should now be authorizing your app @    #
-#   https://accounts.google.com/o/oauth2/      #
-#----------------------------------------------#
-
-#----------------------------------------------#
-#                                              #
-# **Step C, D & E (Check OAuth2 figure above)**#
-#                                              #
-#----------------------------------------------#
-
-# Step C
-# Google should redirect current_user to
-# this endpoint with a grant code
 @app.route('/callback/aiogoogle')
 async def spotify_callback(request):
     if request.args.get('error'):
-        error = {
-            'error': request.args.get('error'),
-            'error_description': request.args.get('error_description')
-        }
-        return response.json(error)
+        return response.text('whoops!', 401)
     elif request.args.get('code'):
         returned_state = request.args['state'][0]
         # Check state
@@ -88,10 +71,11 @@ async def spotify_callback(request):
             grant = request.args.get('code'),
             client_creds = CLIENT_CREDS
         )
-        return response.json(full_user_creds)
-    else:
-        # Should either receive a code or an error
-        return response.text("Something's probably wrong with your callback")
+        await refresh(full_user_creds)
+        expire_creds_then_refresh(full_user_creds)
+        await revoke(full_user_creds)
+        return response.text('passed')
+
 
 if __name__ == '__main__':
     webbrowser.open(

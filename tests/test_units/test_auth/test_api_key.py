@@ -17,7 +17,7 @@ def key2():
     return 'asjdaosdniaurn3uh2873he9has9dhASDQ(Dasd'
 
 
-def test_google_api_is_functiona(manager, create_api, key1):
+def test_google_api_is_functional(manager, create_api, key1):
     api = create_api('urlshortener', 'v1')
     request_with_key = api.url.get(key=key1, shortUrl='asdasd', validate=False)
     assert key1 in request_with_key.url

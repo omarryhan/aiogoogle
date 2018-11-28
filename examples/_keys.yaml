@@ -1,0 +1,8 @@
+client_id: PLACEHOLDER
+client_secret: PLACEHOLDER
+client_scope: 
+  - https://www.googleapis.com/auth/youtube
+  - https://www.googleapis.com/auth/youtube.force-ssl
+email: example@gmail.com  # Optional
+
+# Register this callback in your console: localhost:5000/callback/aiogoogle

@@ -13,6 +13,9 @@ from aiogoogle.excs import ValidationError
 from ..globals import SOME_APIS
 
 
+# TODO: test rm None uri_params
+
+
 def test_url_query_extra_not_included_and_warns(create_api):
     youtube = create_api('youtube', 'v3')
     with pytest.warns(UserWarning, match='i_am_extra'):
@@ -55,7 +58,7 @@ def test_url_path_args_and_query_path(create_api):
 def test_url_path_args_and_query_path_extra_arg(create_api):
     calendar = create_api('calendar', 'v3')
     with pytest.warns(UserWarning, match='i_am_extra'):
-        req = calendar.events.get(i_am_extra=None, eventId='dos', calendarId='uno', maxAttendees=1, validate=False)
+        req = calendar.events.get(i_am_extra='asdasdasdasd', eventId='dos', calendarId='uno', maxAttendees=1, validate=False)
     assert req.url == 'https://www.googleapis.com/calendar/v3/calendars/uno/events/dos?maxAttendees=1'
 
 def test_method(create_api):

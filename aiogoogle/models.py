@@ -1,5 +1,6 @@
 from urllib.parse import urlparse, parse_qsl, urlunparse
 from urllib.parse import urlencode
+from .excs import HTTPError, AuthError
 
 
 class ResumableUpload:
@@ -159,6 +160,10 @@ class Response:
 
         data (any): data
 
+        reason (str): reason for http error if any
+
+        req (aiogoogle.models.Request): request that caused this response
+
         download_file (str): path of the download file specified in the request
 
         upload_file (str): path of the upload file specified in the request
@@ -168,7 +173,7 @@ class Response:
         content (any): equals either ``self.json`` or ``self.data``
     '''
     
-    def __init__(self, status_code=None, headers=None, url=None, json=None, data=None, download_file=None, upload_file=None):
+    def __init__(self, status_code=None, headers=None, url=None, json=None, data=None, reason=None, req=None, download_file=None, upload_file=None):
         if json and data:
             raise TypeError('Pass either json or data, not both.')
         
@@ -177,6 +182,8 @@ class Response:
         self.url = url
         self.json = json
         self.data = data
+        self.reason = reason
+        self.req = req
         self.content = self.json or self.data
         self.download_file = download_file
         self.upload_file = upload_file
@@ -206,3 +213,11 @@ class Response:
         else:
             request._add_query_param({req_token_name : res_token})
         return request
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            if self.status_code == 401:
+                raise AuthError(self.reason, self.req, self)
+            else:
+                raise HTTPError(self.reason, self.req, self)
+

@@ -12,11 +12,7 @@ from .models import Request
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager
 from .sessions.aiohttp_session import AiohttpSession
-
-
-
-GETREST_DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis/{api_name}/{api_version}/rest'
-LIST_DISCOVERY_URL = 'https://www.googleapis.com/discovery/v1/apis?name={name}'
+from .data import DISCOVERY_SERVICE_V1_DISCOVERY_DOC
 
 
 class Aiogoogle:
@@ -56,18 +52,10 @@ class Aiogoogle:
         self.api_key_manager = ApiKeyManager()
         self.oauth2 = Oauth2Manager(self.session_factory)
 
-    #-------- Discovery Document ---------#
+        # Discovery service
+        self.discovery_service = GoogleAPI(DISCOVERY_SERVICE_V1_DISCOVERY_DOC)
 
-    async def _download_discovery_document(self, api_name, api_version):
-        url = GETREST_DISCOVERY_URL.format(api_name=api_name, api_version=api_version)
-        request = Request(method='GET', url=url)
-        
-        if self.active_session is None:
-            async with self:
-                discovery_docuemnt = await self.as_anon(request)
-        else:
-            discovery_docuemnt = await self.as_anon(request)
-        return discovery_docuemnt
+    #-------- Discovery Service's only 2 methods ---------#
 
     async def list_api(self, name, preffered=None, fields=None):
         '''
@@ -124,17 +112,8 @@ class Aiogoogle:
 
             aiogoogle.excs.HTTPError
         '''
-        if preffered and fields:
-            url = LIST_DISCOVERY_URL.format(name=name) +  f'&{urlencode(dict(preffered=preffered))}&{urlencode(dict(fields=fields))}'
-        elif fields:
-            url = LIST_DISCOVERY_URL.format(name=name) +  f'&{urlencode(dict(fields=fields))}'
-        elif preffered:
-            url = LIST_DISCOVERY_URL.format(name=name) +  f'&{urlencode(dict(preffered=preffered))}'
-        else:
-            url = LIST_DISCOVERY_URL.format(name=name)
-
-        request = Request(method='GET', url=url)
-
+        
+        request = self.discovery_service.apis.list(name=name, preffered=preffered, fields=fields, validate=False)
         if self.active_session is None:
             async with self:
                 res = await self.as_anon(request)
@@ -181,9 +160,15 @@ class Aiogoogle:
                 api_version = discovery_list['items'][0]['version']
             else:
                 raise ValueError('Invalid API name')
+        
+        request = self.discovery_service.apis.getRest(api=api_name, version=api_version, validate=False)
+        if self.active_session is None:
+            async with self:
+                discovery_docuemnt = await self.as_anon(request)
+        else:
+            discovery_docuemnt = await self.as_anon(request)
+        return GoogleAPI(discovery_docuemnt, validate)
 
-        disc_doc_dict = await self._download_discovery_document(api_name, api_version)
-        return GoogleAPI(disc_doc_dict, validate)
 
     #-------- Send Requests ----------#
 

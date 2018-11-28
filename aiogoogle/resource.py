@@ -64,8 +64,7 @@ class Method:
         self._should_validate = validate
 
 #---- Changes URL parameters with a "-" to "_" -----# 
-
-# Depends on how you view it, but this section also changes robots with small mouths to big ones
+# Depends on how you view it, but this section also changes robots with small mouths to robots with big mouths
 
     def _rm_dash_params(self, param_set) -> dict:
         if param_set:
@@ -240,6 +239,13 @@ class Method:
     def _validate(self, instance, schema):
         return validate__(instance, schema, self._schemas)
 
+    @staticmethod
+    def rm_none_params(uri_params):
+        for k,v in list(uri_params.items()):
+            if v is None:
+                del uri_params[k]
+        return uri_params
+
     @_toggle2x_dashed_params
     def __call__(self, validate=None, data=None, json=None, upload_file=None, 
                 download_file=None, timeout=None, **uri_params) -> Request:
@@ -275,6 +281,9 @@ class Method:
         #
         # NOTE: Use '_' instead of '-' when passing uri parameters that have a '-' in their names
         #
+
+        # Remove params that are None
+        uri_params = self.rm_none_params(uri_params)
 
         # Assert timeout is int
         if timeout is not None:

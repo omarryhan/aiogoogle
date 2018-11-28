@@ -7,10 +7,11 @@ __all__ = [
 ]
 
 import asyncio
+from json import JSONDecodeError
 
 from aiohttp import ClientSession
 from aiohttp import ClientTimeout
-from aiohttp.client_exceptions import ClientResponseError
+from aiohttp.client_exceptions import ClientResponseError, ContentTypeError
 import aiofiles
 
 from ..models import Response
@@ -21,22 +22,24 @@ class AiohttpSession(ClientSession, AbstractSession):
     def __init__(self, *args, **kwargs):
         if kwargs.get('timeout') is not None:
             kwargs['timeout'] = ClientTimeout(total=kwargs['timeout'])
-        else:
-            kwargs.pop('timeout')
+        # Delete if None because aiohttp has a default timeout object set
+        # to it's constructor's signature and it won't function without it
+        elif 'timeout' in kwargs:
+            del kwargs['timeout']
         super().__init__(*args, **kwargs)
 
-    async def send(self, *requests, timeout=None, return_full_http_response=False):
+    async def send(self, *requests, timeout=None, return_full_http_response=False, raise_for_status=True):
         def call_callback(request, response):
             if request.callback is not None:
                 response.content = request.callback(response.content)
             return response
 
         async def resolve_response(request, response):
-
             data = None
             json = None
             download_file = None
             upload_file = None
+            content = None
 
 
             # If downloading file:
@@ -50,11 +53,17 @@ class AiohttpSession(ClientSession, AbstractSession):
                         download_file_fs.write(chunk)
             else:
                 if response.status != 204:  # If no (no content)
-                    response.content = await response.json(content_type=None)  # Any content type
+                    try:
+                        content = await response.json()
+                    except JSONDecodeError:
+                        try:
+                            content = await response.text(content_type=None)
+                        except ContentTypeError:
+                            content = await response.read(content_type=None)
                     if isinstance(response.content, dict):
-                        json = response.content
+                        json = content
                     else:
-                        data = response.content
+                        data = content
             
             if request.media_upload:
                 upload_file = request.media_upload.file_path
@@ -65,20 +74,14 @@ class AiohttpSession(ClientSession, AbstractSession):
                 status_code = response.status,
                 json = json,
                 data = data,
+                reason = response.reason if getattr(response, 'reason') else None,
+                req = request,
                 download_file = download_file,
                 upload_file = upload_file
             )
 
-        def raise_for_status(response):
-            try:
-                response.raise_for_status()
-            except ClientResponseError as e:
-                raise HTTPError(e)
-
         async def fire_request(request):
-            # Add accept gzip header
             request.headers['Accept-Encoding'] = 'gzip'
-            # If uploading file
             if request.media_upload:
                 async with aiofiles.open(request.media_upload.file_path, 'rb') as data:
                     return await self.request(
@@ -99,28 +102,24 @@ class AiohttpSession(ClientSession, AbstractSession):
                     timeout = request.timeout
                 )
 
-        #----------------- coro runners ------------------#
+        #----------------- runners ------------------#
         async def get_response(request):
             response = await fire_request(request)
-            raise_for_status(response)
             response = await resolve_response(request, response)
+            if raise_for_status is True:
+                response.raise_for_status()
             response = call_callback(request, response)
             return response
         async def get_content(request):
-            response = await fire_request(request)
-            raise_for_status(response)
-            response = await resolve_response(request, response)
-            response = call_callback(request, response)
+            response = await get_response(request)
             return response.content
-        #----------------- /coro runners ------------------#
+        #----------------- /runners ------------------#
 
-        # 1. Create tasks
         if return_full_http_response is True:
             tasks = [asyncio.create_task(get_response(request)) for request in requests]
         else:
             tasks = [asyncio.create_task(get_content(request)) for request in requests]
 
-        # 2. await tasks and return results
         results = await asyncio.gather(*tasks, return_exceptions=False)
         if isinstance(results, list) and len(results) == 1:
             return results[0]

@@ -192,6 +192,8 @@ def validate(instance, schema, schemas):
     if not isinstance(schema, dict):
         raise TypeError('Schema should always be a dict')
 
+    # skip validating params with None
+
     if isinstance(instance, dict):
         for k, v in instance.items():
             # Get next instance of schema

@@ -8,3 +8,4 @@ include *keys_template.py
 global-exclude *.pyc
 global-exclude *tox_private.ini
 global-exclude personal_notes/
+global-exclude */keys.yaml

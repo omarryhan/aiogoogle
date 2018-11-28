@@ -3,22 +3,19 @@
 .. note::
 
     * These are the default auth managers. They won't perform any file io.
-    
+
     * If you want auth managers with file io capabilities, then you'll have to implement AbstractAuthManager's interface or inherent from this module's classes.
     
     * In most cases you won't need to implement new managers, as by design, credentials are an instance of dict and will only contain json types (str, number, array, ISO8601 datetime, etc) to make it easily serializable.
-
-
-.. note::
-
-    * This module copies many of the code found in these libraries:
-
-        1. https://github.com/googleapis/google-auth-library-python  (Provides many nice functions but doesn't implement OAuth2 grant authorization)
-
-        2. 
 '''
 
- 
+# To download data in aiogoogle.auth.data.py:
+# >>> oauth2_json = requests.get('https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest').json() 
+# >>> google_plus_json = requests.get('https://www.googleapis.com/discovery/v1/apis/plus/v1/rest').json()
+# >>> with open('/home/omar/Documents/aiogoogle/aiogoogle/auth/data.py', 'w') as file:
+# ...     file.write('OAUTH2_V2_DISCVOCERY_DOC = ' + pprint.pformat(oauth2_json, width=160))
+# >>> with open('/home/omar/Documents/aiogoogle/aiogoogle/auth/data.py', 'a') as file:
+# ...     file.write('\n\nGOOGLE_PLUS_V1_DISCVOCERY_DOC = ' + pprint.pformat(google_plus_json, width=160))
 
 
 __all__ = [
@@ -29,20 +26,25 @@ __all__ = [
 
 from urllib import parse
 import datetime
+try:
+    import ujson as json
+except:
+    import json
 
 from .abc import AbstractOAuth2Manager, AbstractAPIKeyManager
 from .creds import UserCreds, ClientCreds
-from .utils import _create_secret
-from .data import OAUTH2_V2_DISCVOCERY_DOC
+from .data import OAUTH2_V2_DISCVOCERY_DOC, GOOGLE_PLUS_V1_DISCVOCERY_DOC
 from ..excs import HTTPError, AuthError
 from ..models import Request
 from ..resource import GoogleAPI
 
 
-
 URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
 JWT_GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+
 REFRESH_GRANT_TYPE = 'refresh_token'
+AUTHORIZATION_TYPE = 'code'
+GRANT_TYPE = 'authorization_code'
 
 # The URL that provides public certificates for verifying ID tokens issued
 # by Google's OAuth 2.0 authorization server.
@@ -54,17 +56,16 @@ GOOGLE_APIS_CERTS_URL = (
     'https://www.googleapis.com/robot/v1/metadata/x509'
     '/securetoken@system.gserviceaccount.com')
 
-
-
 # Used here: https://developers.google.com/identity/protocols/OAuth2WebServer#exchange-authorization-code
-AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
-REVOKE_URL = 'https://accounts.google.com/o/oauth2/revoke'
-REFRESH_URL = 'https://www.googleapis.com/oauth2/v4/token'  # Not included in OAuth2 v2 discovery doc
+AUTH_URI = 'https://accounts.google.com/o/oauth2/v2/auth'
+REVOKE_URI = 'https://accounts.google.com/o/oauth2/revoke'
+TOKEN_URI = 'https://www.googleapis.com/oauth2/v4/token'  # Not included in OAuth2 v2 discovery doc
+REFRESH_URI = TOKEN_URI
+TOKEN_INFO_URI = 'https://www.googleapis.com/oauth2/v4/tokeninfo'
 
-# The Google OAuth 2.0 token endpoint. Used for authorized user credentials.
-GOOGLE_OAUTH2_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
-
-# Used here: https://github.com/googleapis/oauth2client/blob/master/oauth2client/__init__.py
+# Used here: https://github.com/googleapis/oauth2client/blob/master/oauth2client/__init__.py  
+# Google oauth2client is deprecated in favor of google-oauth-lib & google-auth-library-python
+# These aren't used in the code below
 GOOGLE_AUTH_URI = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_DEVICE_URI = 'https://oauth2.googleapis.com/device/code'
 GOOGLE_REVOKE_URI = 'https://oauth2.googleapis.com/revoke' 
@@ -75,12 +76,11 @@ GOOGLE_TOKEN_INFO_URI = 'https://oauth2.googleapis.com/tokeninfo'
 class ApiKeyManager(AbstractAPIKeyManager):
 
     def authorize(self, request, key: str) -> Request:
+        # TODO: Do this using urllib or take url fragments into consideration
         if 'key=' in request.url:
-            # Don't add a key if it has already been added
             return request
         else:
             url = request.url
-            # TODO: Do this using urllib or take url fragments into consideration
             if '?' not in url:
                 if url.endswith('/'):
                     url = url[:-1]
@@ -91,12 +91,12 @@ class ApiKeyManager(AbstractAPIKeyManager):
             request.url = url
             return request
 
-
 class Oauth2Manager(AbstractOAuth2Manager):
-    def __init__(self, session_factory):
+    def __init__(self, session_factory, verify=True):
         self.oauth2_api = GoogleAPI(OAUTH2_V2_DISCVOCERY_DOC, validate=True)
         self.session_factory = session_factory
         self.active_session = None
+        self.verify = verify
 
     async def __aenter__(self):
         self.active_session = await self.session_factory().__aenter__()
@@ -112,147 +112,128 @@ class Oauth2Manager(AbstractOAuth2Manager):
         request.headers['Authorization'] = f'Bearer {creds["access_token"]}'
         return request
 
-    def is_expired(self, creds: dict) -> bool:
-        pass
+    def is_ready(self, client_creds):
+        '''
+        Checks passed ``client_creds`` whether or not the client has enough information to perform OAuth2 Authorization code flow
 
-    async def refresh(self, user_creds, client_creds):
-        # Prepare request
-        uri = REFRESH_URL + f'''?
-            grant_type={REFRESH_GRANT_TYPE}&
-            client_id={client_creds["client_id"]}&
-            client_secret={client_creds["client_id"]}&
-            refresh_token={user_creds["refresh_token"]}'''
-        method = 'POST'
-        headers = {'content-type': URLENCODED_CONTENT_TYPE}
-        req = Request(method, uri, headers)
+        Arguments:
 
-        # Send request
-        async with self.session_factory() as sess:
-            json_res = sess.send(req)
+            client_creds(aiogoogle.auth.creds.ClientCreds): Client credentials object
 
-        # Parse result
-        user_creds['access_token'] = json_res['access_token']
-        user_creds['expires_in'] = json_res['expires_in']
-        user_creds['token_type'] = json_res['token_type']
-        if json_res.get('refresh_token'):
-            user_creds['refresh_token'] = json_res['refresh_token']
-        if json_res.get('id_token'):
-            user_creds['id_token'] = json_res['id_token']
-        return user_creds
+        Returns:
+
+            bool: 
+
+        '''
+        if client_creds.get('client_id') and \
+        client_creds.get('client_secret') and \
+        client_creds.get('scopes') and \
+        isinstance(client_creds['scopes'], (list, tuple)) and \
+        client_creds.get('redirect_uri'):
+            return True
+        return False
 
     def build_auth_uri(self, client_creds, state=None, access_type=None, include_granted_scopes=None, login_hint=None, prompt=None) -> (str, dict):
-        # Create state
-        user_creds = UserCreds()
-        if state is None:
-            state = _create_secret(32)
-        user_creds['state'] = state
-
-        # Create Auth URL
-        client_id = client_creds['client_id']
-        redirect_uri = client_creds['redirect_uri']
-        scope = ' '.join(client_creds['scopes'])
-
-        # space delimit scopes
-        uri = AUTH_URL + f'?client_id={client_id}&'
+        scopes = ' '.join(client_creds['scopes'])
+        uri = AUTH_URI + f'?redirect_uri={client_creds["redirect_uri"]}&scope={scopes}&'
         for param_name, param in {
-            'redirect_uri': redirect_uri,
-            'scope': scope,
+            'client_id': client_creds['client_id'],
+            'response_type': AUTHORIZATION_TYPE,
+            'state': state,
             'access_type': access_type,
-            'include_granted_scopes': include_granted_scopes,
+            'include_granted_scopes': json.dumps(include_granted_scopes),
             'login_hint': login_hint,
             'prompt': prompt
         }.items():
             if param is not None:
                 uri += '&' 
                 uri += parse.urlencode({param_name: param})
-
         return uri
 
     async def build_user_creds(self, grant, client_creds) -> dict:
-        # Prep request
-        headers = {'content-type': URLENCODED_CONTENT_TYPE}
-        method = 'POST'
-        url = AUTH_URL + '?' + parse.urlencode(
-            dict(
+        request = self._build_user_creds_req(grant, client_creds)
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                json_res = await sess.send(request)
+        else:
+            json_res = await self.active_session.send(request)
+        return self._build_user_creds_from_res(json_res)
+
+    def _build_user_creds_req(self, grant, client_creds) -> Request:
+        data = dict(
                 code=grant,
                 client_id=client_creds['client_id'],
                 client_secret=client_creds['client_secret'],
                 redirect_uri=client_creds['redirect_uri'],
-                grant_type='authorization_code'
+                grant_type=GRANT_TYPE
             )
-        )
-        request = Request(method, url, headers)
+        headers = {'content-type': URLENCODED_CONTENT_TYPE}
+        method = 'POST'
+        url = TOKEN_URI
+        data = data
+        return Request(method, url, headers, data=data)
 
-        # Send request        
-        try:
-            async with self.session_factory() as sess:
-                json_res = await sess.send(request)
-        except HTTPError as e:
-            raise AuthError(e)
-        else:
-            return UserCreds(
-                access_token=json_res['access_token'],
-                refresh_token=json_res.get('refresh_token'),
-                expires_in=json_res['expires_in'],
-                token_type=json_res.get('token_type'),
-                scopes=json_res['scope'].split(' ') if json_res.get('scope') else client_creds.get('scopes')
-            )
-
-    async def revoke(self, user_creds):
-        req = Request(
-            method='POST',
-            headers={'content-type': URLENCODED_CONTENT_TYPE},
-            url=REVOKE_URL + f'?token={user_creds["access_token"]}'  # TODO: diff between URI 1 and 2
-        )
-        async with self.session_factory() as sess:
-            json_res = sess.send(req)
-
-        return json_res
-
-    #---- Only 4 methods OAuth2 V2 -------------------------------------------
-
-    async def get_open_id_certs(self):
-        async with self.session_factory() as sess:
-            certs = await sess.send(self.oauth2_api.getCertForOpenIdConnect())
-        return certs
-
-    async def get_token_info(self, user_creds):
-        async with self.session_factory() as sess:
-            token_info = await sess.send(
-                self.oauth2_api.tokenInfo(
-                    access_token=user_creds.get('access_token'),
-                    id_token=user_creds.get('id_token'),
-                    token_handle=user_creds.get('token_handle')
-                )
-            )
-        return token_info
-
-    async def get_user_info(self, user_creds):
-        req = self.oauth2_api.userinfo.get()
-        authorized_req = self.authorize(req, user_creds)
-        async with self.session_factory() as sess:
-            user_info = await sess.send(authorized_req)
-        return user_info
-
-    async def get_me_info(self, user_creds):
-        req = self.oauth2_api.userinfo.v2.me.get()
-        authorized_req = self.authorize(req, user_creds)
-        async with self.session_factory() as sess:
-            me_info = await sess.send(authorized_req)
-        return me_info
-
-    #---- /Only 4 methods OAuth2 V2 -------------------------------------------
+    def _build_user_creds_from_res(self, json_res):
+        scopes = json_res.pop('scope').split(' ')
+        user_creds = UserCreds(**json_res, scopes=scopes)
+        # Idk why, but sometimes google returns these json params empty
+        user_creds['token_uri'] = TOKEN_URI if user_creds.get('token_uri') is None else None
+        user_creds['token_info_uri'] = TOKEN_INFO_URI if not user_creds.get('token_info_uri') else None
+        user_creds['revoke_uri'] = REVOKE_URI if not user_creds.get('revoke_uri') else None
+        user_creds['expires_at'] = self._get_expires_at(user_creds['expires_in'])
+        return user_creds
+    
+    def _get_expires_at(self, expires_in):
+        expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=expires_in)
+        # substract 2 mins to account for network latency and thus avoiding 401 responses
+        expires_at -= datetime.timedelta(seconds=120)
+        return expires_at.isoformat()
 
     def authorized_for_method(self, method, user_creds) -> bool:
-        if user_creds is None:
-            user_creds = user_creds
+        '''
+        Checks if oauth2 user_creds object has sufficient scopes for a method call.
+        
+        .. note:: 
+        
+            This method doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
+
+        e.g.
+
+            **Correct:**
+
+            .. code-block:: python3
+        
+                is_authorized = authorized_for_method(youtube.resources.video.list)
+            
+            **NOT correct:**
+
+            .. code-block:: python3
+
+                is_authorized = authorized_for_method(youtube.resources.video.list())
+
+            **AND NOT correct:**
+
+            .. code-block:: python3
+
+                is_authorized = authorized_for_method(youtube.resources.videos)
+
+
+        Arguments:
+
+            method (aiogoogle.resource.Method): Method to be checked
+
+            user_credentials (aiogoogle.auth.creds.UserCreds): User Credentials with scopes item
+
+        Returns:
+
+            bool:
+
+        '''
         method_scopes = method['scopes'] or []
         if not method_scopes:
             return True
-        
         if not isinstance(user_creds['scopes'], (list, set, tuple)):
             raise TypeError('Scopes should be an instance of list, set or tuple')
-        
         if set(method_scopes).issubset(
             set(user_creds['scopes'])
         ):
@@ -260,17 +241,100 @@ class Oauth2Manager(AbstractOAuth2Manager):
         else:
             return False
 
+    def is_expired(self, creds) -> bool:
+        expires_at = datetime.datetime.fromisoformat(creds['expires_at'])
+        if datetime.datetime.utcnow() >= expires_at:
+            return True
+        else:
+            return False
 
-    def _get_error_msg(self, json):
-        try:
-            msg = f'{json["error"]}: {json["error_description"]}'
-        except (KeyError, ValueError):
-            msg = str(json)
-        return msg
+    async def refresh(self, user_creds, client_creds):
+        request = self._build_refresh_request(user_creds, client_creds)
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                json_res = await sess.send(request)
+        else:
+            json_res = await self.active_session.send(request)
+        return self._build_user_creds_from_res(json_res)
 
-    def _datetime_token_expiry(self, expires_in):
-        return datetime.datetime.utcnow() + datetime.timedelta(seconds=expires_in)
+    def _build_refresh_request(self, user_creds, client_creds):
+        data = dict(
+            grant_type=REFRESH_GRANT_TYPE,
+            client_id=client_creds["client_id"],
+            client_secret=(client_creds["client_secret"]),
+            refresh_token=(user_creds["refresh_token"])
+        )
+        method = 'POST'
+        headers = {'content-type': URLENCODED_CONTENT_TYPE}
+        return Request(method, REFRESH_URI, headers, data=data)
 
+    def _build_revoke_request(self, user_creds):
+        return Request(
+            method='POST',
+            headers={'content-type': URLENCODED_CONTENT_TYPE},
+            url=REVOKE_URI,
+            data=dict(token=user_creds['access_token'])
+        )
+
+    async def revoke(self, user_creds):
+        request = self._build_revoke_request(user_creds)
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                json_res = await sess.send(request)
+        else:
+            json_res = await self.active_session.send(request)
+        return json_res
+
+    #---- Only 4 methods OAuth2 V2 -------------------------------------------
+    # First 2 methods shouldn't belong here 
+
+    async def get_open_id_certs(self):
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                certs = await sess.send(self.oauth2_api.getCertForOpenIdConnect())
+        else:
+            certs = await self.active_session.send(self.oauth2_api.getCertForOpenIdConnect())
+        return certs
+
+    async def get_token_info(self, user_creds):
+        req = self.oauth2_api.tokenInfo(
+            access_token=user_creds.get('access_token'),
+            id_token=user_creds.get('id_token'),
+            token_handle=user_creds.get('token_handle')
+        )
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                token_info = await sess.send(req)
+        else:
+            token_info = await self.active_session.send(req)
+        return token_info
+
+    async def get_user_info(self, user_creds):
+        req = self.oauth2_api.userinfo.get()
+        authorized_req = self.authorize(req, user_creds)
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                user_info = await sess.send(authorized_req)
+        else:
+            user_info = await self.active_session.send(authorized_req)
+        return user_info
+
+    async def get_me_info(self, user_creds):
+        req = self.oauth2_api.userinfo.v2.me.get()
+        authorized_req = self.authorize(req, user_creds)
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                me_info = await sess.send(authorized_req)
+        else:
+            me_info = await self.active_session.send(authorized_req)
+        return me_info
+
+    #---- /Only 4 methods OAuth2 V2 -------------------------------------------
+
+class OpenIDManager(Oauth2Manager):
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        self.google_plus = GoogleAPI(GOOGLE_PLUS_V1_DISCVOCERY_DOC)
 
     def jwt_grant(request, token_uri, assertion):
         """Implements the JWT Profile for OAuth 2.0 Authorization Grants.
