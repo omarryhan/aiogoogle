@@ -40,7 +40,6 @@ class AiohttpSession(ClientSession, AbstractSession):
             download_file = None
             upload_file = None
 
-
             # If downloading file:
             if request.media_download:
                 download_file = request.media_download.file_path

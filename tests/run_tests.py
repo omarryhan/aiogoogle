@@ -1,4 +1,4 @@
-import os
+import os, sys
 import pytest
 import time
 
@@ -11,7 +11,7 @@ def main():
     if test_integration == 'true' and test_integration_with_keys == 'true':
         print('Running unit tests followed by integration tests and integration tests with keys provided')
         time.sleep(SLEEP)
-        pytest.main(
+        exit_code = pytest.main(
             [
                 #'--fulltrace',
                 '-v',
@@ -29,7 +29,7 @@ def main():
     elif test_integration == 'true':
         print('Running unit tests followed by asynchronous integration tests')
         time.sleep(SLEEP)
-        pytest.main(
+        exit_code = pytest.main(
             [
                 '-v',
                 '-s',
@@ -44,7 +44,7 @@ def main():
     else:
         print('Running unit tests')
         time.sleep(SLEEP)
-        pytest.main(
+        exit_code = pytest.main(
             [
                 '-v',
                 '-s',
@@ -55,6 +55,8 @@ def main():
                 'tests/test_units/'
             ]
         )
+
+    sys.exit(exit_code)
 
 if __name__ == '__main__':
     main()

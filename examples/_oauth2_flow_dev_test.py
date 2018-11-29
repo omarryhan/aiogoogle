@@ -61,10 +61,8 @@ async def callback(request):
         return response.text('whoops!', 401)
     elif request.args.get('code'):
         returned_state = request.args['state'][0]
-        # Check state
         if returned_state != state:
             raise ServerError('NO')
-        # Step D & E (D send grant code, E receive token info)
         full_user_creds = await aiogoogle.oauth2.build_user_creds(
             grant = request.args.get('code'),
             client_creds = CLIENT_CREDS

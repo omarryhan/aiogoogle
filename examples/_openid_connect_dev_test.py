@@ -24,8 +24,8 @@ CLIENT_CREDS = {
     'scopes': ['openid', 'email', 'profile'] + config['client_scope'],
     'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
 }
-state = create_secret()  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once 
-nonce = create_secret()  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once
+state = create_secret()  # Shouldn't be a global hardcoded variable.
+nonce = create_secret()  # Shouldn't be a global hardcoded variable.
 
 
 LOCAL_ADDRESS = 'localhost'
@@ -33,12 +33,6 @@ LOCAL_PORT = '5000'
 
 app = Sanic(__name__)
 aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
-
-#----------------------------------------#
-#                                        #
-# **Step A (Check OAuth2 figure above)** #
-#                                        #
-#----------------------------------------#
 
 @app.route('/authorize')
 def authorize(request):
@@ -53,25 +47,6 @@ def authorize(request):
             "Client doesn't have enough info for Oauth2"
         )
 
-#----------------------------------------------#
-#                                              #
-# **Step B (Check OAuth2 figure above)**       #
-#                                              #
-#----------------------------------------------#
-# NOTE:                                        #
-#  you should now be authorizing your app @    #
-#   https://accounts.google.com/o/oauth2/      #
-#----------------------------------------------#
-
-#----------------------------------------------#
-#                                              #
-# **Step C, D & E (Check OAuth2 figure above)**#
-#                                              #
-#----------------------------------------------#
-
-# Step C
-# Google should redirect current_user to
-# this endpoint with a grant code
 @app.route('/callback/aiogoogle')
 async def callback(request):
     if request.args.get('error'):
@@ -82,10 +57,8 @@ async def callback(request):
         return response.json(error)
     elif request.args.get('code'):
         returned_state = request.args['state'][0]
-        # Check state
         if returned_state != state:
             raise ServerError('NO')
-        # Step D & E (D send grant code, E receive token info)
         full_user_creds = await aiogoogle.openid_connect.build_user_creds(
             grant=request.args.get('code'),
             client_creds=CLIENT_CREDS,
@@ -93,11 +66,14 @@ async def callback(request):
             verify=False
         )
         full_user_info = await aiogoogle.openid_connect.get_user_info(full_user_creds)
+        await aiogoogle.openid_connect.get_token_info(full_user_creds)
+        await aiogoogle.openid_connect.get_me_info(full_user_creds)
+        await aiogoogle.openid_connect.get_token_info_jwt(full_user_creds)
+        jwt_grant_creds = await aiogoogle.openid_connect.jwt_grant(full_user_creds['id_token_jwt'])
         return response.text(
-            f"full_user_creds: {pprint.pformat(full_user_creds)}\n\nfull_user_info: {pprint.pformat(full_user_info)}"
+            f"full_user_creds: {pprint.pformat(full_user_creds)}\n\nfull_user_info: {pprint.pformat(full_user_info)}\n\njwt_grant_creds {pprint.pformat(jwt_grant_creds)}"
         )
     else:
-        # Should either receive a code or an error
         return response.text("Something's probably wrong with your callback")
 
 if __name__ == '__main__':

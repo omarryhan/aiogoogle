@@ -7,6 +7,9 @@
     
     * In most cases you won't need to implement new managers, as by design, credentials are an instance of dict and will only contain json types (str, number, array, ISO8601 datetime, etc) to make it easily serializable.
 '''
+
+__all__ = ['ApiKeyManager', 'Oauth2Manager', 'OpenIdConnectManager']
+
 from urllib import parse
 import datetime
 try:
@@ -509,43 +512,35 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
                 raise AuthError(f"Invalid audience. Got: {id_token['aud']} expected: {client_id}")
         return id_token
 
-    def jwt_grant(self, request, token_uri, assertion):
-        """Implements the JWT Profile for OAuth 2.0 Authorization Grants.
-
-        For more details, see `rfc7523 section 4`_.
+    async def jwt_grant(self, assertion):
+        """
+        Implements the JWT Profile for OAuth 2.0 Authorization Grants.
 
         Args:
-            request (google.auth.transport.Request): A callable used to make
-                HTTP requests.
-            token_uri (str): The OAuth 2.0 authorizations server's token endpoint
-                URI.
-            assertion (str): The OAuth 2.0 assertion.
+
+            assertion (str):
+
+                * The value of the "client_assertion" parameter contains a single JWT. It MUST NOT contain more than one JWT.
 
         Returns:
-            Tuple[str, Optional[datetime], Mapping[str, str]]: The access token,
-                expiration, and additional data returned by the token endpoint.
+            
+            aiogoogle.auth.creds.UserCreds:
 
         Raises:
-            google.auth.exceptions.RefreshError: If the token endpoint returned
-                an error.
+            
+            aiogoogle.excs.AuthError: 
 
         .. _rfc7523 section 4: https://tools.ietf.org/html/rfc7523#section-4
         """
-    #   TODO
-    #    body = {
-    #        'assertion': assertion,
-    #        'grant_type': _JWT_GRANT_TYPE,
-    #    }
-    #
-    #    response_data = _token_endpoint_request(request, token_uri, body)
-    #
-    #    try:
-    #        access_token = response_data['access_token']
-    #    except KeyError as caught_exc:
-    #        new_exc = exceptions.RefreshError(
-    #            'No access token in response.', response_data)
-    #        six.raise_from(new_exc, caught_exc)
-    #
-    #    expiry = _parse_expiry(response_data)
-    #
-    #    return access_token, expiry, response_data
+        data = {
+            'assertion': assertion,
+            'grant_type': JWT_GRANT_TYPE,
+        }
+        req = Request(method='POST', url=self['token_endpoint'], data=data)
+    
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                json_res = await sess.send(req)
+        else:
+            json_res = await self.active_session.send(req)
+        return self._build_user_creds_from_res(json_res)
