@@ -217,7 +217,13 @@ class Response:
     def raise_for_status(self):
         if self.status_code >= 400:
             if self.status_code == 401:
-                raise AuthError(self.reason, self.req, self)
+                raise AuthError(msg=self.reason, req=self.req, res=self)
             else:
-                raise HTTPError(self.reason, self.req, self)
+                raise HTTPError(msg=self.reason, req=self.req, res=self)
+
+    def __str__(self):
+        return str(self.content)
+
+    def __repr__(self):
+        return f'Aiogoogle response model. Status: {self.status_code}'
 

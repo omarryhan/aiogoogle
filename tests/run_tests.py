@@ -1,6 +1,8 @@
 import os
 import pytest
-from time import sleep
+import time
+
+SLEEP = 1.5
 
 def main():
     test_integration = os.getenv('TEST_INTEGRATION')
@@ -8,7 +10,7 @@ def main():
 
     if test_integration == 'true' and test_integration_with_keys == 'true':
         print('Running unit tests followed by integration tests and integration tests with keys provided')
-        sleep(0.5)
+        time.sleep(SLEEP)
         pytest.main(
             [
                 #'--fulltrace',
@@ -26,7 +28,7 @@ def main():
         )
     elif test_integration == 'true':
         print('Running unit tests followed by asynchronous integration tests')
-        sleep(0.5)
+        time.sleep(SLEEP)
         pytest.main(
             [
                 '-v',
@@ -41,7 +43,7 @@ def main():
         )
     else:
         print('Running unit tests')
-        sleep(0.5)
+        time.sleep(SLEEP)
         pytest.main(
             [
                 '-v',

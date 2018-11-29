@@ -10,10 +10,12 @@ from urllib.parse import urlencode
 from .utils import _dict
 from .models import Request
 from .resource import GoogleAPI
-from .auth.managers import Oauth2Manager, ApiKeyManager
+from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager
 from .sessions.aiohttp_session import AiohttpSession
 from .data import DISCOVERY_SERVICE_V1_DISCOVERY_DOC
 
+
+# Discovery doc reference https://developers.google.com/discovery/v1/reference/apis
 
 class Aiogoogle:
     '''
@@ -51,6 +53,7 @@ class Aiogoogle:
         # Auth managers
         self.api_key_manager = ApiKeyManager()
         self.oauth2 = Oauth2Manager(self.session_factory)
+        self.openid_connect = OpenIdConnectManager(self.session_factory)
 
         # Discovery service
         self.discovery_service = GoogleAPI(DISCOVERY_SERVICE_V1_DISCOVERY_DOC)

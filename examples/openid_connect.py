@@ -1,12 +1,13 @@
 #!/usr/bin/python3.7
 
-import sys, os, webbrowser, yaml, json
+import sys, os, webbrowser, yaml, json, pprint
 sys.path.append('..')
 
 from sanic import Sanic, response
 from sanic.exceptions import ServerError
 
 from aiogoogle import Aiogoogle
+from aiogoogle.excs import HTTPError
 from aiogoogle.auth.utils import create_secret
 
 try:
@@ -20,10 +21,11 @@ EMAIL = config.get('email')
 CLIENT_CREDS = {
     'client_id': config['client_id'],
     'client_secret': config['client_secret'],
-    'scopes': config['client_scope'],
+    'scopes': ['openid', 'email', 'profile'] + config['client_scope'],
     'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
 }
 state = create_secret()  # Shouldn't be a global hardcoded variable.
+nonce = create_secret()  # Shouldn't be a global hardcoded variable.
 
 
 LOCAL_ADDRESS = 'localhost'
@@ -40,9 +42,9 @@ aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
 
 @app.route('/authorize')
 def authorize(request):
-    if aiogoogle.oauth2.is_ready(CLIENT_CREDS):
-        uri = aiogoogle.oauth2.authorization_url(
-            client_creds=CLIENT_CREDS, state=state, access_type='offline', include_granted_scopes=True, login_hint=EMAIL, prompt='select_account'
+    if aiogoogle.openid_connect.is_ready(CLIENT_CREDS):
+        uri = aiogoogle.openid_connect.authorization_url(
+            client_creds=CLIENT_CREDS, state=state, nonce=nonce, access_type='offline', include_granted_scopes=True, login_hint=EMAIL, prompt='select_account'
         )
         # Step A
         return response.redirect(uri)
@@ -84,11 +86,17 @@ async def callback(request):
         if returned_state != state:
             raise ServerError('NO')
         # Step D & E (D send grant code, E receive token info)
-        full_user_creds = await aiogoogle.oauth2.build_user_creds(
-            grant = request.args.get('code'),
-            client_creds = CLIENT_CREDS
+        full_user_creds = await aiogoogle.openid_connect.build_user_creds(
+            grant=request.args.get('code'),
+            client_creds=CLIENT_CREDS,
+            nonce=nonce,
+            verify=False
         )
-        return response.json(full_user_creds)
+        full_user_info = await aiogoogle.openid_connect.get_user_info(full_user_creds)
+        # token_info = await aiogoogle.openid_connect.get_token_info(full_user_creds)
+        return response.text(
+            f"full_user_creds: {pprint.pformat(full_user_creds)}\n\nfull_user_info: {pprint.pformat(full_user_info)}"
+        )
     else:
         # Should either receive a code or an error
         return response.text("Something's probably wrong with your callback")

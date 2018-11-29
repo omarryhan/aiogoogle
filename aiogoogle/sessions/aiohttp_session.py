@@ -39,7 +39,6 @@ class AiohttpSession(ClientSession, AbstractSession):
             json = None
             download_file = None
             upload_file = None
-            content = None
 
 
             # If downloading file:
@@ -54,16 +53,15 @@ class AiohttpSession(ClientSession, AbstractSession):
             else:
                 if response.status != 204:  # If no (no content)
                     try:
-                        content = await response.json()
+                        json = await response.json()
                     except JSONDecodeError:
                         try:
-                            content = await response.text(content_type=None)
+                            data = await response.text(content_type=None)
                         except ContentTypeError:
-                            content = await response.read(content_type=None)
-                    if isinstance(response.content, dict):
-                        json = content
-                    else:
-                        data = content
+                            try:
+                                data = await response.read(content_type=None)
+                            except ContentTypeError:
+                                data = None
             
             if request.media_upload:
                 upload_file = request.media_upload.file_path

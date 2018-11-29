@@ -15,6 +15,7 @@ SOME_APIS = [
     ('kgsearch', 'v1'),
     ('oauth2', 'v2'),
     ('people', 'v1'),
+    ('plus', 'v1'),
     ('safebrowsing', 'v4'),
     ('sheets', 'v4'),
     ('storagetransfer', 'v1'),

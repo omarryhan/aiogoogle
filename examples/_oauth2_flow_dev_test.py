@@ -16,8 +16,6 @@ except Exception as e:
     print('Rename _keys.yaml to keys.yaml')
     raise e
 
-print(config['client_scope'])
-
 EMAIL = config.get('email')
 CLIENT_CREDS = {
     'client_id': config['client_id'],
@@ -48,7 +46,7 @@ async def revoke(full_user_creds):
 @app.route('/authorize')
 def authorize(request):
     if aiogoogle.oauth2.is_ready(CLIENT_CREDS):
-        uri = aiogoogle.oauth2.build_auth_uri(
+        uri = aiogoogle.oauth2.authorization_url(
             client_creds=CLIENT_CREDS, state=state, access_type='offline', include_granted_scopes=True, login_hint=EMAIL, prompt='select_account'
         )
         return response.redirect(uri)
@@ -58,7 +56,7 @@ def authorize(request):
         )
 
 @app.route('/callback/aiogoogle')
-async def spotify_callback(request):
+async def callback(request):
     if request.args.get('error'):
         return response.text('whoops!', 401)
     elif request.args.get('code'):

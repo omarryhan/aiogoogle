@@ -22,8 +22,6 @@ async def test_oauth2_manager_api_is_latest_version(manager):
     async with Aiogoogle() as google:
         oauth2_apis_list = await google.list_api('oauth2')
 
-    print(oauth2_apis_list)
-
     apis = oauth2_apis_list['items']
 
     versions_available = [int(api['version'][-1:]) for api in apis]

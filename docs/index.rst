@@ -529,7 +529,7 @@ Install sanic
         if aiogoogle.oauth2_manager.is_oauth_ready(client_creds):
 
             # Create redirect uri + user_creds dict with a CSRF token
-            uri, user_creds = aiogoogle.oauth2_manager.build_auth_uri(
+            uri, user_creds = aiogoogle.oauth2_manager.authorization_url(
                 client_creds
             )
 
@@ -568,7 +568,7 @@ Install sanic
     # Google should redirect current_user to
     # this endpoint with a grant code
     @app.route('/callback/yourapp')
-    async def spotify_callback(request):
+    async def callback(request):
 
         # If error, return description
         if request.args.get('error'):
