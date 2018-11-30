@@ -1,27 +1,56 @@
+'''
+A simple instance validation module for Discovery schemas.
+Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
+As a result, using an external library to validate Discovery schemas will raise lots of errors.
+I tried to modify the popular: https://github.com/Julian/jsonschema to make it work with Google's version,
+but it was just too complicated for the relatively simple task on our hands
+
+Validate the following:
+1. DONE type (str) jsonschema types
+2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
+3. DONE minimum (str)
+4. DONE maximum (str)
+5. DONE pattern (str)
+
+6. required (bool)
+7. properties (dict): of nested schemas. Not to be confused with:
+  I. "item" (a regular key in objects)
+  II. "parameter" (isn't part of json schema, but part of method description)
+8. TODO: repeated: Whether this parameter may appear multiple times
+9. TODO: Support media upload/download validation without doing file io
+10.
+'''
+
 __all__ = [
     'validate',
-    'resolve'
 ]
 
 import datetime
+import warnings
 import re
 
 from .excs import ValidationError
 
 
+def make_validation_error(checked_value, correct_criteria):
+    return f"{checked_value} isn't valid. Expected a value that meets those criteria: {correct_criteria}"
+
 #------- MAPPINGS -------#
 
-TYPE_MAPPING = {
-    'number': [float, int],
-    'string': [str],
-    'object': [dict],
-    'array': [list],
-    'boolean': [bool],
-    'null': []
+JSON_PYTHON_TYPE_MAPPING = {
+    'number': (float, int),
+    'integer': (int),
+    'string': (str),
+    'object': (dict),
+    'array': (list, set, tuple),
+    'boolean': (bool),
+    'null': (),  # Not used
+    'any': (float, int, str, dict, list, set, tuple, bool, datetime.datetime, datetime.date)
 }
 
 TYPE_FORMAT_MAPPING = {
-    # Given this type, if None then don't check for additional "format" property in the schema
+    # Given this type, if None then don't check for additional "format" property in the schema, else, format might be any of the mapped values
+    # Those are kept here for reference. They aren't used by any validator, instead validators check directly if there's any format requirements
     'any': [],
     'array': [],
     'boolean': [],
@@ -31,39 +60,44 @@ TYPE_FORMAT_MAPPING = {
     'string': ['null', 'byte', 'date', 'date-time','int64','uint64']
 }
 
-def make_validation_error(checked_value, correct_criteria):
-    return f"{checked_value} isn't valid. Expected a value that meets those criteria: {correct_criteria}"
-
 #-------- VALIDATORS ---------#
 
 # Type validators (JSON schema)
 
 def any_validator(value):
-    pass
+    req_types = JSON_PYTHON_TYPE_MAPPING['any']
+    if not isinstance(value, req_types):
+        raise ValidationError(make_validation_error(value, str(req_types)))
 
 def array_validator(value):
-    if not isinstance(value, (list, set, tuple)):
-        raise ValidationError(make_validation_error(value, 'List or Set or Tuple'))
+    req_types = JSON_PYTHON_TYPE_MAPPING['array']
+    if not isinstance(value, req_types):
+        raise ValidationError(make_validation_error(value, str(req_types)))
 
 def boolean_validator(value):
-    if not isinstance(value, bool):
-        raise ValidationError(make_validation_error(value, 'Boolean'))
+    req_types = JSON_PYTHON_TYPE_MAPPING['boolean']
+    if not isinstance(value, req_types):
+        raise ValidationError(make_validation_error(value, str(req_types)))
 
 def integer_validator(value):
-    if not isinstance(value, int):
-        raise ValidationError(make_validation_error(value, 'Integer'))
+    req_types = JSON_PYTHON_TYPE_MAPPING['integer']
+    if not isinstance(value, req_types):
+        raise ValidationError(make_validation_error(value, str(req_types)))
 
 def number_valdator(value):
-    if not isinstance(value, (int, float)):
-        raise ValidationError(make_validation_error(value, 'Number'))
+    req_types = JSON_PYTHON_TYPE_MAPPING['number']
+    if not isinstance(value, req_types):
+        raise ValidationError(make_validation_error(value, str(req_types)))
 
 def object_validator(value):
-    if not isinstance(value, (dict)):
-        raise ValidationError(make_validation_error(value, 'Mappable object'))
+    req_types = JSON_PYTHON_TYPE_MAPPING['object']
+    if not isinstance(value, req_types):
+        raise ValidationError(make_validation_error(value, str(req_types)))
 
 def string_validator(value):
-    if not isinstance(value, (str)):
-        raise ValidationError(make_validation_error(value, 'String'))
+    req_types = JSON_PYTHON_TYPE_MAPPING['string']
+    if not isinstance(value, req_types):
+        raise ValidationError(make_validation_error(value, str(req_types)))
 
 # Format validators (Discovery Specific)  https://developers.google.com/discovery/v1/type-format
 
@@ -96,16 +130,26 @@ def byte_validator(value):
         raise ValidationError(make_validation_error(value, 'Bytes type'))
 
 def date_validator(value):
-    if not isinstance(value, datetime.date):
-        raise ValidationError(make_validation_error(value, 'Python\'s datetime.date'))
+    msg = make_validation_error(value, 'JSON date value. Hint: use datetime.date.isoformat(), instead of datetime.date')
+    try:
+        pvalue = datetime.date.fromisoformat(value)
+    except:
+        raise ValidationError(msg)
+    if not isinstance(pvalue, datetime.date):
+        raise ValidationError(msg)
 
 def datetime_validator(value):
-    if not isinstance(value, datetime.datetime):
-        raise ValidationError(make_validation_error(value, 'Python\'s datetime.datetime'))
+    msg = make_validation_error(value, 'JSON date value. Hint: use datetime.datetime.isoformat(), instead of datetime.datetime')
+    try:
+        pvalue = datetime.datetime.fromisoformat(value)
+    except:
+        raise ValidationError(msg)
+    if not isinstance(pvalue, datetime.datetime):
+        raise ValidationError(msg)
 
 def null_validator(value):
-    if value is not None:
-        raise ValidationError(make_validation_error(value, 'None (null)'))
+    if value != 'null':
+        raise ValidationError(make_validation_error(value, "'null' NOT None"))
 
 # Other Validators
 
@@ -117,7 +161,7 @@ def maximum_validator(value, maximum):
     if value > int(maximum):
         raise ValidationError(make_validation_error(value, f'Not less than {maximum}'))
 
-#-- Executors ---------------------------
+#-- Sub validators ---------------------------
 
 def validate_type(instance, schema):
     type_validator_name = schema['type']
@@ -155,53 +199,68 @@ def validate_all(instance, schema):
 
 #-- API --------------------
 
-def resolve(name, schema, schemas):
-    if name in schemas:
-        pass
-
-def validate(instance, schema, schemas):
+def validate(instance, schema, schemas=None):
     '''
     Arguments:
 
         Instance: Instance to validate
 
-        schema: schema to validate instance against (top level schema)
+        schema: schema to validate instance against
 
         schemas: Full schamas dict to resolve refs if any
     '''
-    # A simple instance validation module for Discovery schemas.
-    # Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
-    # As a result, using an external library to validate Discovery schemas will raise lots of errors.
-    # I tried to modify the popular: https://github.com/Julian/jsonschema to make it work with Google's version,
-    # but it was just too complicated for the relatively simple task on our hands
+    def resolve(schema):
+        '''
+        Resolves schema from schemas
+        if no $ref was found, returns original schema
+        '''
+        if schemas is None:
+            raise ValidationError(f"Attempted to resolve {k}, but no schema was found to resolve from")
+        if '$ref' in schema:
+            try:
+                schema = schemas[schema['$ref']]
+            except KeyError:
+                raise ValidationError(f"Attempted to resolve {schema['$ref']}, but no result was found.")
+        return schema
 
-    # Validate the following:
-    # 1. DONE type (str) jsonschema types
-    # 2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
-    # 3. DONE minimum (str)
-    # 4. DONE maximum (str)
-    # 5. DONE pattern (str)
-
-    # 6. required (bool)
-    # 7. properties (dict): of nested schemas. Not to be confused with:
-    #   I. "item" (a regular key in objects)
-    #   II. "parameter" (isn't part of json schema, but part of method description)
-    # 8. TODO: repeated: Whether this parameter may appear multiple times
-    # 9. TODO: Support media upload/download validation without doing file io
-    # 10.
+    # Check schema and schemas are dicts
     if not isinstance(schema, dict):
-        raise TypeError('Schema should always be a dict')
+        raise TypeError('Schema must be a dict')
+    if schemas is not None:
+        if not isinstance(schemas, dict):
+            raise TypeError('Schemas must be a dict')
 
-    if isinstance(instance, dict):
-        for k, v in instance.items():
-            # Get next instance of schema
-            if not isinstance(schema, dict):
-                raise ValidationError(f'Invalid sub schema {schema}')
-            corresponding_schema = schema.get(k)
-            if not corresponding_schema:
-                raise ValidationError(f'Couldn\'t find a schema for {instance}.')
-            validate(v, corresponding_schema, schemas)
-    elif isinstance(instance, (list, tuple)):
-        pass
+    # Preliminary resolvement
+    schema = resolve(schema)
+    
+    # If object (Dict): iterate over each entry and recursively validate
+    if schema['type'] == 'object':        
+        # Validate instance is an object
+        object_validator(instance)
+        # Raise warnings on passed dict keys that aren't mentioned in the schema
+        for k, _ in instance.items():
+            if k not in schema['properties']:
+                warnings.warn(f"Item {k} was passed, but not mentioned in the following schema {schema.get('id')}.\n\n It will probably be discarded by the API you're using")
+        # Validate
+        for k,v in schema['properties'].items():
+            # Check if there's a ref to resolve
+            v = resolve(v)
+            # Check if instance has the property, if not, check if it's required
+            if k not in instance:
+                if v.get('required') is True:
+                    raise ValidationError(f"Instance {k} is required")
+            else:
+                validate(instance[k], v, schemas)
+
+    # If array (list) iterate over each item and recursively validate
+    elif schema['type'] == 'array':
+        # Validate instance is an array
+        array_validator(instance)
+        schema = resolve(schema['items'])
+        # Check if instance has the property, if not, check if it's required
+        for item in instance:
+            validate(item, schema, schemas)
+
+    # Else we reached the lowest level of a schema, validate 
     else:
         validate_all(instance, schema)

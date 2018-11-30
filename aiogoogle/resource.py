@@ -7,6 +7,7 @@ __all__ = [
 import warnings
 from urllib.parse import urlencode
 from functools import wraps
+import datetime
 
 from .excs import ValidationError
 from .utils import _dict, _safe_getitem, _toggle2x_dashed_params
@@ -70,7 +71,7 @@ class Method:
         if param_set:
             for name, schema in param_set.items():
                 if '-' in name:
-                    new_name = name.replace('-', '_')
+                    new_name = name.replace('-', '_')  # See?!
                     schema['orig_name'] = name
                     param_set[new_name] = schema
                     del param_set[name]
@@ -252,6 +253,21 @@ class Method:
         ''' 
         Builds a request from this method
 
+        Note:
+
+            * When passing ``datetime.datetime or datetime.date`` pass them in json format.
+            
+            * Aiogoogle won't do that as it would be a big hassle to iterate over every item in ``*uri_params``, ``json`` and ``data``
+            to check if there's any datetime objects.
+
+            * Fortunately Python makes it really easy to achieve that. 
+            
+            * Instead of passing say ``datetime.datetime.now()``, pass: ``datetime.datetime.now().jsonformat()``
+
+        Note:
+
+            * All ``None`` values are ommited before sending to Google apis, if you want to explicitly pass a JSON null then pass it as ``"null"`` not ``None`` 
+
         Arguments:
 
             validate (bool): Overrides :param: aiogoogle.Aiogoole.validate if not None
@@ -337,7 +353,7 @@ class Method:
         # Validate body
         if validate is True:
             body = json if json is not None else data if data is not None else None  # json or data or None
-            if isinstance(body, dict):
+            if body is not None:
                 self._validate_body(body)
 
         # Process download_file
@@ -396,7 +412,7 @@ class Method:
                 request_schema = self._schemas[request_schema['$ref']]
             self._validate(req, request_schema)
         else:
-            raise ValidationError('Request body should\'ve been validated, but wasn\'t because a schema body wasn\'nt found')
+            raise ValidationError('Request body should\'ve been validated, but wasn\'t because the method doesn\'t accept a JSON body')
 
     def _build_upload_media(self, upload_file):
         # Will check wether validate is true or false
@@ -428,7 +444,6 @@ class Method:
             if response_schema is not None:
                 if '$ref' in response_schema:
                     response_schema = self._schemas[response_schema['$ref']]
-                self._validate(resp, response_schema)
             else:
                 raise ValidationError('Response body should\'ve been validated, but wasn\'t because a schema body wasn\'nt found')
             self._validate(resp, response_schema)

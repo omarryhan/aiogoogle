@@ -61,6 +61,8 @@ def test_validates_body_json(create_api):
         validate=True
     )
 
+def test_validates_body_json_2(create_api):
+    youtube = create_api('youtube', 'v3')
     with pytest.raises(ValidationError):
         youtube.videos.insert(
             autoLevels=True,
@@ -68,3 +70,223 @@ def test_validates_body_json(create_api):
             json=False,
             validate=True
         )
+
+def test_validates_body_json_3(create_api):
+    youtube = create_api('youtube', 'v3')
+    with pytest.raises(ValidationError):
+        youtube.videos.insert(
+            autoLevels=True,
+            part='snippet',
+            json=dict(ageGating=dict(alcoholContent='asdasdasdasd')),
+            validate=True
+        )
+
+def test_validates_body_json_4(create_api):
+    youtube = create_api('youtube', 'v3')
+    with pytest.raises(ValidationError):
+        youtube.videos.insert(
+            autoLevels=True,
+            part='snippet',
+            json=dict(ageGating=dict(alcoholContent={'asdasdkj': 'asdads'})),
+            validate=True
+        )
+
+def test_validates_body_json_5(create_api):
+    youtube = create_api('youtube', 'v3')
+    youtube.videos.insert(
+        autoLevels=True,
+        part='snippet',
+        json=None,
+        validate=True
+    )
+
+def test_validates_body_json_6(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.get(
+        calendarId='asdasd',
+        validate=True
+    )
+
+def test_validates_body_json_7(create_api):
+    calendar = create_api('calendar', 'v3')
+    with pytest.raises(ValidationError):
+        calendar.calendarList.get(
+            calendarId=True,
+            validate=True
+        )
+
+def test_validates_body_json_8(create_api):
+    calendar = create_api('calendar', 'v3')
+    with pytest.raises(ValidationError):
+        calendar.calendarList.get(
+            calendarId=123,
+            validate=True
+        )
+
+def test_validates_body_json_9(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.raises(ValidationError):
+        calendar.calendarList.list(
+            json='asdasd',
+            validate=True
+        )
+
+def test_validates_body_json_10(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.raises(ValidationError):
+        calendar.calendarList.list(
+            json=[],
+            validate=True
+        )
+def test_validates_body_json_11(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    calendar.calendarList.list(
+        json={},
+        validate=True
+    )
+
+def test_validates_body_json_12(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.raises(ValidationError):
+        calendar.calendarList.list(
+            json={
+                'items':{}
+            }
+        )
+
+def test_validates_body_json_13(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    calendar.calendarList.list(
+        json={
+            'items':[
+                {
+                    'accessRole': 'a_valid_access_role'
+                },
+            ]
+        }
+    )
+
+def test_validates_body_json_14(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.raises(ValidationError):
+        calendar.calendarList.list(
+            json={
+                'items':[
+                    {
+                        'accessRole': 1
+                    },
+                ]
+            }
+        )
+
+def test_validates_body_json_15(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.warns(UserWarning, match='this_isnt_supposed_to_be_here'):
+        calendar.calendarList.list(
+            json={
+                'items':[
+                    {
+                        'accessRole': 'a_valid_access_role'
+                    },
+                    {
+                        'this_isnt_supposed_to_be_here': True
+                    }
+                ]
+            }
+        )
+
+def test_validates_body_json_16(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.warns(UserWarning, match='this_isnt_supposed_to_be_here'):
+        calendar.calendarList.list(
+            json={
+                'items':[
+                    {
+                        'accessRole': 'a_valid_access_role'
+                    },
+                    {
+                        'this_isnt_supposed_to_be_here': 'asdasdasd'
+                    }
+                ]
+            }
+        )
+
+def test_validates_body_json_17(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.warns(UserWarning, match='this_isnt_supposed_to_be_here'):
+        calendar.calendarList.list(
+            json={
+                'items':[
+                    {
+                        'this_isnt_supposed_to_be_here': True
+                    }
+                ]
+            }
+        )
+
+def test_validates_body_json_18(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.warns(UserWarning, match='this_isnt_supposed_to_be_here'):
+        calendar.calendarList.list(
+            json={
+                'items':[
+                    {
+                        'this_isnt_supposed_to_be_here': 'asdasdasd'
+                    }
+                ]
+            }
+        )
+
+def test_validates_body_json_19(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.warns(UserWarning, match='this_isnt_supposed_to_be_here'):
+        with pytest.raises(ValidationError):
+            calendar.calendarList.list(
+                json={
+                    'items':[
+                        {
+                            'accessRole': 1,
+                            'this_isnt_supposed_to_be_here': 123
+                        },
+                    ]
+                }
+            )
+
+def test_validates_body_json_20(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.warns(UserWarning, match='this_isnt_supposed_to_be_here'):
+        with pytest.raises(ValidationError):
+            calendar.calendarList.list(
+                json={
+                    'items':[
+                        {
+                            'accessRole': 1,
+                            'this_isnt_supposed_to_be_here': 'asdsda'
+                        },
+                    ]
+                }
+            )

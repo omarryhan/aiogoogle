@@ -198,10 +198,11 @@ class Aiogoogle:
             aiogoogle.models.Response:
         '''
         # Refresh credentials
-        self.user_creds = self.oauth2.refresh(
-            self.user_creds,
-            client_creds=self.client_creds
-        )
+        if self.oauth2.is_expired(self.user_creds) is True:
+            self.user_creds = self.oauth2.refresh(
+                self.user_creds,
+                client_creds=self.client_creds
+            )
 
         # Authroize requests
         authorized_requests = [self.oauth2.authorize(request, self.user_creds) for request in requests]
