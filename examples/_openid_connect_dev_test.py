@@ -23,6 +23,7 @@ CLIENT_CREDS = {
     'client_secret': config['client_secret'],
     'scopes': ['openid', 'email', 'profile'] + config['client_scope'],
     'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
+    #'redirect_uri': OOB_REDIRECT_URI
 }
 state = create_secret()  # Shouldn't be a global hardcoded variable.
 nonce = create_secret()  # Shouldn't be a global hardcoded variable.
@@ -69,9 +70,8 @@ async def callback(request):
         await aiogoogle.openid_connect.get_token_info(full_user_creds)
         await aiogoogle.openid_connect.get_me_info(full_user_creds)
         await aiogoogle.openid_connect.get_token_info_jwt(full_user_creds)
-        jwt_grant_creds = await aiogoogle.openid_connect.jwt_grant(full_user_creds['id_token_jwt'])
         return response.text(
-            f"full_user_creds: {pprint.pformat(full_user_creds)}\n\nfull_user_info: {pprint.pformat(full_user_info)}\n\njwt_grant_creds {pprint.pformat(jwt_grant_creds)}"
+            f"full_user_creds: {pprint.pformat(full_user_creds)}\n\nfull_user_info: {pprint.pformat(full_user_info)}"
         )
     else:
         return response.text("Something's probably wrong with your callback")

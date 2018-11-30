@@ -9,6 +9,7 @@ from sanic.exceptions import ServerError
 from aiogoogle import Aiogoogle
 from aiogoogle.excs import HTTPError
 from aiogoogle.auth.utils import create_secret
+from aiogoogle.auth.managers import OOB_REDIRECT_URI
 
 try:
     with open("keys.yaml", 'r') as stream:

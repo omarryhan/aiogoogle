@@ -3,9 +3,9 @@
 
     * These are the default auth managers. They won't perform any file io.
 
-    * If you want auth managers with file io capabilities, then you'll have to implement AbstractAuthManager's interface or inherent from this module's classes.
+    * If you want auth managers with file io capabilities, then you'll have to implement AbstractAuthManager's interface or inherent from any of this module's managers.
     
-    * In most cases you won't need to implement new managers, as by design, credentials are an instance of dict and will only contain json types (str, number, array, ISO8601 datetime, etc) to make it easily serializable.
+    * In most cases you won't need to implement new managers for file io, as by design, credentials are an instance of dict and will only contain json types (str, number, array, ISO8601 datetime, etc) to make it easily serializable.
 '''
 
 __all__ = ['ApiKeyManager', 'Oauth2Manager', 'OpenIdConnectManager']
@@ -26,7 +26,6 @@ from ..models import Request
 from ..resource import GoogleAPI
 
 
-# TODO: JWT grant type
 # TODO: Device code flow
 # TODO: Service accounts integration
 
@@ -39,7 +38,8 @@ OPENID_CONFIGS_DISCOVERY_DOC_URL = 'https://accounts.google.com/.well-known/open
 OAUTH2_DISCOVERY_DOCUMENT_URL = 'https://www.googleapis.com/discovery/v1/apis/oauth2/v2/rest'
 
 # Response types
-AUTH_CODE_RESPONSE_TYPE = 'code'  # token for implicit flow and and openid for OpenID  
+AUTH_CODE_RESPONSE_TYPE = 'code'  # token for implicit flow and and openid for OpenID 
+HYBRID_RESPONSE_TYPE = 'code id_token' 
 
 # Grant types
 AUTH_CODE_GRANT_TYPE = 'authorization_code'
@@ -48,6 +48,9 @@ JWT_GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:jwt-bearer'  # https://tools.
 
 # Other types
 URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
+# _Installed Application Authorization Flow:
+#  https://developers.google.com/api-client-library/python/auth/installed-app
+OOB_REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
 
 ## The URL that provides public certificates for verifying ID tokens issued
@@ -512,7 +515,7 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
                 raise AuthError(f"Invalid audience. Got: {id_token['aud']} expected: {client_id}")
         return id_token
 
-    async def jwt_grant(self, assertion):
+    async def jwt_grant(self, assertion, token_uri):
         """
         Implements the JWT Profile for OAuth 2.0 Authorization Grants.
 
@@ -520,7 +523,11 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
 
             assertion (str):
 
-                * The value of the "client_assertion" parameter contains a single JWT. It MUST NOT contain more than one JWT.
+                * A single id_token_jwt
+
+            token_uri (str):
+
+                * Token URI of your authorization server
 
         Returns:
             
@@ -530,17 +537,27 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
             
             aiogoogle.excs.AuthError: 
 
-        .. _rfc7523 section 4: https://tools.ietf.org/html/rfc7523#section-4
+        .. _rfc7523 section 4: https://tools.ietf.org/html/rfc7523#section-4 (Section 2.1 for an example: https://tools.ietf.org/html/rfc7523#section-2.1)
         """
         data = {
             'assertion': assertion,
             'grant_type': JWT_GRANT_TYPE,
         }
-        req = Request(method='POST', url=self['token_endpoint'], data=data)
+        req = Request(method='POST', url=token_uri, data=data)
+        
     
         if self.active_session is None:
             async with self.session_factory() as sess:
                 json_res = await sess.send(req)
         else:
             json_res = await self.active_session.send(req)
-        return self._build_user_creds_from_res(json_res)
+        user_creds = self._build_user_creds_from_res(json_res)
+        if not user_creds.get('id_token'):  # Google specific (Not RFC compliant)
+            return user_creds
+        else:
+            user_creds['id_token'] = jwt.decode(user_creds['id_token_jwt'], verify=False)
+            return user_creds
+
+    async def jwt_auth(self, assertion, token_uri):
+        '''https://tools.ietf.org/html/rfc7523#section-2.2 '''
+        pass
