@@ -1,6 +1,5 @@
 import pytest
 
-import pprint
 from aiogoogle import Aiogoogle
 from aiogoogle.resource import Resource, GoogleAPI, Method
 from ..globals import SOME_APIS

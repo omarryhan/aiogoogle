@@ -147,20 +147,21 @@ class UserCreds(_dict):
     '''
     OAuth2 User Credentials Dictionary
 
-    Arguments:
+    Attributes:
 
         access_token (str): Access Token
         refresh_token (str): Refresh Token
         expires_in (int): seconds till expiry from creation
+        expires_at (str): JSON datetime ISO 8601 expiry datetime
         scopes (list): list of scopes owned by access token
         
         id_token (aiogoogle.auth.creds.IdToken): Decoded OpenID JWT
         id_token_jwt (str): Encoded OpenID JWT
         
         token_type (str): Bearer
-        token_uri (str): "https://accounts.google.com/o/oauth2/token"
-        token_info_uri (str): "https://www.googleapis.com/oauth2/v3/tokeninfo",
-        revoke_uri (str): "https://accounts.google.com/o/oauth2/revoke"
+        token_uri (str): URI where this token was issued from
+        token_info_uri (str): URI where one could get more info about this token
+        revoke_uri (str): URI where this token should be revoked
         
     '''
     def __init__(
@@ -168,6 +169,7 @@ class UserCreds(_dict):
         access_token=None,
         refresh_token=None,
         expires_in=None,
+        expires_at=None,
         scopes=None,
         
         id_token=None,
@@ -176,11 +178,12 @@ class UserCreds(_dict):
         token_type=None,
         token_uri=None,
         token_info_uri=None,
-        revoke_uri=None
+        revoke_uri=None,
     ):
         self.access_token = access_token
         self.refresh_token = refresh_token
         self.expires_in = expires_in
+        self.expires_at = expires_at
         self.scopes = scopes
         
         self.id_token = id_token

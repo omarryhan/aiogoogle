@@ -1,25 +1,31 @@
 '''
 A simple instance validation module for Discovery schemas.
-Unfrtunately, Google uses a slightly modified version of JSONschema draft3.
+Unfrtunately, Google uses a slightly modified version of JSONschema draft3 (mix of jsonschema and protobuff).
 As a result, using an external library to validate Discovery schemas will raise lots of errors.
 I tried to modify the popular: https://github.com/Julian/jsonschema to make it work with Google's version,
-but it was just too complicated for the relatively simple task on our hands
+but it was just too complicated for the relatively simple task on our hands.
+If you face any problems with aiogoogle's validation, you can always turn it off by either passing: ``method.__call__(validate=False)``
+or turning it off for the whole API by passing aiogoogle.discover(validate=False)
 
-Validate the following:
-1. DONE type (str) jsonschema types
-2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
-3. DONE minimum (str)
-4. DONE maximum (str)
-5. DONE pattern (str)
+This module misses a lot of the features provided with more advanced jsonschema validators e.g.
 
-6. required (bool)
-7. properties (dict): of nested schemas. Not to be confused with:
-  I. "item" (a regular key in objects)
-  II. "parameter" (isn't part of json schema, but part of method description)
-8. TODO: repeated: Whether this parameter may appear multiple times
-9. TODO: Support media upload/download validation without doing file io
-10.
+1. collecting all validation errors and raising them all at once
+2. descriptive errors
 '''
+
+# Validate the following:
+# 1. DONE type (str) jsonschema types
+# 2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
+# 3. DONE minimum (str)
+# 4. DONE maximum (str)
+# 5. DONE pattern (str)
+# 6. DONE required (bool)
+# 7. DONE Recursion -- properties (dict): of nested schemas. Not to be confused with:
+#   I. "item" (key name for arrays in objects)
+#   II. "parameter" (isn't part of jsonschema, but part of method description)
+# 8. TODO: repeated: Whether this parameter may appear multiple times support multidicts
+# 9. TODO: Support media upload/download validation without doing file io
+
 
 __all__ = [
     'validate',
@@ -28,9 +34,23 @@ __all__ = [
 import datetime
 import warnings
 import re
+import rfc3339
 
 from .excs import ValidationError
 
+
+#------ Helpers -------#
+
+def remove_microseconds(value):
+    # 2014-02-11T14:13:26
+    if not isinstance(value, str):
+        raise ValidationError("datetime should be a string")
+    if '.' in value:
+        print(value)
+        print(value[:-5])
+        return value[:-5] + 'Z'
+    else:
+        return value
 
 def make_validation_error(checked_value, correct_criteria):
     return f"{checked_value} isn't valid. Expected a value that meets those criteria: {correct_criteria}"
@@ -45,12 +65,12 @@ JSON_PYTHON_TYPE_MAPPING = {
     'array': (list, set, tuple),
     'boolean': (bool),
     'null': (),  # Not used
-    'any': (float, int, str, dict, list, set, tuple, bool, datetime.datetime, datetime.date)
+    'any': (float, int, str, dict, list, set, tuple, bool)
 }
 
 TYPE_FORMAT_MAPPING = {
     # Given this type, if None then don't check for additional "format" property in the schema, else, format might be any of the mapped values
-    # Those are kept here for reference. They aren't used by any validator, instead validators check directly if there's any format requirements
+    # Those are kept here for reference. They aren't used by any of the validators below. Instead validators check directly if there's any format requirements
     'any': [],
     'array': [],
     'boolean': [],
@@ -132,18 +152,20 @@ def byte_validator(value):
 def date_validator(value):
     msg = make_validation_error(value, 'JSON date value. Hint: use datetime.date.isoformat(), instead of datetime.date')
     try:
-        pvalue = datetime.date.fromisoformat(value)
-    except:
-        raise ValidationError(msg)
+        pvalue = rfc3339.parse_date(value)
+        #pvalue = datetime.date.fromisoformat(value)
+    except Exception as e:
+        raise ValidationError(str(e) + msg)
     if not isinstance(pvalue, datetime.date):
         raise ValidationError(msg)
 
 def datetime_validator(value):
-    msg = make_validation_error(value, 'JSON date value. Hint: use datetime.datetime.isoformat(), instead of datetime.datetime')
+    msg = make_validation_error(value, 'JSON datetime value. Hint: use datetime.datetime.isoformat(), instead of datetime.datetime')
     try:
-        pvalue = datetime.datetime.fromisoformat(value)
-    except:
-        raise ValidationError(msg)
+        pvalue = rfc3339.parse_datetime(value)
+        #pvalue = datetime.datetime.fromisoformat(value)
+    except Exception as e:
+        raise ValidationError(str(e), msg)
     if not isinstance(pvalue, datetime.datetime):
         raise ValidationError(msg)
 
@@ -170,6 +192,10 @@ def validate_type(instance, schema):
 
 def validate_format(instance, schema):
     if schema.get('format'):
+        # Exception for format: google-fieldmask (protobuff related.)
+        if schema['format'] == 'google-fieldmask':
+            return
+        # /Exception
         format_validator_name = schema['format']
         if format_validator_name == 'date-time':
             format_validator_name = 'datetime'
@@ -232,11 +258,14 @@ def validate(instance, schema, schemas=None):
 
     # Preliminary resolvement
     schema = resolve(schema)
-    
+
     # If object (Dict): iterate over each entry and recursively validate
-    if schema['type'] == 'object':        
+    if schema['type'] == 'object':
         # Validate instance is an object
         object_validator(instance)
+        # Objects sometimes do not have a properties item?? weird. e.g. https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest schemas['Event']['extendedProperties']
+        if 'properties' not in schema:
+            return
         # Raise warnings on passed dict keys that aren't mentioned in the schema
         for k, _ in instance.items():
             if k not in schema['properties']:
@@ -261,6 +290,6 @@ def validate(instance, schema, schemas=None):
         for item in instance:
             validate(item, schema, schemas)
 
-    # Else we reached the lowest level of a schema, validate 
+    # Else we reached the lowest level of a schema, validate
     else:
         validate_all(instance, schema)

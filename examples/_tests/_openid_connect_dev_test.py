@@ -1,7 +1,7 @@
 #!/usr/bin/python3.7
 
 import sys, os, webbrowser, yaml, json, pprint
-sys.path.append('..')
+sys.path.append('../..')
 
 from sanic import Sanic, response
 from sanic.exceptions import ServerError
@@ -11,19 +11,18 @@ from aiogoogle.excs import HTTPError
 from aiogoogle.auth.utils import create_secret
 
 try:
-    with open("keys.yaml", 'r') as stream:
+    with open("../keys.yaml", 'r') as stream:
         config = yaml.load(stream)
 except Exception as e:
     print('Rename _keys.yaml to keys.yaml')
     raise e
 
-EMAIL = config.get('email')
+EMAIL = config['user_creds']['email']
 CLIENT_CREDS = {
-    'client_id': config['client_id'],
-    'client_secret': config['client_secret'],
-    'scopes': ['openid', 'email', 'profile'] + config['client_scope'],
+    'client_id': config['client_creds']['client_id'],
+    'client_secret': config['client_creds']['client_secret'],
+    'scopes': config['client_creds']['scopes'],
     'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
-    #'redirect_uri': OOB_REDIRECT_URI
 }
 state = create_secret()  # Shouldn't be a global hardcoded variable.
 nonce = create_secret()  # Shouldn't be a global hardcoded variable.

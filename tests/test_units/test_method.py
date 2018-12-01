@@ -1,6 +1,5 @@
 import pytest
 
-import pprint
 from aiogoogle import Aiogoogle
 from aiogoogle.resource import Resource, GoogleAPI, Method, STACK_QUERY_PARAMETER_DEFAULT_VALUE, STACK_QUERY_PARAMETERS
 from ..globals import SOME_APIS

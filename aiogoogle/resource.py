@@ -4,6 +4,7 @@ __all__ = [
     'Method'
 ]
 
+import re
 import warnings
 from urllib.parse import urlencode
 from functools import wraps
@@ -27,25 +28,6 @@ STACK_QUERY_PARAMETERS = frozenset(['trace', 'pp', 'strict'])
 STACK_QUERY_PARAMETER_DEFAULT_VALUE = {
     'type': 'string',
     'location': 'query',
-}
-
-# TODO: Add default media type
-BODY_PARAMETER_DEFAULT_VALUE = {
-    'description': 'The request body.',
-    'type': 'object',
-    'required': True,
-}
-MEDIA_BODY_PARAMETER_DEFAULT_VALUE = {
-    'description': ('The filename of the media request body, or an instance '
-                    'of a MediaUpload object.'),
-    'type': 'string',
-    'required': False,
-}
-MEDIA_MIME_TYPE_PARAMETER_DEFAULT_VALUE = {
-    'description': ('The MIME type of the media request body, or an instance '
-                    'of a MediaUpload object.'),
-    'type': 'string',
-    'required': False,
 }
 
 
@@ -385,7 +367,7 @@ class Method:
     def _build_url(self, uri_params, validate):
         if self.path_parameters:
             # sort path params as sepcified in method_specs.parameterOrder
-            sorted_required_path_params = {}  # Dict order is guaranteed (by insertion) as of Python 3.6+
+            sorted_required_path_params = {}  # Dict order is guaranteed (by insertion) as of Python 3.6
             for param_name in self['parameterOrder']:
                 try:
                     sorted_required_path_params[param_name] = uri_params.pop(param_name)
@@ -397,13 +379,17 @@ class Method:
                 self._validate_url(sorted_required_path_params)
 
         # Build full path
-            return self._base_url + self['path'].format(**sorted_required_path_params)
+            # replace named placeholders with empty ones. e.g. {first_param} --> {}
+            # Why? Because some endpoints have different names in their url path placeholders than in their parameters
+            # e.g. path: {"v1/{+resourceName}/connections"}. e.g. param name: resourceName NOT +resourceName
+            self._method_specs['path'] = re.sub(r'\{(.*?)\}', r'{}', self._method_specs['path'])
+            return self._base_url + self['path'].format(*list(sorted_required_path_params.values()))
         else:
             return self._base_url + self['path']
 
     def _validate_url(self, sorted_required_path_params):
         for path_param_name, path_param_info in sorted_required_path_params.items():
-            self._validate(path_param_info, self.parameters[path_param_name])  # instance, schema
+            self._validate(instance=path_param_info, schema=self.parameters[path_param_name])
 
     def _validate_body(self, req):
         request_schema = self._method_specs.get('request')
@@ -439,7 +425,7 @@ class Method:
 
     def _validate_response(self, resp, validate):
         # TODO: validate response
-        if validate:
+        if validate is True and resp is not None:
             response_schema = self._method_specs.get('response')
             if response_schema is not None:
                 if '$ref' in response_schema:

@@ -4,7 +4,6 @@ __all__ = [
 
 
 import json
-from pprint import pprint
 from urllib.parse import urlencode
 
 from .utils import _dict
@@ -60,7 +59,7 @@ class Aiogoogle:
 
     #-------- Discovery Service's only 2 methods ---------#
 
-    async def list_api(self, name, preffered=None, fields=None):
+    async def list_api(self, name, preferred=None, fields=None):
         '''
         https://developers.google.com/discovery/v1/reference/apis/list
 
@@ -103,7 +102,7 @@ class Aiogoogle:
 
             name (str): Only include APIs with the given name.
 
-            preffered (bool): Return only the preferred version of an API.  "false" by default.
+            preferred (bool): Return only the preferred version of an API.  "false" by default.
 
             fields (str): Selector specifying which fields to include in a partial response.
 
@@ -116,7 +115,7 @@ class Aiogoogle:
             aiogoogle.excs.HTTPError
         '''
         
-        request = self.discovery_service.apis.list(name=name, preffered=preffered, fields=fields, validate=False)
+        request = self.discovery_service.apis.list(name=name, preferred=preferred, fields=fields)
         if self.active_session is None:
             async with self:
                 res = await self.as_anon(request)
@@ -134,7 +133,7 @@ class Aiogoogle:
             
             When you leave the API version to None, Aiogoogle uses the ``list_api`` method to search for the best fit version of the given API name.
             
-            The problem is that Google's discovery service sometimes does not return the latest version of a given API. Rather, returns the "preffered" one.
+            The reason behind this recommendation is that Google's discovery service sometimes does not return the latest version of a given API. Rather, returns the "preferred" one. Your pick.
         
         Arguments:
 
@@ -156,7 +155,7 @@ class Aiogoogle:
 
         if api_version is None:
             # Search for name in self.list_api and return best match
-            discovery_list = await self.list_api(api_name, preffered=True)
+            discovery_list = await self.list_api(api_name, preferred=True)
 
             if discovery_list['items']:
                 api_name = discovery_list['items'][0]['name']
@@ -199,7 +198,7 @@ class Aiogoogle:
         '''
         # Refresh credentials
         if self.oauth2.is_expired(self.user_creds) is True:
-            self.user_creds = self.oauth2.refresh(
+            self.user_creds = await self.oauth2.refresh(
                 self.user_creds,
                 client_creds=self.client_creds
             )

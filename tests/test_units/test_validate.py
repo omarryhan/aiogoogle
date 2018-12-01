@@ -1,4 +1,3 @@
-import pprint
 import json
 import os
 
@@ -34,7 +33,6 @@ def test_validates_url_query_params(create_api):
         youtube.videos.list(part=('snippet'), validate=True)
 
 def test_validates_body_data(create_api):
-    # Also tests ref resolution as the Video schmea has nested $refs that need to be resolved
     youtube = create_api('youtube', 'v3')
     youtube.videos.insert(
         autoLevels=True,
@@ -52,7 +50,6 @@ def test_validates_body_data(create_api):
         )
 
 def test_validates_body_json(create_api):
-    # Also tests ref resolution as the Video schmea has nested $refs that need to be resolved
     youtube = create_api('youtube', 'v3')
     youtube.videos.insert(
         autoLevels=True,
@@ -290,3 +287,107 @@ def test_validates_body_json_20(create_api):
                     ]
                 }
             )
+
+def test_validates_body_json_21(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    calendar.calendarList.list(
+        json={
+            'etag': 'asd',
+            'items':[
+                {
+                    'accessRole': 'asdasd',
+                    'defaultReminders': [
+                        {
+                            'method': 'asd',
+                            'minutes': 1
+                        },
+                        {
+                            'method': 'asd',
+                            'minutes': 1
+                        },
+                    ]
+                },
+            ]
+        }
+    )
+
+def test_validates_body_json_22(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.raises(ValidationError):
+        calendar.calendarList.list(
+            json={
+                'etag': 'asd',
+                'items':[
+                    {
+                        'accessRole': 'asdasd',
+                        'defaultReminders': [
+                            {
+                                'method': 'asd',
+                                'minutes': '123'
+                            },
+                            {
+                                'method': 'asd',
+                                'minutes': 1
+                            },
+                        ]
+                    },
+                ]
+            }
+        )
+
+def test_validates_body_json_23(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.raises(ValidationError):
+        calendar.calendarList.list(
+            json={
+                'etag': 'asd',
+                'items':[
+                    {
+                        'accessRole': 'asdasd',
+                        'defaultReminders': [
+                            {
+                                'method': 'asd',
+                                'minutes': 1
+                            },
+                            {
+                                'method': 'asd',
+                                'minutes': 1
+                            },
+                            'asd'
+                        ]
+                    },
+                ]
+            }
+        )
+
+def test_validates_body_json_24(create_api):
+    calendar = create_api('calendar', 'v3')
+    calendar.calendarList.list(validate=True)
+    calendar.calendarList.list._method_specs['request'] = calendar.calendarList.list._method_specs['response']  # Testing arrays and objects
+    with pytest.raises(ValidationError):
+        calendar.calendarList.list(
+            json={
+                'etag': 'asd',
+                'items':[
+                    {
+                        'accessRole': 3,
+                        'defaultReminders': [
+                            {
+                                'method': 'asd',
+                                'minutes': 1
+                            },
+                            {
+                                'method': 'asd',
+                                'minutes': 1
+                            },
+                        ]
+                    },
+                ]
+            }
+        )

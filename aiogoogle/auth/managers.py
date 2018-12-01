@@ -94,7 +94,7 @@ class ApiKeyManager(AbstractAPIKeyManager):
 
 class Oauth2Manager(AbstractOAuth2Manager):
     def __init__(self, session_factory, verify=True):
-        self.oauth2_api = GoogleAPI(OAUTH2_V2_DISCVOCERY_DOC, validate=True)
+        self.oauth2_api = GoogleAPI(OAUTH2_V2_DISCVOCERY_DOC)
         self.session_factory = session_factory
         self.active_session = None
         self.verify = verify
@@ -115,7 +115,6 @@ class Oauth2Manager(AbstractOAuth2Manager):
         '''
         req = self.oauth2_api.tokeninfo(
             access_token=user_creds.get('access_token'),
-            validate=False
         )
         if self.active_session is None:
             async with self.session_factory() as sess:
@@ -142,7 +141,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
 
             aiogoogle.excs.HTTPError:
          '''
-        req = self.oauth2_api.userinfo.v2.me.get(validate=False)
+        req = self.oauth2_api.userinfo.v2.me.get()
         authorized_req = self.authorize(req, user_creds)
         if self.active_session is None:
             async with self.session_factory() as sess:
@@ -189,10 +188,10 @@ class Oauth2Manager(AbstractOAuth2Manager):
         else:
             self.openid_configs = await self.active_session.send(req)
 
-    def authorize(self, request: Request, creds: dict) -> Request:
+    def authorize(self, request: Request, user_creds: dict) -> Request:
         if request.headers is None:
             request.headers = {}
-        request.headers['Authorization'] = f'Bearer {creds["access_token"]}'
+        request.headers['Authorization'] = f'Bearer {user_creds["access_token"]}'
         return request
 
     def is_ready(self, client_creds):
@@ -215,7 +214,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
             return True
         return False
 
-    def authorization_url(self, client_creds, state=None, access_type=None, include_granted_scopes=None, login_hint=None, prompt=None, response_type=AUTH_CODE_GRANT_TYPE) -> (str):
+    def authorization_url(self, client_creds, state=None, access_type=None, include_granted_scopes=None, login_hint=None, prompt=None, response_type=AUTH_CODE_RESPONSE_TYPE) -> (str):
         scopes = ' '.join(client_creds['scopes'])
         uri = self['authorization_endpoint'] + f'?redirect_uri={client_creds["redirect_uri"]}&scope={scopes}&'
         for param_name, param in {
@@ -403,7 +402,7 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
                     "hd": string
                 }
         '''
-        req = self.oauth2_api.userinfo.get(validate=False)
+        req = self.oauth2_api.userinfo.get()
         authorized_req = self.authorize(req, user_creds)
         if self.active_session is None:
             async with self.session_factory() as sess:
@@ -425,7 +424,6 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
         '''
         req = self.oauth2_api.tokeninfo(
             id_token=user_creds.get('id_token_jwt'),
-            validate=False
         )
         if self.active_session is None:
             async with self.session_factory() as sess:

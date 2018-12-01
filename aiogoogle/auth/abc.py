@@ -46,7 +46,7 @@ class AbstractOAuth2Manager(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def authorize(self, request, creds) -> Request:
+    def authorize(self, request, user_creds) -> Request:
         '''
         Adds OAuth2 authorization headers to requests given user creds
 
@@ -56,7 +56,7 @@ class AbstractOAuth2Manager(ABC):
 
                 Request to authorize
 
-            creds (aiogoogle.auth.creds.UserCreds):
+            user_creds (aiogoogle.auth.creds.UserCreds):
 
                 user_creds to refresh with
 

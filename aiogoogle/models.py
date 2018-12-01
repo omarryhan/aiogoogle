@@ -1,6 +1,7 @@
 from urllib.parse import urlparse, parse_qsl, urlunparse
 from urllib.parse import urlencode
 from .excs import HTTPError, AuthError
+import pprint
 
 
 class ResumableUpload:
@@ -113,11 +114,16 @@ class Request:
         if not self.url:
             raise TypeError('no url to add query to')
 
-        url = list(urlparse(self.url))
-        url_query = dict(parse_qsl(url[4]))
-        url_query.update(query)
-        url[4] = url_query
-        self.url = urlunparse(url)
+        url = self.url
+        if '?' not in url:
+            if url.endswith('/'):
+                url = url[:-1]
+            url += '?'
+        else:
+            url += '&'
+        query = urlencode(query)
+        url += query
+        self.url = url
 
     @classmethod
     def batch_requests(cls, *requests):
@@ -207,15 +213,21 @@ class Response:
         res_token = self.json.get(res_token_name, None)
         if not res_token:
             return None
-        request = Request.from_response(self)
+        #request = Request.from_response(self)
+        request = self.req
         if json_req:
             request.json[req_token_name] = res_token
         else:
             request._add_query_param({req_token_name : res_token})
         return request
 
+    @property
+    def error_msg(self):
+        return pprint.pformat(self.json['error']) if self.json.get('error') else None
+
     def raise_for_status(self):
         if self.status_code >= 400:
+            self.reason = '\n\n' + self.reason + '\n\nContent:\n' + self.error_msg if self.error_msg else self.reason
             if self.status_code == 401:
                 raise AuthError(msg=self.reason, req=self.req, res=self)
             else:
