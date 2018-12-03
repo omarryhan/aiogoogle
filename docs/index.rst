@@ -13,9 +13,9 @@ Async Google OAuth2 Client +
 Async Google OpenID Connect (Social Sign-in) Client
 
 Discovery Service?
-==================
+===================
 
-Most of Google's public APIs are served by a single API called the Discovery Service. e.g. (Youtube, Gmail, Google Analytics, Calendar etc.)
+Most of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
 
 Google's Discovery Serivce provides machine readable specifications known as discovery documents. `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
 
@@ -27,8 +27,8 @@ For a list of supported APIs, visit: `Google's APIs Explorer <https://developers
 Quickstart
 ============
 
-List files on Google Drive
-----------------------------
+List Files on Google Drive
+---------------------------
 
 .. code-block:: python3
 
@@ -66,7 +66,7 @@ Pagination
 
     asyncio.run(list_files())
 
-Download a file from Google Drive
+Download a File from Google Drive
 ----------------------------------
 
 .. code-block:: python3
@@ -79,7 +79,7 @@ Download a file from Google Drive
             )
     asyncio.run(download_file('/home/user/Desktop/my_file.zip'))
 
-Upload a file to Google Drive
+Upload a File to Google Drive
 --------------------------------
 
 .. code-block:: python3
@@ -92,7 +92,7 @@ Upload a file to Google Drive
             )
     asyncio.run(upload_file(path))
 
-List your contacts
+List Your Contacts
 --------------------
 
 .. code-block:: python3
@@ -118,6 +118,22 @@ List your contacts
                 print(connection['phoneNumbers'][0][cannonicalForm'])
 
     asyncio.run(list_contacts())
+
+List Calendar Events
+-----------------------
+
+.. code-block:: python3
+
+    async def list_events():
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
+            req = calendar_v3.events.list(calendarId='primary')
+            res = await aiogoogle.as_user(
+                req
+            )
+            pprint.pprint(res)
+
+Check out https://github.com/omarryhan/aiogoogle/tree/master/examples for more.
 
 Library Setup
 =============
@@ -517,7 +533,7 @@ Most of Google's APIs that are supported by the discovery service support these 
 OAuth2 Primer
 --------------
 
-Oauth2 serves as an authentication and authorization framework. It supports four main flows:
+Oauth2 serves as an authorization framework. It supports four main flows:
 
 1. **Authorization code flow**:
     
@@ -543,7 +559,7 @@ Since Aiogoogle only supports Authorization Code Flow, let's get a little in to 
 Authorization Code Flow
 ------------------------
 
-There three main parties are involved in this flow:
+There are three main parties are involved in this flow:
 
 1. **User**: 
     - represented as ``aiogoogle.user_creds``
@@ -551,9 +567,9 @@ There three main parties are involved in this flow:
     - represented as ``aiogoogle.client_creds``
     - 3rd party
 3. **Resource Server**:
-    - The service aiogoogle acts as a client to. e.g. Google Analytics, Youtube, etc. 
+    - The service that aiogoogle acts as a client to. e.g. Google Analytics, Youtube, etc. 
 
-Here's a nice ASCII chart as shown in `RFC6749 section 4.1 Figure 3 <https://tools.ietf.org/html/rfc6749#section-4.1.1>`_.::
+Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figure 3 <https://tools.ietf.org/html/rfc6749#section-4.1.1>`_.::
 
     +----------+
     | Resource |
@@ -599,7 +615,7 @@ Install sanic
 
     The error and return messages shown below are very verbose and aren't fit for production.
 
-    And obviously, if you're performing OAuth2 via Authorization Code Flow, then you shouldn't hand the user their tokens 
+    If you're performing OAuth2 via Authorization Code Flow, you shouldn't hand the user their tokens.
 
 .. hint:: Code reads from top to bottom
 
@@ -608,7 +624,6 @@ Install sanic
 .. code-block:: python3
 
     import sys, os, webbrowser, yaml, json
-    sys.path.append('../..')
 
     from sanic import Sanic, response
     from sanic.exceptions import ServerError
@@ -711,14 +726,13 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
 
     The error and return messages shown below are very verbose and aren't fit for production.
 
-    And obviously, if you're performing OAuth2 via Authorization Code Flow, then you shouldn't hand the user their tokens 
+    If you're performing OAuth2 via Authorization Code Flow, you shouldn't hand the user their tokens.
 
 .. code-block:: python3
 
     #!/usr/bin/python3.7
 
     import sys, os, webbrowser, yaml, json, pprint
-    sys.path.append('../..')
 
     from sanic import Sanic, response
     from sanic.exceptions import ServerError
@@ -726,7 +740,6 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
     from aiogoogle import Aiogoogle
     from aiogoogle.excs import HTTPError
     from aiogoogle.auth.utils import create_secret
-    from aiogoogle.auth.managers import OOB_REDIRECT_URI
 
     try:
         with open("../keys.yaml", 'r') as stream:
@@ -742,8 +755,10 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
         'scopes': config['client_creds']['scopes'],
         'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
     }
-    state = create_secret()  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once 
-    nonce = create_secret()  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once
+    # Shouldn't be a global or a hardcoded variable.
+    # Instead, should be tied to a session or a user and shouldn't be used more than once
+    state = create_secret() 
+    nonce = create_secret()
 
 
     LOCAL_ADDRESS = 'localhost'
@@ -762,7 +777,13 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
     def authorize(request):
         if aiogoogle.openid_connect.is_ready(CLIENT_CREDS):
             uri = aiogoogle.openid_connect.authorization_url(
-                client_creds=CLIENT_CREDS, state=state, nonce=nonce, access_type='offline', include_granted_scopes=True, login_hint=EMAIL, prompt='select_account'
+                client_creds=CLIENT_CREDS,
+                state=state,
+                nonce=nonce,
+                access_type='offline',
+                include_granted_scopes=True,
+                login_hint=EMAIL,
+                prompt='select_account'
             )
             # Step A
             return response.redirect(uri)

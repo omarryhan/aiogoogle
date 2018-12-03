@@ -18,6 +18,15 @@ from .data import DISCOVERY_SERVICE_V1_DISCOVERY_DOC
 
 class Aiogoogle:
     '''
+    Main entry point for Aiogoogle.
+
+    This class acts as tiny wrapper around:
+
+        1. Discovery Service v1 API
+        2. Aiogoogle's OAuth2 manager
+        3. Aiogoogle's API key manager
+        4. Aiogoogle's OpenID Connect manager
+
     Arguments:
 
         session_factory (aiogoogle.sessions.abc.AbstractSession): AbstractSession Implementation. Defaults to ``aiogoogle.sessions.aiohttp_session.AiohttpSession``
@@ -240,7 +249,7 @@ class Aiogoogle:
 
     async def as_anon(self, *requests, timeout=None, full_res=False):
         ''' 
-        Sends an unauthorized request
+        Sends unauthorized requests
         
         Arguments:
 

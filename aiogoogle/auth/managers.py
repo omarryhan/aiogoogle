@@ -5,7 +5,7 @@
 
     * If you want auth managers with file io capabilities, then you'll have to implement AbstractAuthManager's interface or inherent from any of this module's managers.
     
-    * In most cases you won't need to implement new managers for file io, as by design, credentials are an instance of dict and will only contain json types (str, number, array, ISO8601 datetime, etc) to make it easily serializable.
+    * In most cases you won't need to implement new managers for file io, as by design, credentials are an instance of dict and will only contain json types (str, number, array, JSONSCHEMA datetime and ISO8601 datetime, etc) to make it easily serializable.
 '''
 
 __all__ = ['ApiKeyManager', 'Oauth2Manager', 'OpenIdConnectManager']

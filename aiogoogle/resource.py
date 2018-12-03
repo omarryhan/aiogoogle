@@ -242,7 +242,7 @@ class Method:
         return validate__(instance, schema, self._schemas)
 
     @staticmethod
-    def rm_none_params(uri_params):
+    def _rm_none_params(uri_params):
         for k,v in list(uri_params.items()):
             if v is None:
                 del uri_params[k]
@@ -300,7 +300,7 @@ class Method:
         #
 
         # Remove params that are None
-        uri_params = self.rm_none_params(uri_params)
+        uri_params = self._rm_none_params(uri_params)
 
         # Assert timeout is int
         if timeout is not None:
