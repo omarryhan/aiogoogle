@@ -27,7 +27,7 @@ class AiohttpSession(ClientSession, AbstractSession):
             del kwargs['timeout']
         super().__init__(*args, **kwargs)
 
-    async def send(self, *requests, timeout=None, full_resp=False, raise_for_status=True, session_factory=None):
+    async def send(self, *requests, timeout=None, full_res=False, raise_for_status=True, session_factory=None):
         def call_callback(request, response):
             if request.callback is not None:
                 if response.json:
@@ -149,7 +149,7 @@ class AiohttpSession(ClientSession, AbstractSession):
         if session_factory is None:
             session_factory = self.__class__
 
-        if full_resp is True:
+        if full_res is True:
             tasks = [asyncio.create_task(get_response(request)) for request in requests]
         else:
             tasks = [asyncio.create_task(get_content(request)) for request in requests]

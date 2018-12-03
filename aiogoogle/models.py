@@ -236,7 +236,7 @@ class Response:
             next_req = prev_res.next_page(req_token_name=req_token_name, res_token_name=res_token_name, json_req=json_req)
             if next_req is not None:
                 async with session_factory() as sess:
-                    prev_res = await sess.send(next_req, full_resp=True)
+                    prev_res = await sess.send(next_req, full_res=True)
             else:
                 prev_res = None
 

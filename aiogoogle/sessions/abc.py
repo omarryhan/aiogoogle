@@ -25,7 +25,7 @@ class AbstractSession(ABC):
         return super(AbstractSession, cls).__new__(cls)
 
     @abstractmethod
-    async def send(self, *requests, timeout=None,  full_resp=False):
+    async def send(self, *requests, timeout=None,  full_res=False):
         '''
         Takes requests, sends them, returns contents of responses or full http responses.
 
@@ -43,7 +43,7 @@ class AbstractSession(ABC):
 
                 Total timeout for *requests
 
-            full_resp (bool):
+            full_res (bool):
 
                 Return full HTTP response with headers, status code
 

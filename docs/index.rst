@@ -6,7 +6,11 @@
 Aiogoogle
 ==========
 
-An **Asynchronous** Discovery Service Client
+An **Asynchronous** Discovery Service Client + 
+
+Async Google OAuth2 Client + 
+
+Async Google OpenID Connect (Social Sign-in) Client
 
 Discovery Service?
 ==================
@@ -15,10 +19,105 @@ Most of Google's public APIs are served by a single API called the Discovery Ser
 
 Google's Discovery Serivce provides machine readable specifications known as discovery documents. `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
 
-In it's essence, Aiogoogle is a feature-rich yet easy to use Pythonic wrapper for discovery documents.
+In essence, Aiogoogle is a feature-rich yet easy to use Pythonic wrapper for discovery documents.
 
 For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
 
+
+Quickstart
+============
+
+List files on Google Drive
+----------------------------
+
+.. code-block:: python3
+
+    import asyncio
+    from aiogoogle import Aiogoogle
+
+    user_creds = {'access_token': 'an_access_token'}
+
+    async def list_files():
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            json_res = await aiogoogle.as_user(
+                drive_v3.files.list(),
+            )
+            for file in json_res['files']:
+                print(file['name'])
+
+    asyncio.run(list_files())
+
+Pagination
+------------
+
+.. code-block:: python3
+
+    async def list_files():
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            full_res = await aiogoogle.as_user(
+                drive_v3.files.list(),
+                full_res=True
+            )
+        async for page in full_res:
+            for file in page['files']:
+                print(file['name'])
+
+    asyncio.run(list_files())
+
+Download a file from Google Drive
+----------------------------------
+
+.. code-block:: python3
+
+    async def download_file(path):
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            await aiogoogle.as_user(
+                drive_v3.files.get(fileId=file_id, download_file=path, alt='media'),
+            )
+    asyncio.run(download_file('/home/user/Desktop/my_file.zip'))
+
+Upload a file to Google Drive
+--------------------------------
+
+.. code-block:: python3
+
+    async def upload_file(path):
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            await aiogoogle.as_user(
+                drive_v3.files.create(upload_file=path)
+            )
+    asyncio.run(upload_file(path))
+
+List your contacts
+--------------------
+
+.. code-block:: python3
+
+    import asyncio
+
+    async def list_contacts():
+        aiogoogle = Aiogoogle(user_creds=user_creds)
+        people_v1 = await aiogoogle.discover('people', 'v1')
+        async with aiogoogle:
+            contacts_book = await aiogoogle.as_user(
+                people_v1.people.connections.list(
+                    resourceName='people/me',
+                    personFields='names,phoneNumbers'
+                ),
+                full_res=True
+            )
+        async for page in contacts_book:
+            for connection in page['connections']:
+                # print name
+                print(connection['names'][0]['displayName']
+                # print phone number
+                print(connection['phoneNumbers'][0][cannonicalForm'])
+
+    asyncio.run(list_contacts())
 
 Library Setup
 =============
@@ -45,7 +144,7 @@ Now that *Aiogoogle* and your Google account are set up, let's start!
 Assuming you chose the Urlshortener-v1 API:
 
 Create a Google API instance
---------------------------------
+-------------------------------
 
 .. code-block:: python3
 
@@ -389,6 +488,10 @@ Most of Google's APIs that are supported by the discovery service support these 
 
     Should be used whenever you want to access personal information.
 
+    Also, Aiogoogle supports Google OpenID connect.
+    
+    OpenID connect is a tiny layer built on top of OAuth2 to make it natively support Authentication, and not just Authorization. (The magic behind Signin with Google)
+
 2. **API key**
 
     Should be used when accessing Public information.
@@ -479,8 +582,10 @@ Here's a nice ASCII chart as shown in `RFC6749 section 4.1 Figure 3 <https://too
     +---------+       (w/ Optional Refresh Token)
 
 
-**Example with Sanic (An asynchronous web framework)**
+**OAuth2 Example**
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py
 
 Install sanic
 
@@ -494,26 +599,42 @@ Install sanic
 
     The error and return messages shown below are very verbose and aren't fit for production.
 
+    And obviously, if you're performing OAuth2 via Authorization Code Flow, then you shouldn't hand the user their tokens 
+
 .. hint:: Code reads from top to bottom
 
 ./app.py
 
 .. code-block:: python3
 
-    import webbrowser
-    
+    import sys, os, webbrowser, yaml, json
+    sys.path.append('../..')
+
     from sanic import Sanic, response
     from sanic.exceptions import ServerError
-    from aiogoogle import Aiogoogle, GoogleAPI, AuthError, StateError
 
+    from aiogoogle import Aiogoogle
+    from aiogoogle.auth.utils import create_secret
+
+    try:
+        with open("../keys.yaml", 'r') as stream:
+            config = yaml.load(stream)
+    except Exception as e:
+        print('Rename _keys.yaml to keys.yaml')
+        raise e
+
+    EMAIL = config['user_creds']['email']
     CLIENT_CREDS = {
-        'client_id': '...',
-        'client_secret': '...',
-        'scopes': ['...', '...'],
+        'client_id': config['client_creds']['client_id'],
+        'client_secret': config['client_creds']['client_secret'],
+        'scopes': config['client_creds']['scopes'],
+        'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
     }
+    state = create_secret()  # Shouldn't be a global hardcoded variable.
+
+
     LOCAL_ADDRESS = 'localhost'
     LOCAL_PORT = '5000'
-    LOCAL_FULL_ADDRESS = local_address + ':' + str(local_port)
 
     app = Sanic(__name__)
     aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
@@ -526,36 +647,19 @@ Install sanic
 
     @app.route('/authorize')
     def authorize(request):
-        if aiogoogle.oauth2_manager.is_oauth_ready(client_creds):
-
-            # Create redirect uri + user_creds dict with a CSRF token
-            uri, user_creds = aiogoogle.oauth2_manager.authorization_url(
-                client_creds
-            )
-
-            # Save user creds to the current_user for
-            # when they callback with a grant
-            current_user.aiogoogle_creds = user_creds
-
-            # Step A
-            return response.redirect(uri)
-        
-        else:
-
-            raise ServerError(
-                'Client doesn't have enough info for Oauth2'
-            )
-
+        uri = aiogoogle.oauth2.authorization_url(
+            client_creds=CLIENT_CREDS, state=state, access_type='offline', include_granted_scopes=True, login_hint=EMAIL, prompt='select_account'
+        )
+        # Step A
+        return response.redirect(uri)
     #----------------------------------------------#
     #                                              #
     # **Step B (Check OAuth2 figure above)**       #
     #                                              #
     #----------------------------------------------#
-    #                                              #
     # NOTE:                                        #
-    #     current_user should be authorizing       #
-    #     your application right now.              #
-    #                                              #
+    #  you should now be authorizing your app @    #
+    #   https://accounts.google.com/o/oauth2/      #
     #----------------------------------------------#
 
     #----------------------------------------------#
@@ -564,71 +668,166 @@ Install sanic
     #                                              #
     #----------------------------------------------#
 
-    # Step C  
+    # Step C
     # Google should redirect current_user to
     # this endpoint with a grant code
-    @app.route('/callback/yourapp')
+    @app.route('/callback/aiogoogle')
     async def callback(request):
-
-        # If error, return description
         if request.args.get('error'):
-            return response.text('whoops!', 401)
-
-        # If a grant code was returned
+            error = {
+                'error': request.args.get('error'),
+                'error_description': request.args.get('error_description')
+            }
+            return response.json(error)
         elif request.args.get('code'):
-            grant = request.args.get('code')
-            state = request.args.get('state')
-            user_creds = current_user.aiogoogle_creds
-
-            # Fetch the rest of user_token info
-            # (access token, refresh token, expiry etc..)
-            # Step D & E (D sends grant code, E receives token info)
-            try:
-                full_user_creds = await aiogoogle.build_user_creds(
-                    client_creds,
-                    user_creds
-                )
-
-            # If states do not match, this error will be thrown
-            except StateError:
-                return response.text('NO!')
-
-            # Shouldn't really happen since we actually
-            # got a grant code back and it has been 
-            # verified that it's our current_user who spawned it.
-            # But hey, gotta handle them pesky errors!
-            except AuthError:
-                return response.text(
-                    'Something went terribly wrong', 500
-                )
-            
-            # If no errors were raised
-            else:
-                current_user.aiogoogle_creds = full_user_creds
-                
-                # <save_those_creds_to_db_or_file_of_choice>
-                #
-                # WARNING: Do not return an access token to the user, 
-                #          it is to be solely used by the client.
-                #
-                # </save_those_creds_to_db_or_file_of_choice>
-                
-                return response.text('OK')
-
+            returned_state = request.args['state'][0]
+            # Check state
+            if returned_state != state:
+                raise ServerError('NO')
+            # Step D & E (D send grant code, E receive token info)
+            full_user_creds = await aiogoogle.oauth2.build_user_creds(
+                grant = request.args.get('code'),
+                client_creds = CLIENT_CREDS
+            )
+            return response.json(full_user_creds)
         else:
             # Should either receive a code or an error
-            return response.text('Something's wrong with your callback')
+            return response.text("Something's probably wrong with your callback")
 
     if __name__ == '__main__':
-        webbrowser.open_new_tab(
-            'http://' + local_full_address + '/authorize'
+        webbrowser.open(
+            'http://' + LOCAL_ADDRESS + ':' + LOCAL_PORT + '/authorize'
         )
-        app.run(host=LOCAL_ADDRESS, port=str(LOCAL_PORT), debug=True)
+        app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
+
+**OpenID Connect Example**
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/openid_connect.py
+
+.. warning::
+
+    Do not copy and paste the following snippet as is.
+
+    The error and return messages shown below are very verbose and aren't fit for production.
+
+    And obviously, if you're performing OAuth2 via Authorization Code Flow, then you shouldn't hand the user their tokens 
+
+.. code-block:: python3
+
+    #!/usr/bin/python3.7
+
+    import sys, os, webbrowser, yaml, json, pprint
+    sys.path.append('../..')
+
+    from sanic import Sanic, response
+    from sanic.exceptions import ServerError
+
+    from aiogoogle import Aiogoogle
+    from aiogoogle.excs import HTTPError
+    from aiogoogle.auth.utils import create_secret
+    from aiogoogle.auth.managers import OOB_REDIRECT_URI
+
+    try:
+        with open("../keys.yaml", 'r') as stream:
+            config = yaml.load(stream)
+    except Exception as e:
+        print('Rename _keys.yaml to keys.yaml')
+        raise e
+
+    EMAIL = config['user_creds']['email']
+    CLIENT_CREDS = {
+        'client_id': config['client_creds']['client_id'],
+        'client_secret': config['client_creds']['client_secret'],
+        'scopes': config['client_creds']['scopes'],
+        'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
+    }
+    state = create_secret()  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once 
+    nonce = create_secret()  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once
+
+
+    LOCAL_ADDRESS = 'localhost'
+    LOCAL_PORT = '5000'
+
+    app = Sanic(__name__)
+    aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
+
+    #----------------------------------------#
+    #                                        #
+    # **Step A (Check OAuth2 figure above)** #
+    #                                        #
+    #----------------------------------------#
+
+    @app.route('/authorize')
+    def authorize(request):
+        if aiogoogle.openid_connect.is_ready(CLIENT_CREDS):
+            uri = aiogoogle.openid_connect.authorization_url(
+                client_creds=CLIENT_CREDS, state=state, nonce=nonce, access_type='offline', include_granted_scopes=True, login_hint=EMAIL, prompt='select_account'
+            )
+            # Step A
+            return response.redirect(uri)
+        else:
+            raise ServerError(
+                "Client doesn't have enough info for Oauth2"
+            )
+
+    #----------------------------------------------#
+    #                                              #
+    # **Step B (Check OAuth2 figure above)**       #
+    #                                              #
+    #----------------------------------------------#
+    # NOTE:                                        #
+    #  you should now be authorizing your app @    #
+    #   https://accounts.google.com/o/oauth2/      #
+    #----------------------------------------------#
+
+    #----------------------------------------------#
+    #                                              #
+    # **Step C, D & E (Check OAuth2 figure above)**#
+    #                                              #
+    #----------------------------------------------#
+
+    # Step C
+    # Google should redirect current_user to
+    # this endpoint with a grant code
+    @app.route('/callback/aiogoogle')
+    async def callback(request):
+        if request.args.get('error'):
+            error = {
+                'error': request.args.get('error'),
+                'error_description': request.args.get('error_description')
+            }
+            return response.json(error)
+        elif request.args.get('code'):
+            returned_state = request.args['state'][0]
+            # Check state
+            if returned_state != state:
+                raise ServerError('NO')
+            # Step D & E (D send grant code, E receive token info)
+            full_user_creds = await aiogoogle.openid_connect.build_user_creds(
+                grant=request.args.get('code'),
+                client_creds=CLIENT_CREDS,
+                nonce=nonce,
+                verify=False
+            )
+            full_user_info = await aiogoogle.openid_connect.get_user_info(full_user_creds)
+            return response.text(
+                f"full_user_creds: {pprint.pformat(full_user_creds)}\n\nfull_user_info: {pprint.pformat(full_user_info)}"
+            )
+        else:
+            # Should either receive a code or an error
+            return response.text("Something's probably wrong with your callback")
+
+    if __name__ == '__main__':
+        webbrowser.open(
+            'http://' + LOCAL_ADDRESS + ':' + LOCAL_PORT + '/authorize'
+        )
+        app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 
 Design
 =======
 
-Aiogoogle does not and will not enforce the use of any asynchronous framework e.g. Asyncio, Curio or Trio. As a result, modules that handle *io* are easily pluggable.
+Aiogoogle does not and will not enforce the use of any async/await framework e.g. Asyncio, Curio or Trio. As a result, modules that handle *io* are easily pluggable.
 
 If you want to use Curio instead of Asyncio:
 
@@ -761,7 +960,7 @@ More
     
     One of the main objectives of this library is to act as a layer of abstraction over discovery documents.
 
-    If you find any leaks in this abstraction and find yourself wanting to know more about the discovery document and how it's structured:
+    If you find any leaks in this abstraction (which you likely will) and find yourself wanting to know more about the discovery document and how it's structured:
 
     then checkout `Overview of the discovery document <https://developers.google.com/discovery/v1/reference/apis>`_.
 
@@ -776,7 +975,6 @@ Contributors
 ============
 
 -
-
 
 :ref:`genindex`
 :ref:`modindex`

@@ -10,7 +10,7 @@ or turning it off for the whole API by passing aiogoogle.discover(validate=False
 This module misses a lot of the features provided with more advanced jsonschema validators e.g.
 
 1. collecting all validation errors and raising them all at once
-2. way more descriptive errors with a nice traceback
+2. more descriptive errors with nice tracebacks
 '''
 
 

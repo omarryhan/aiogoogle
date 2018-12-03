@@ -43,7 +43,7 @@ async def download_file(file_id, dir_path):
         # Second download the file
         await aiogoogle.as_user(
             drive_v3.files.get(fileId=file_id, download_file=full_path, alt='media'),
-            full_resp=True
+            full_res=True
         )
 
         print('Downloaded file to {} successfully!'.format(full_path))

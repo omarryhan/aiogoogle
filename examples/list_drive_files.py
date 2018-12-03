@@ -9,7 +9,7 @@ async def list_files():
         drive_v3 = await aiogoogle.discover('drive', 'v3')
         res = await aiogoogle.as_user(
             drive_v3.files.list(),
-            full_resp=True
+            full_res=True
         )
     async for page in res:
         for file in page['files']:

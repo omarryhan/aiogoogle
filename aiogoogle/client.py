@@ -174,7 +174,7 @@ class Aiogoogle:
 
     #-------- Send Requests ----------#
 
-    async def as_user(self, *requests, timeout=None, full_resp=False):
+    async def as_user(self, *requests, timeout=None, full_res=False):
         ''' 
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
         
@@ -188,7 +188,7 @@ class Aiogoogle:
 
                 Total timeout for all the requests being sent
 
-            full_resp (bool):
+            full_res (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
 
@@ -207,9 +207,9 @@ class Aiogoogle:
         authorized_requests = [self.oauth2.authorize(request, self.user_creds) for request in requests]
 
         # Send authorized requests
-        return await self.active_session.send(*authorized_requests, timeout=timeout, full_resp=full_resp, session_factory=self.session_factory)
+        return await self.active_session.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
-    async def as_api_key(self, *requests, timeout=None, full_resp=False):
+    async def as_api_key(self, *requests, timeout=None, full_res=False):
         ''' 
         Sends requests on behalf of ``self.api_key`` (OAuth2)
         
@@ -223,7 +223,7 @@ class Aiogoogle:
 
                 Total timeout for all the requests being sent
 
-            full_resp (bool):
+            full_res (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
 
@@ -236,9 +236,9 @@ class Aiogoogle:
         authorized_requests = [self.api_key_manager.authorize(request, self.api_key) for request in requests]
 
         # Send authorized requests
-        return await self.active_session.send(*authorized_requests, timeout=timeout, full_resp=full_resp, session_factory=self.session_factory)
+        return await self.active_session.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
-    async def as_anon(self, *requests, timeout=None, full_resp=False):
+    async def as_anon(self, *requests, timeout=None, full_res=False):
         ''' 
         Sends an unauthorized request
         
@@ -252,7 +252,7 @@ class Aiogoogle:
 
                 Total timeout for all the requests being sent
 
-            full_resp (bool):
+            full_res (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
 
@@ -260,7 +260,7 @@ class Aiogoogle:
 
             aiogoogle.models.Response:
         '''
-        return await self.active_session.send(*requests, timeout=timeout, full_resp=full_resp, session_factory=self.session_factory)
+        return await self.active_session.send(*requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
     async def __aenter__(self):
         self.active_session = await self.session_factory(timeout=self.timeout).__aenter__()

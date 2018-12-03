@@ -29,7 +29,7 @@ async def list_contacts():
     async with aiogoogle:
         pages = await aiogoogle.as_user(
             people_v1.people.connections.list(resourceName='people/me', personFields='names,phoneNumbers'),
-            full_resp=True
+            full_res=True
         )
     async for page in pages:
         append_connections(page['connections'])
