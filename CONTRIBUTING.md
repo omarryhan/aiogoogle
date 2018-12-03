@@ -37,3 +37,7 @@ Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/cod
 - Add Spell checking
 
 ## Examples
+
+## General
+
+- Reonciliate aiogoogle.__version__.py.__verison__ && setup.py.version && docs.conf.py
