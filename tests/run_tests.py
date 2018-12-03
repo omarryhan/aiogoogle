@@ -1,62 +1,36 @@
 import os, sys
 import pytest
-import time
 
-SLEEP = 1.5
+args = [
+    '-v',
+    '-s',
+    '--cov',
+    'aiogoogle/',
+    #'--fulltrace',
+    #'--maxfail=5',
+    #'-p no:warnings',
+    #'--disable-warnings',
+]
 
 def main():
-    test_integration = os.getenv('TEST_INTEGRATION')
-    test_integration_with_keys = os.getenv('TEST_INTEGRATION_WITH_KEYS')
 
-    if test_integration == 'true' and test_integration_with_keys == 'true':
-        print('Running unit tests followed by integration tests and integration tests with keys provided')
-        time.sleep(SLEEP)
-        exit_code = pytest.main(
-            [
-                #'--fulltrace',
-                '-v',
-                '-s',
-                '--maxfail=5',
-                #'-p no:warnings',
-                #'--disable-warnings',
-                '--cov',
-                'aiogoogle/',
-                'tests/test_units/',
-                'tests/test_integration/',
-                'tests/test_integration_with_keys/',
-            ]
+    if os.getenv('TEST_UNITS') == 'true':
+        args.append(
+            'tests/test_units/',
         )
-    elif test_integration == 'true':
-        print('Running unit tests followed by asynchronous integration tests')
-        time.sleep(SLEEP)
-        exit_code = pytest.main(
-            [
-                '-v',
-                '-s',
-                #'--disable-warnings',
-                #'--maxfail=5',
-                '--cov',
-                'aiogoogle/',
-                'tests/test_units/',
-                'tests/test_integration/'
-            ]
+    if os.getenv('TEST_INTEGRATION_OFFLINE') == 'true':
+        args.append(
+            'tests/test_integ_offline/',
         )
-    else:
-        print('Running unit tests')
-        time.sleep(SLEEP)
-        exit_code = pytest.main(
-            [
-                '-v',
-                '-s',
-                #'--disable-warnings',
-                #'--maxfail=5',
-                '--cov',
-                'aiogoogle/',
-                'tests/test_units/'
-            ]
+    if os.getenv('TEST_INTEGRATION_ONLINE') == 'true':
+        args.append(
+            'tests/test_integ_online/',
         )
-
-    sys.exit(exit_code)
+    if os.getenv('TEST_INTEGRATION_WITH_KEYS') == 'true':
+        args.append(
+            'tests/test_with_keys/'
+        )
+    sys.exit(pytest.main(args))
 
 if __name__ == '__main__':
     main()

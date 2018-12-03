@@ -30,9 +30,15 @@ STACK_QUERY_PARAMETER_DEFAULT_VALUE = {
     'location': 'query',
 }
 
+# TODO: etagRequired: {
+#    type: "boolean",
+#    description: "Whether this method requires an ETag to be specified. The ETag is sent as an HTTP If-Match or If-None-Match header."
+#    }
+# Note: etagRequired is only mentioned once in all of the discovery documents available from Google. (In discovery_service-v1. So, it isn't actually being used)
+
 
 class Method:
-    def __init__(self, name, method_specs, global_parameters, schemas, base_url, root_url, service_path, validate):
+    def __init__(self, name, method_specs, global_parameters, schemas, root_url, service_path, batch_path, validate):
         # Replaces '-'s with '_'s and preserve old names to revert back to them after this method is called
         global_parameters = self._rm_dash_params(global_parameters)
         method_specs['parameters'] = self._rm_dash_params(method_specs.get('parameters'))
@@ -41,15 +47,27 @@ class Method:
         self._method_specs = method_specs
         self._global_parameters = global_parameters
         self._schemas = schemas
-        self._base_url = base_url
+
         self._root_url = root_url
         self._service_path = service_path
+        self._batch_path = batch_path
+        
+        # Not gonna use it, because it's useless. Maybe I'm wrong?
+        if self['useMediaDownloadService'] is True and self['supportsMediaDownload'] is True:
+            self._download_base_url = self._root_url + 'download/' + self._service_path
+        else:
+            self._download_base_url = None
+
+        self._base_url = self._root_url + self._service_path
+        self._batch_url = self._root_url + self._batch_path
+
         self._should_validate = validate
 
 #---- Changes URL parameters with a "-" to "_" -----# 
 # Depends on how you view it, but this section also changes robots with small mouths to robots with big mouths
 
-    def _rm_dash_params(self, param_set) -> dict:
+    @staticmethod
+    def _rm_dash_params(param_set) -> dict:
         if param_set:
             for name, schema in param_set.items():
                 if '-' in name:
@@ -59,7 +77,8 @@ class Method:
                     del param_set[name]
         return param_set
 
-    def _add_dash_params(self, param_set) -> dict:
+    @staticmethod
+    def _add_dash_params(param_set) -> dict:
         if param_set:
             # list() forces the creation of a new copy in memory
             # to avoid having the dict size changing during iteration
@@ -244,7 +263,7 @@ class Method:
 
             * Fortunately Python makes it really easy to achieve that. 
             
-            * Instead of passing say ``datetime.datetime.now()``, pass: ``datetime.datetime.now().jsonformat()``
+            * Instead of passing say ``datetime.datetime.utcnow()``, pass: ``datetime.datetime.utcnow().jsonformat()``
 
         Note:
 
@@ -273,7 +292,7 @@ class Method:
         # If collisions are found between the 'key' of **uri_params and explicit kwargs e.g. data, json etc., then 
         # priority will be given to explicit kwargs. With that said, it's not likely there will be any.
         # If you want to double check if there are any collisions,
-        # you can append the API name and version you're using to tests.globals.SOME_APIS (only if they don't exist, otherwise, you shouldn't worry about collisions)
+        # you can append the API name and version you're using to tests.globals.ALL_APIS (only if they don't exist, otherwise, you shouldn't worry about collisions)
         # Then, run the unit tests and monitor: tests.test_discovery_document.test_parameters_not_colliding_with_google_api__call__ for failure
 
         #
@@ -291,9 +310,11 @@ class Method:
         # Resolve validation status
         if not isinstance(validate, bool):
             validate = self._should_validate
+
+        base_url = self._base_url
         
         # Build full url minus query & fragment
-        url = self._build_url(uri_params=uri_params, validate=validate)
+        url = self._build_url(base_url=base_url, uri_params=uri_params, validate=validate)
 
         # Filter out query parameters from all uri_params that were passed to this method
         passed_query_params = {param_name: param_info for param_name, param_info in uri_params.items() if param_name in self.query_parameters}
@@ -329,8 +350,9 @@ class Method:
             raise TypeError('Pass either json or data for the body of the request, not both.'
                             '\nThis is similar to the "body" argument in google-python-client'
                             '\nThis will validate agains the $request key in this method\'s '
-                            'discovery document')  # This raises a TypeError instead of a ValidationError because 
-                                                   # it will probably make your session raise an error if it passes.
+                            'specs')  # This raises a TypeError instead of a ValidationError because 
+                                      # it will probably make your session raise an error if it passes.
+                                      # Better raise it early on
 
         # Validate body
         if validate is True:
@@ -349,13 +371,14 @@ class Method:
 
         # Process upload_file
         if upload_file:
-            media_upload = self._build_upload_media(upload_file)
+            media_upload = self._build_upload_media(upload_file, uri, validate, fallback_url=url)
         else:
             media_upload = None
 
         return Request(
             method=self['httpMethod'],
             url=uri,
+            batch_url=self._batch_url,
             data=data,
             json=json,
             timeout=timeout,
@@ -364,7 +387,7 @@ class Method:
             callback=lambda resp: self._validate_response(resp, validate)
         )
 
-    def _build_url(self, uri_params, validate):
+    def _build_url(self, base_url, uri_params, validate):
         if self.path_parameters:
             # sort path params as sepcified in method_specs.parameterOrder
             sorted_required_path_params = {}  # Dict order is guaranteed (by insertion) as of Python 3.6
@@ -379,13 +402,66 @@ class Method:
                 self._validate_url(sorted_required_path_params)
 
         # Build full path
-            # replace named placeholders with empty ones. e.g. {first_param} --> {}
+            # replace named placeholders with empty ones. e.g. {param} --> {}
             # Why? Because some endpoints have different names in their url path placeholders than in their parameters
             # e.g. path: {"v1/{+resourceName}/connections"}. e.g. param name: resourceName NOT +resourceName
             self._method_specs['path'] = re.sub(r'\{(.*?)\}', r'{}', self._method_specs['path'])
-            return self._base_url + self['path'].format(*list(sorted_required_path_params.values()))
+            return base_url + self['path'].format(*list(sorted_required_path_params.values()))
         else:
-            return self._base_url + self['path']
+            return base_url + self['path']
+
+    def _build_upload_media(self, upload_file, qualified_url, validate, fallback_url):
+        if self['supportsMediaUpload'] is not True:
+            if validate is True:
+                raise ValidationError('upload_file was provided while method doesn\'t support media upload')
+            else:
+                # This will probably not work, but will return a mediaupload object anyway
+                return MediaUpload(upload_file, upload_path=fallback_url)
+        
+        # If resumable, create resumable object
+        resumable = self._build_resumeable_media(upload_file, qualified_url) if _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable') else None
+        
+        # Create MediaUpload object and pass it the resumable object we just created
+        #simple_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'simple', 'path')
+        #media_upload_url_base = self._root_url[:-1] + simple_upload_path
+        media_upload_url_base = self._root_url + 'upload/' + self._service_path
+        media_upload_url = qualified_url.replace(self._base_url, media_upload_url_base)
+        max_size = self._convert_str_size_to_int(_safe_getitem(self._method_specs, 'mediaUpload', 'maxSize'))
+        mime_range = _safe_getitem(self._method_specs, 'mediaUpload', 'accept')
+        multipart = self['mediaUpload']['protocols']['simple'].get('multipart', True)
+
+        # Return
+        return MediaUpload(file_path=upload_file, upload_path=media_upload_url, max_size=max_size, mime_range=mime_range, multipart=multipart, resumable=resumable, validate=validate)
+
+    def _build_resumeable_media(self, upload_file, qualified_url):
+        #resumable_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable', 'path')
+        #resumable_url_base = self._root_url[:-1] + resumable_upload_path
+        resumable_url_base = self._root_url + 'resumable/upload/' + self._service_path
+        resumable_url = qualified_url.replace(self._base_url, resumable_url_base)
+        multipart = self['mediaUpload']['protocols']['resumable'].get('multipart', True)
+        return ResumableUpload(upload_file, multipart=multipart, upload_path=resumable_url)
+
+    @staticmethod
+    def _convert_str_size_to_int(size):
+        """Convert a string media size, such as 10GB or 3TB into an integer.
+
+        Args:
+            size: (str): e.g. such as 2MB or 7GB.
+
+        Returns:
+            The size as an integer value.
+        """
+        MEDIA_SIZE_BIT_SHIFTS = {'KB': 10, 'MB': 20, 'GB': 30, 'TB': 40}
+        if size is None:
+            return None
+        if len(size) < 2:
+            return 0
+        units = size[-2:].upper()
+        bit_shift = MEDIA_SIZE_BIT_SHIFTS.get(units)
+        if bit_shift is not None:
+            return int(size[:-2]) << bit_shift
+        else:
+            return int(size)
 
     def _validate_url(self, sorted_required_path_params):
         for path_param_name, path_param_info in sorted_required_path_params.items():
@@ -400,31 +476,7 @@ class Method:
         else:
             raise ValidationError('Request body should\'ve been validated, but wasn\'t because the method doesn\'t accept a JSON body')
 
-    def _build_upload_media(self, upload_file):
-        # Will check wether validate is true or false
-        if self['supportsMediaUpload'] is not True:
-            raise ValidationError('upload_file was provided while method doesn\'t support media upload')
-        
-        # If resumable, create resumable object
-        resumable = self._build_resumeable_media(upload_file) if _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable') else None
-        
-        # Create MediaUpload object and pass it the resumable object we just created
-        simple_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'simple', 'path')
-        media_upload_url = self._root_url[:-1] + simple_upload_path
-        mime_range = _safe_getitem(self._method_specs, 'mediaUpload', 'accept')
-        multipart = self['mediaUpload']['protocols']['simple'].get('multipart', False)
-
-        # Return
-        return MediaUpload(upload_file, upload_path=media_upload_url, mime_range=mime_range, multipart=multipart, resumable=resumable)
-
-    def _build_resumeable_media(self, upload_file):
-            resumable_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable', 'path')
-            resumable_url = self._root_url[:-1] + resumable_upload_path
-            multipart = self['mediaUpload']['protocols']['resumable'].get('multipart', False)
-            return ResumableUpload(upload_file, multipart=multipart, upload_path=resumable_url)
-
     def _validate_response(self, resp, validate):
-        # TODO: validate response
         if validate is True and resp is not None:
             response_schema = self._method_specs.get('response')
             if response_schema is not None:
@@ -449,45 +501,45 @@ class Method:
 
 
 class Resource:
-    def __init__(self, name, resource_specs, global_parameters, schemas, base_url, root_url, service_path, validate):
+    def __init__(self, name, resource_specs, global_parameters, schemas, root_url, service_path, batch_path, validate):
         self.name = name
         self._resource_specs = resource_specs
         self._global_parameters = global_parameters
         self._schemas = schemas
-        self._base_url = base_url
         self._root_url = root_url
         self._service_path = service_path
+        self._batch_path = batch_path
         self._validate = validate  
 
     @property
-    def methods(self) -> [str, str]:
+    def methods_available(self) -> [str, str]:
         '''
-        Returns names of the methods that this resource provides
+        Returns the names of the methods that this resource provides
         '''
         return [k for k,v in self['methods'].items()] if self['methods'] else []
 
     @property
-    def resources(self) -> [str, str]:
+    def resources_available(self) -> [str, str]:
         '''
-        Returns names of the nested resources in this resource
+        Returns the names of the nested resources in this resource
         '''
         return [k for k,v in self['resources'].items()] if self['resources'] else []
 
     def __str__(self):
-        return self.name + ' resource @ ' + self._base_url
+        return self.name + ' resource @ ' + self._root_url + self._service_path
 
     def __repr__(self):
         return self.__str__()
 
     def __call__(self):
         raise TypeError('Only methods are callables, not resources.'
-                        ' e.g. client.resources.user.list() NOT client.resources.user().list()')
+                        ' e.g. api.resource.list() NOT api.resource().list()')
 
     def __len__(self):
-        return len(self.methods)
+        return len(self.methods_available)
 
     def __contains__(self, item):
-        return ((item in self.methods) or (item in self.resources))
+        return ((item in self.methods_available) or (item in self.resources_available))
 
     def __getitem__(self, k):
         return self._resource_specs.get(k)
@@ -514,35 +566,35 @@ class Resource:
             AttributeError:
         '''
         # 1. Search in nested resources
-        if method_or_resource in self.resources:
+        if method_or_resource in self.resources_available:
             return Resource(
                 name=method_or_resource,
                 resource_specs=self['resources'][method_or_resource],
                 global_parameters=self._global_parameters,
                 schemas=self._schemas,
-                base_url=self._base_url,
                 root_url=self._root_url,
                 service_path=self._service_path,
+                batch_path=self._batch_path,
                 validate=self._validate
             )
         # 2. Search in methods
-        elif method_or_resource in self.methods:
+        elif method_or_resource in self.methods_available:
             return Method(
                 name=method_or_resource,
                 method_specs=self['methods'][method_or_resource],
                 global_parameters=self._global_parameters,
                 schemas=self._schemas,
-                base_url=self._base_url,
                 root_url=self._root_url,
                 service_path=self._service_path,
+                batch_path=self._batch_path,
                 validate=self._validate
             )
         else:
             raise AttributeError(f"""Resource/Method {method_or_resource} doesn't exist.
                                  Check: https://developers.google.com/ for more info. 
                                  \nAvailable resources are: 
-                                 {self.resources}\n
-                                 Available methods are {self.methods}""")
+                                 {self.resources_available}\n
+                                 Available methods are {self.methods_available}""")
 
 class GoogleAPI:
     '''
@@ -568,14 +620,14 @@ class GoogleAPI:
         return discovery_document
 
     @property
-    def methods(self) -> [str, str]:
+    def methods_available(self) -> [str, str]:
         '''
         Returns names of the methods provided by this resource
         '''
         return [k for k,v in self['methods'].items()] if self['methods'] else []
 
     @property
-    def resources(self) -> [str, str]:
+    def resources_available(self) -> [str, str]:
         '''
         Returns names of the resources in a given API if any
         '''
@@ -604,32 +656,32 @@ class GoogleAPI:
 
         Returns:
 
-            aiogoogle.resource.Resource, aiogoogle.resource.Methods: A Resource or a Method
+            aiogoogle.resource.Resource, aiogoogle.resource.Method: A Resource or a Method
 
         Raises:
 
             AttributeError:
         '''
-        if method_or_resource in self.resources:
+        if method_or_resource in self.resources_available:
             return Resource(
                 name=method_or_resource,
                 resource_specs=self['resources'][method_or_resource],
                 global_parameters=self['parameters'],
                 schemas=self['schemas'] or {},  # josnschema validator will fail if schemas isn't a dict
-                base_url= self['baseUrl'],
                 root_url=self['rootUrl'],
                 service_path=self['servicePath'],
+                batch_path=self['batchPath'],
                 validate=self._validate
             )
-        elif method_or_resource in self.methods:
+        elif method_or_resource in self.methods_available:
             return Method(
                 name=method_or_resource,
                 method_specs=self['methods'][method_or_resource],
                 global_parameters=self['parameters'],
                 schemas=self['schemas'] or {},  # josnschema validator will fail if schemas isn't a dict
-                base_url= self['baseUrl'],
                 root_url=self['rootUrl'],
                 service_path=self['servicePath'],
+                batch_path=self['batchPath'],
                 validate=self._validate
             )
         else:
@@ -637,8 +689,8 @@ class GoogleAPI:
             raise AttributeError(f"""Resource/Method {method_or_resource} doesn't exist.
                                  Check: {documentation_link} for more info. 
                                  \nAvailable resources are: 
-                                 {self.resources}\n
-                                 Available methods are {self.methods}""")
+                                 {self.resources_available}\n
+                                 Available methods are {self.methods_available}""")
 
     def __getitem__(self, k):
         '''
@@ -680,16 +732,17 @@ class GoogleAPI:
         return self.discovery_document.get(k)
 
     def __contains__(self, item):
-        return (item in self.resources) or (item in self.methods)
+        return (item in self.resources_available) or (item in self.methods_available)
     
     def __repr__(self):
-        return self.discovery_document['name'] + '-' + self.discovery_document['version'] + ' API @ ' + self['baseUrl']
+        labels = f'\nLabels:\n{self["labels"]}' if self['labels'] is not None else ''
+        return self.discovery_document['name'] + '-' + self.discovery_document['version'] + ' API @ ' + self['rootUrl'] + self['servicePath'] + labels
 
     def __str__(self):
         return self.__repr__()
 
     def __len__(self):
-        return len(self.resources) + len(self.methods)
+        return len(self.resources_available) + len(self.methods_available)
 
     def __call__(self):
         raise TypeError('Only methods are callables, not resources.'

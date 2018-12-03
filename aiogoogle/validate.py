@@ -10,21 +10,8 @@ or turning it off for the whole API by passing aiogoogle.discover(validate=False
 This module misses a lot of the features provided with more advanced jsonschema validators e.g.
 
 1. collecting all validation errors and raising them all at once
-2. descriptive errors
+2. way more descriptive errors with a nice traceback
 '''
-
-# Validate the following:
-# 1. DONE type (str) jsonschema types
-# 2. DONE format (str) discovery specific types https://developers.google.com/discovery/v1/type-format
-# 3. DONE minimum (str)
-# 4. DONE maximum (str)
-# 5. DONE pattern (str)
-# 6. DONE required (bool)
-# 7. DONE Recursion -- properties (dict): of nested schemas. Not to be confused with:
-#   I. "item" (key name for arrays in objects)
-#   II. "parameter" (isn't part of jsonschema, but part of method description)
-# 8. TODO: repeated: Whether this parameter may appear multiple times support multidicts
-# 9. TODO: Support media upload/download validation without doing file io
 
 
 __all__ = [
@@ -67,6 +54,10 @@ JSON_PYTHON_TYPE_MAPPING = {
     'null': (),  # Not used
     'any': (float, int, str, dict, list, set, tuple, bool)
 }
+
+KNOWN_FORMATS = ['int32', 'uint32', 'double', 'float', 'null', 'byte', 'date', 'date-time', 'int64', 'uint64', 'google-fieldmask', 'google-duration', 'google-datetime']
+
+IGNORABLE_FORMATS = ['google-fieldmask', 'google-duration', 'google-datetime']
 
 TYPE_FORMAT_MAPPING = {
     # Given this type, if None then don't check for additional "format" property in the schema, else, format might be any of the mapped values
@@ -187,16 +178,30 @@ def maximum_validator(value, maximum):
 
 def validate_type(instance, schema):
     type_validator_name = schema['type']
+    # Check if type in list of possible types to avoid calling globals() maliciously
+    if type_validator_name not in JSON_PYTHON_TYPE_MAPPING:
+        warnings.warn(
+            f"""\n\nUnknown type: {type_validator_name} found.\n\nSkipping type checks for {instance}
+            against this schema:\n\n{schema}\n\nPlease create an 
+            issue @ https://github.com/omarryhan/aiogoogle and report this warning msg.""")
+        return
     type_validator = globals()[type_validator_name + '_validator']
     type_validator(instance)
 
 def validate_format(instance, schema):
     if schema.get('format'):
-        # Exception for format: google-fieldmask (protobuff related.)
-        if schema['format'] == 'google-fieldmask':
+        # Exception for format: mostly protobuf formats
+        if schema['format'] in IGNORABLE_FORMATS:
             return
         # /Exception
         format_validator_name = schema['format']
+        # Check if type in list of possible types to avoid calling globals() maliciously
+        if format_validator_name not in KNOWN_FORMATS:
+            warnings.warn(
+            f"""\n\nUnknown format: {format_validator_name} found.\n\nSkipping format checks for {instance}
+            against this schema:\n\n{schema}\n\nPlease create an 
+            issue @ https://github.com/omarryhan/aiogoogle and report this warning msg.""")
+            return
         if format_validator_name == 'date-time':
             format_validator_name = 'datetime'
         format_validator = globals()[format_validator_name + '_validator']
@@ -235,37 +240,31 @@ def validate(instance, schema, schemas=None):
 
         schemas: Full schamas dict to resolve refs if any
     '''
+
     def resolve(schema):
         '''
         Resolves schema from schemas
         if no $ref was found, returns original schema
         '''
-        if schemas is None:
-            raise ValidationError(f"Attempted to resolve {k}, but no schema was found to resolve from")
         if '$ref' in schema:
+            if schemas is None:
+                raise ValidationError(f"Attempted to resolve a {str(schema)}, but no schemas ref were found to resolve from")
             try:
                 schema = schemas[schema['$ref']]
             except KeyError:
-                raise ValidationError(f"Attempted to resolve {schema['$ref']}, but no result was found.")
+                raise ValidationError(f"Attempted to resolve {schema['$ref']}, but no results found.")
         return schema
 
-    # Check schema and schemas are dicts
-    if not isinstance(schema, dict):
-        raise TypeError('Schema must be a dict')
-    if schemas is not None:
-        if not isinstance(schemas, dict):
-            raise TypeError('Schemas must be a dict')
-
-    # Preliminary resolvement
-    schema = resolve(schema)
-
-    # If object (Dict): iterate over each entry and recursively validate
-    if schema['type'] == 'object':
+    def validate_object():
         # Validate instance is an object
         object_validator(instance)
-        # Objects sometimes do not have a properties item?? weird. e.g. https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest schemas['Event']['extendedProperties']
+
+        # Objects sometimes do not have a properties item?? weird. 
+        # e.g. https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest schemas['Event']['extendedProperties']
+        # Not sure whether or not this should raise a validation error.
         if 'properties' not in schema:
             return
+
         # Raise warnings on passed dict keys that aren't mentioned in the schema
         for k, _ in instance.items():
             if k not in schema['properties']:
@@ -281,15 +280,29 @@ def validate(instance, schema, schemas=None):
             else:
                 validate(instance[k], v, schemas)
 
-    # If array (list) iterate over each item and recursively validate
-    elif schema['type'] == 'array':
-        # Validate instance is an array
+    def validate_array():
         array_validator(instance)
-        schema = resolve(schema['items'])
+        schema_ = resolve(schema['items'])
         # Check if instance has the property, if not, check if it's required
         for item in instance:
-            validate(item, schema, schemas)
+            validate(item, schema_, schemas)
 
+    # Check schema and schemas are dicts. 
+    # These errors shouldn't normally be raised, unless there's some messed up schema(s) being passed
+    if not isinstance(schema, dict):
+        raise TypeError('Schema must be a dict')
+    if schemas is not None:
+        if not isinstance(schemas, dict):
+            raise TypeError('Schemas must be a dict')
+    # Preliminary resolvement. 
+    schema = resolve(schema)
+    # If object (Dict): iterate over each entry and recursively validate
+    if schema['type'] == 'object':
+        validate_object()
+    # If array (list or tuple) iterate over each item and recursively validate
+    elif schema['type'] == 'array':
+        # Validate instance is an array
+        validate_array()
     # Else we reached the lowest level of a schema, validate
     else:
         validate_all(instance, schema)

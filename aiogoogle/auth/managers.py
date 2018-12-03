@@ -26,9 +26,6 @@ from ..models import Request
 from ..resource import GoogleAPI
 
 
-# TODO: Device code flow
-# TODO: Service accounts integration
-
 # ID token contents: https://openid.net/specs/openid-connect-core-1_0.html#IDToken
 # JWK reference: https://tools.ietf.org/html/rfc7517
 # Google OpenID discovery doc reference: https://developers.google.com/identity/protocols/OpenIDConnect#discovery
@@ -55,7 +52,7 @@ OOB_REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
 ## The URL that provides public certificates for verifying ID tokens issued
 ## by Google's OAuth 2.0 authorization server.
-#GOOGLE_OAUTH2_CERTS_URL = 'https://www.googleapis.com/oauth2/v1/certs'
+GOOGLE_OAUTH2_CERTS_URL = 'https://www.googleapis.com/oauth2/v1/certs'
 #GOOGLE_OAUTH2_CERTS_URL_V3 = 'https://www.googleapis.com/oauth2/v3/certs'
 
 # Used here: https://developers.google.com/identity/protocols/OAuth2WebServer#exchange-authorization-code
@@ -76,8 +73,8 @@ TOKEN_INFO_URI = 'https://www.googleapis.com/oauth2/v4/tokeninfo'
 
 class ApiKeyManager(AbstractAPIKeyManager):
 
-    def authorize(self, request, key: str) -> Request:
-        # TODO: Do this using urllib or take url fragments into consideration
+    @staticmethod
+    def authorize(request, key: str) -> Request:
         if 'key=' in request.url:
             return request
         else:
@@ -95,60 +92,10 @@ class ApiKeyManager(AbstractAPIKeyManager):
 class Oauth2Manager(AbstractOAuth2Manager):
     def __init__(self, session_factory, verify=True):
         self.oauth2_api = GoogleAPI(OAUTH2_V2_DISCVOCERY_DOC)
+        self.openid_configs = WELLKNOWN_OPENID_CONFIGS
         self.session_factory = session_factory
         self.active_session = None
         self.verify = verify
-        self.openid_configs = WELLKNOWN_OPENID_CONFIGS
-
-    async def get_token_info(self, user_creds):
-        '''
-        Gets token info given an access token
-
-        Arguments:
-
-            user_creds (aiogoogle.creds.UserCreds): UserCreds instance with an access token
-
-        Returns:
-
-            dict: Info about the token
-
-        '''
-        req = self.oauth2_api.tokeninfo(
-            access_token=user_creds.get('access_token'),
-        )
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                token_info = await sess.send(req)
-        else:
-            token_info = await self.active_session.send(req)
-        return token_info
-
-    async def get_me_info(self, user_creds):
-        '''
-        Gets information of a user given his access token. User must also be the client.
-        (Not sure about if that's the main purpose of this endpoint and how it differs from get_user_info,
-        if someone can confirm/deny this, please edit (or remove) this message and make a pull request)
-        
-        Arguments:
-
-            user_creds (aiogoogle.creds.UserCreds): UserCreds instance with an access token
-
-        Returns:
-
-            dict: Info about the user
-
-        Raises:
-
-            aiogoogle.excs.HTTPError:
-         '''
-        req = self.oauth2_api.userinfo.v2.me.get()
-        authorized_req = self.authorize(req, user_creds)
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                me_info = await sess.send(authorized_req)
-        else:
-            me_info = await self.active_session.send(authorized_req)
-        return me_info
 
     def __getitem__(self, key):
         '''
@@ -175,6 +122,14 @@ class Oauth2Manager(AbstractOAuth2Manager):
         await self.active_session.__aexit__(*args, **kwargs)
         self.active_session = None
 
+    async def _send_request(self, req):
+        if self.active_session is None:
+            async with self.session_factory() as sess:
+                res = await sess.send(req)
+        else:
+            res = await self.active_session.send(req)
+        return res
+
     async def refresh_openid_configs(self):
         '''
         Downloads fresh openid discovery document and sets it to the current manager.
@@ -182,19 +137,17 @@ class Oauth2Manager(AbstractOAuth2Manager):
         OpenID configs are used for both OAuth2 manager and OpenID connect manager
         '''
         req = Request('GET', url=OPENID_CONFIGS_DISCOVERY_DOC_URL)
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                self.openid_configs = await sess.send(req)
-        else:
-            self.openid_configs = await self.active_session.send(req)
+        self.openid_configs = await self._send_request(req)
 
-    def authorize(self, request: Request, user_creds: dict) -> Request:
+    @staticmethod
+    def authorize(request: Request, user_creds: dict) -> Request:
         if request.headers is None:
             request.headers = {}
         request.headers['Authorization'] = f'Bearer {user_creds["access_token"]}'
         return request
 
-    def is_ready(self, client_creds):
+    @staticmethod
+    def is_ready(client_creds):
         '''
         Checks passed ``client_creds`` whether or not the client has enough information to perform OAuth2 Authorization code flow
 
@@ -233,11 +186,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
 
     async def build_user_creds(self, grant, client_creds, grant_type=AUTH_CODE_GRANT_TYPE) -> dict:
         request = self._build_user_creds_req(grant, client_creds, grant_type)
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                json_res = await sess.send(request)
-        else:
-            json_res = await self.active_session.send(request)
+        json_res = await self._send_request(request)
         return self._build_user_creds_from_res(json_res)
 
     def _build_user_creds_req(self, grant, client_creds, grant_type) -> Request:
@@ -264,13 +213,15 @@ class Oauth2Manager(AbstractOAuth2Manager):
         user_creds['expires_at'] = self._get_expires_at(user_creds['expires_in'])
         return user_creds
     
-    def _get_expires_at(self, expires_in):
+    @staticmethod
+    def _get_expires_at(expires_in):
         expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=expires_in)
         # account for clock skew
         expires_at -= datetime.timedelta(seconds=120)
         return expires_at.isoformat()
 
-    def authorized_for_method(self, method, user_creds) -> bool:
+    @staticmethod
+    def authorized_for_method(method, user_creds) -> bool:
         '''
         Checks if oauth2 user_creds object has sufficient scopes for a method call.
         
@@ -284,19 +235,19 @@ class Oauth2Manager(AbstractOAuth2Manager):
 
             .. code-block:: python3
         
-                is_authorized = authorized_for_method(youtube.resources.video.list)
+                is_authorized = authorized_for_method(youtube.video.list)
             
             **NOT correct:**
 
             .. code-block:: python3
 
-                is_authorized = authorized_for_method(youtube.resources.video.list())
+                is_authorized = authorized_for_method(youtube.video.list())
 
             **AND NOT correct:**
 
             .. code-block:: python3
 
-                is_authorized = authorized_for_method(youtube.resources.videos)
+                is_authorized = authorized_for_method(youtube.videos)
 
 
         Arguments:
@@ -322,7 +273,49 @@ class Oauth2Manager(AbstractOAuth2Manager):
         else:
             return False
 
-    def is_expired(self, creds) -> bool:
+
+    async def get_token_info(self, user_creds):
+        '''
+        Gets token info given an access token
+
+        Arguments:
+
+            user_creds (aiogoogle.creds.UserCreds): UserCreds instance with an access token
+
+        Returns:
+
+            dict: Info about the token
+
+        '''
+        req = self.oauth2_api.tokeninfo(
+            access_token=user_creds.get('access_token'),
+        )
+        return await self._send_request(req)
+
+    async def get_me_info(self, user_creds):
+        '''
+        Gets information of a user given his access token. User must also be the client.
+        (Not sure whether or not that's the main purpose of this endpoint and how it differs from get_user_info.
+        If someone can confirm/deny this, please edit (or remove) this message and make a pull request)
+
+        Arguments:
+
+            user_creds (aiogoogle.creds.UserCreds): UserCreds instance with an access token
+
+        Returns:
+
+            dict: Info about the user
+
+        Raises:
+
+            aiogoogle.excs.HTTPError:
+         '''
+        req = self.oauth2_api.userinfo.v2.me.get()
+        authorized_req = self.authorize(req, user_creds)
+        return await self._send_request(authorized_req)
+
+    @staticmethod
+    def is_expired(creds) -> bool:
         expires_at = datetime.datetime.fromisoformat(creds['expires_at'])
         if datetime.datetime.utcnow() >= expires_at:
             return True
@@ -331,11 +324,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
 
     async def refresh(self, user_creds, client_creds):
         request = self._build_refresh_request(user_creds, client_creds)
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                json_res = await sess.send(request)
-        else:
-            json_res = await self.active_session.send(request)
+        json_res = await self._send_request(request)
         return self._build_user_creds_from_res(json_res)
 
     def _build_refresh_request(self, user_creds, client_creds):
@@ -359,60 +348,19 @@ class Oauth2Manager(AbstractOAuth2Manager):
 
     async def revoke(self, user_creds):
         request = self._build_revoke_request(user_creds)
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                json_res = await sess.send(request)
-        else:
-            json_res = await self.active_session.send(request)
-        return json_res
+        return await self._send_request(request)
 
 class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     async def get_user_info(self, user_creds):
-        '''
-        https://developers.google.com/+/web/api/rest/openidconnect/getOpenIdConnect
-    
-    
-        People: getOpenIdConnect
-        Get a person's profile in OpenID Connect format.
-    
-        Use this method in place of people.get when you need the OpenID Connect format.
-    
-        This method is not discoverable nor is it in the Google API client libraries. To learn more, see OpenID Connect for sign-in. https://developers.google.com/+/web/api/rest/openidconnect/index.html
-    
-        Example:
-    
-            ::
-    
-                >>> await get_user_info(user_creds)
-                {
-                    "kind": "plus#personOpenIdConnect",
-                    "gender": string,
-                    "sub": string,
-                    "name": string,
-                    "given_name": string,
-                    "family_name": string,
-                    "profile": string,
-                    "picture": string,
-                    "email": string,
-                    "email_verified": "true",
-                    "locale": string,
-                    "hd": string
-                }
-        '''
         req = self.oauth2_api.userinfo.get()
         authorized_req = self.authorize(req, user_creds)
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                user_info = await sess.send(authorized_req)
-        else:
-            user_info = await self.active_session.send(authorized_req)
-        return user_info
+        return await self._send_request(authorized_req)
 
     async def get_token_info_jwt(self, user_creds):
-        ''' get token info using id_token_jwt instead of access_token
+        ''' get token info using id_token_jwt instead of access_token ``self.get_token_info``
         
         Arguments:
         
@@ -425,25 +373,17 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
         req = self.oauth2_api.tokeninfo(
             id_token=user_creds.get('id_token_jwt'),
         )
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                token_info = await sess.send(req)
-        else:
-            token_info = await self.active_session.send(req)
-        return token_info
+        return await self._send_request(req)
+
 
     async def _get_openid_certs_openid_docs(self):
         request = Request(
             method='GET',
-            url='https://www.googleapis.com/oauth2/v1/certs',
+            url=GOOGLE_OAUTH2_CERTS_URL,
             #url=self['jwks_uri'],  # which is: https://www.googleapis.com/oauth2/v3/certs isn't compatible with google.auth. Falling back to v1
         )
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                certs = await sess.send(request)
-        else:
-            certs = await self.active_session.send(request)
-        return certs
+        return await self._send_request(request)
+
 
     def authorization_url(
         self,
@@ -490,7 +430,7 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
 
     async def decode_and_validate(self, id_token_jwt, client_id=None, nonce=None, hd=None):
         certs = await self._get_openid_certs_openid_docs()  # refreshed once a day-ish
-        # Verify ID token is properly signed using certs
+        # Verify ID token is signed by google
         try:
             id_token = jwt.decode(id_token_jwt, certs=certs, verify=True)
         except ValueError as e:
@@ -513,7 +453,7 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
                 raise AuthError(f"Invalid audience. Got: {id_token['aud']} expected: {client_id}")
         return id_token
 
-    async def jwt_grant(self, assertion, token_uri):
+    async def build_user_creds_jwt_grant(self, assertion, token_uri):
         """
         Implements the JWT Profile for OAuth 2.0 Authorization Grants.
 
@@ -542,20 +482,12 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
             'grant_type': JWT_GRANT_TYPE,
         }
         req = Request(method='POST', url=token_uri, data=data)
-        
-    
-        if self.active_session is None:
-            async with self.session_factory() as sess:
-                json_res = await sess.send(req)
-        else:
-            json_res = await self.active_session.send(req)
+        json_res = await self._send_request(req)
         user_creds = self._build_user_creds_from_res(json_res)
-        if not user_creds.get('id_token'):  # Google specific (Not RFC compliant)
-            return user_creds
-        else:
+        if user_creds.get('id_token'):  # Google specific (Not RFC compliant)
             user_creds['id_token'] = jwt.decode(user_creds['id_token_jwt'], verify=False)
-            return user_creds
+        return user_creds
 
-    async def jwt_auth(self, assertion, token_uri):
+    async def build_user_creds_jwt_auth(self, assertion, token_uri):
         '''https://tools.ietf.org/html/rfc7523#section-2.2 '''
-        pass
+        raise NotImplementedError

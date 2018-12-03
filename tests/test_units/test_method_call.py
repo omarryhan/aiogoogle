@@ -9,11 +9,12 @@ from aiogoogle.models import Request, MediaDownload, MediaUpload, ResumableUploa
 from aiogoogle.excs import ValidationError
 
 
-from ..globals import SOME_APIS
+from ..test_globals import ALL_APIS
 
 
-# TODO: test rm None uri_params
-
+def test_uri_params_that_are_NONE_are_removed():
+    # TODO
+    pass
 
 def test_url_query_extra_not_included_and_warns(create_api):
     youtube = create_api('youtube', 'v3')
@@ -233,10 +234,10 @@ def test_resumable_upload(create_api):
         }
     }
     ROOT_URL = 'https://example.com/'
-    BASE_URL = 'https://example.com/api/v1'
+    BATCH_PATH = 'https://example.com/api/v1/batch'
     SERVICE_PATH = 'service/'
 
-    method = Method(name='upload', method_specs=METHOD_SPECS, global_parameters={}, schemas={}, base_url=BASE_URL, service_path=SERVICE_PATH, root_url=ROOT_URL, validate=False)
+    method = Method(name='upload', method_specs=METHOD_SPECS, global_parameters={}, schemas={}, batch_path=BATCH_PATH, service_path=SERVICE_PATH, root_url=ROOT_URL, validate=False)
     req = method(upload_file='/home/omar/resumable_file.file')
     assert req.media_upload.resumable
     assert req.media_upload.resumable.upload_path == 'https://example.com/resumable/upload/example/v3/resource'
@@ -266,10 +267,10 @@ def test_unresumable_upload(create_api):
         }
     }
     ROOT_URL = 'https://example.com/'
-    BASE_URL = 'https://example.com/api/v1'
+    BATCH_PATH = 'https://example.com/api/v1/batch'
     SERVICE_PATH = 'service/'
 
-    method = Method(name='upload', method_specs=METHOD_SPECS, global_parameters={}, schemas={}, base_url=BASE_URL, root_url=ROOT_URL, service_path=SERVICE_PATH, validate=False)
+    method = Method(name='upload', method_specs=METHOD_SPECS, global_parameters={}, schemas={}, batch_path=BATCH_PATH, root_url=ROOT_URL, service_path=SERVICE_PATH, validate=False)
     req = method(upload_file='/home/omar/resumable_file.file')
     assert req.media_upload.resumable is None
 

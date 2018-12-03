@@ -86,7 +86,7 @@ Browse an API
 
     >>> url_resource = url_shortener.url
 
-    >>> url_resource.methods
+    >>> url_resource.methods_available
 
     ['get', 'insert', 'list']
 
@@ -94,7 +94,7 @@ Browse an API
 
 .. code-block:: python3
 
-    >>> url_resource.resources
+    >>> url_resource.resources_available
 
     []
 
@@ -725,6 +725,11 @@ Utils
 ---------
 
 .. automodule:: aiogoogle.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: aiogoogle.auth.utils
     :members:
     :undoc-members:
     :show-inheritance:

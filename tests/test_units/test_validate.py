@@ -8,7 +8,7 @@ from aiogoogle.models import Request
 from aiogoogle.excs import ValidationError
 
 
-from ..globals import SOME_APIS
+from ..test_globals import ALL_APIS
 
 
 def test_validates_url_path_params(create_api):

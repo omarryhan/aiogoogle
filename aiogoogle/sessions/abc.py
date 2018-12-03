@@ -25,7 +25,7 @@ class AbstractSession(ABC):
         return super(AbstractSession, cls).__new__(cls)
 
     @abstractmethod
-    async def send(self, *requests, timeout=None,  return_full_http_response=False):
+    async def send(self, *requests, timeout=None,  full_resp=False):
         '''
         Takes requests, sends them, returns contents of responses or full http responses.
 
@@ -43,7 +43,7 @@ class AbstractSession(ABC):
 
                 Total timeout for *requests
 
-            return_full_http_response (bool):
+            full_resp (bool):
 
                 Return full HTTP response with headers, status code
 
@@ -52,6 +52,14 @@ class AbstractSession(ABC):
                 * Whether or not to raise an HTTP error if status code is >= 400
 
                 * Default: True
+
+            session_factory (aiogoogle.sessions.abs.AbstractSession):
+
+                * A callable implementation of aiogoogle's session interface
+
+                * Session factory that creates a session that will handle pagination, resumable uploads etc.
+
+                * Defaults to ``self.__class__`` 
 
         Returns:
 

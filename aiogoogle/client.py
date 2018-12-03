@@ -133,7 +133,7 @@ class Aiogoogle:
             
             When you leave the API version to None, Aiogoogle uses the ``list_api`` method to search for the best fit version of the given API name.
             
-            The reason behind this recommendation is that Google's discovery service sometimes does not return the latest version of a given API. Rather, returns the "preferred" one. Your pick.
+            This will result in sending two http requests instead of just one.
         
         Arguments:
 
@@ -207,7 +207,7 @@ class Aiogoogle:
         authorized_requests = [self.oauth2.authorize(request, self.user_creds) for request in requests]
 
         # Send authorized requests
-        return await self.active_session.send(*authorized_requests, timeout=timeout, return_full_http_response=full_resp)
+        return await self.active_session.send(*authorized_requests, timeout=timeout, full_resp=full_resp, session_factory=self.session_factory)
 
     async def as_api_key(self, *requests, timeout=None, full_resp=False):
         ''' 
@@ -236,7 +236,7 @@ class Aiogoogle:
         authorized_requests = [self.api_key_manager.authorize(request, self.api_key) for request in requests]
 
         # Send authorized requests
-        return await self.active_session.send(*authorized_requests, timeout=timeout, return_full_http_response=full_resp)
+        return await self.active_session.send(*authorized_requests, timeout=timeout, full_resp=full_resp, session_factory=self.session_factory)
 
     async def as_anon(self, *requests, timeout=None, full_resp=False):
         ''' 
@@ -260,7 +260,7 @@ class Aiogoogle:
 
             aiogoogle.models.Response:
         '''
-        return await self.active_session.send(*requests, timeout=timeout, return_full_http_response=full_resp)
+        return await self.active_session.send(*requests, timeout=timeout, full_resp=full_resp, session_factory=self.session_factory)
 
     async def __aenter__(self):
         self.active_session = await self.session_factory(timeout=self.timeout).__aenter__()

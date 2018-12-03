@@ -618,6 +618,48 @@ class AbstractOpenIdConnectManager(AbstractOAuth2Manager):
         '''
         raise NotImplementedError
 
+
+    @abstractmethod
+    def get_user_info(self, user_creds):
+        '''
+        https://developers.google.com/+/web/api/rest/openidconnect/getOpenIdConnect
+    
+        People: getOpenIdConnect
+    
+        Get user information after performing an OpenID connect flow.
+    
+        Use this method instead of people.get (Google+ API) when you need the OpenID Connect format.
+    
+        This method is not discoverable nor is it in the Google API client libraries. 
+        
+        To learn more, see OpenID Connect for sign-in. https://developers.google.com/+/web/api/rest/openidconnect/index.html
+    
+        Example:
+    
+            ::
+    
+                >>> await get_user_info(user_creds)
+                {
+                    "kind": "plus#personOpenIdConnect",
+                    "gender": string,
+                    "sub": string,
+                    "name": string,
+                    "given_name": string,
+                    "family_name": string,
+                    "profile": string,
+                    "picture": string,
+                    "email": string,
+                    "email_verified": "true",
+                    "locale": string,
+                    "hd": string
+                }
+
+        Arguments:
+
+            user_creds (aiogoogle.auth.creds.UserCreds): User credentials
+        '''
+        raise NotImplementedError
+
 class AbstractAPIKeyManager(ABC):
 
     @abstractmethod
@@ -640,3 +682,4 @@ class AbstractAPIKeyManager(ABC):
             aiogoogle.models.Request: Request with API key in URL
         '''
         raise NotImplementedError
+

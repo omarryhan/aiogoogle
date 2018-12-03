@@ -31,11 +31,9 @@ def test_doesnt_add_key_when_existing(manager, create_api, key1):
     assert request_with_key.url == new_request.url
 
 def test_adds_key_to_url_with_query(manager, create_api, key1):
-    # TODO: Redo this test with a proper url parser
     api = create_api('urlshortener', 'v1')
     request_with_key = api.url.get(shortUrl='asdasd', key=key1)  # Must be kept in this order for this test to pass
     request_without_key = api.url.get(shortUrl='asdasd')
-
     request_without_key_authorized = manager.authorize(request_without_key, key1)
     assert request_without_key_authorized.url == request_with_key.url
 
