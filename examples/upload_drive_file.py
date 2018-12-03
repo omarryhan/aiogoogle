@@ -11,7 +11,7 @@ async def upload_file(full_path, new_name):
         
         # Upload file
         upload_res = await aiogoogle.as_user(
-            drive_v3.files.create(upload_file=full_path, fields='id'),
+            drive_v3.files.create(upload_file=full_path, fields='id')
         )
         print('Uploaded {} successfully!'.format(full_path))
 
