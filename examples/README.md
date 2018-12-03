@@ -40,7 +40,7 @@ API explorer link:
 
 Extra Dependencies (Other than aiogoogle's)):
 
-* curio
+* a_pip_package
 
 Extra Steps (Other than running the file):
 
@@ -144,6 +144,75 @@ API explorer link:
 
 * https://developers.google.com/apis-explorer/#p/calendar/v3/calendar.events.list?calendarId=primary&_h=2&
 
+### 4. list_drive_files.py
+
+What it does:
+
+* Lists "id: names" of your google drive files
+
+API name and API version required:
+
+* drive-v3
+
+Scopes Required:
+
+* https://www.googleapis.com/auth/drive
+* https://www.googleapis.com/auth/drive.file
+
+User Credentials Required:
+
+* yes
+
+API explorer link:
+
+* https://developers.google.com/apis-explorer/#p/drive/v3/drive.files.list
+
+### 5. download_drive_file.py
+
+What it does:
+
+* Downloads a file from your google drive given a file ID
+
+API name and API version required:
+
+* drive-v3
+
+Scopes Required:
+
+* https://www.googleapis.com/auth/drive
+* https://www.googleapis.com/auth/drive.file
+
+User Credentials Required:
+
+* yes
+
+API explorer link:
+
+* https://developers.google.com/apis-explorer/#p/drive/v3/drive.files.get
+
+### 6. upload_drive_file.py
+
+What it does:
+
+* Upload a file to your Google Drive given it's full path and name
+
+API name and API version required:
+
+* drive-v3
+
+Scopes Required:
+
+* https://www.googleapis.com/auth/drive
+* https://www.googleapis.com/auth/drive.file
+
+User Credentials Required:
+
+* yes
+
+API explorer link:
+
+* https://developers.google.com/apis-explorer/#p/drive/v3/drive.files.create
+* https://developers.google.com/apis-explorer/#p/drive/v3/drive.files.update
 
 ## OAuth2
 
