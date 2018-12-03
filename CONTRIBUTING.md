@@ -33,8 +33,7 @@ Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/cod
 ## Docs
 
 - Rewrite docs intro
-- Spell checking
+- Rewrite auth section and include openidconnect
+- Add Spell checking
 
 ## Examples
-
-- Rewrite auth section and include openidconnect
