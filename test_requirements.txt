@@ -7,4 +7,3 @@ async-timeout
 asks
 trio
 curio
-sphinxcontrib-github

@@ -16,6 +16,11 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
 
+# -- sphinxcontrib-github workaround
+#from docutils.parsers.rst.directives.admonitions import BaseAdmonition
+#from sphinx.util import compat
+#from docutils.parsers.rst import Directive
+#compat.Directive = Directive
 
 # -- Project information -----------------------------------------------------
 
@@ -45,7 +50,7 @@ extensions = [
     'sphinxcontrib.asyncio',
     'sphinx.ext.napoleon',
     #'sphinx.ext.todo',
-    'sphinxcontrib.github',
+    #'sphinxcontrib.github',
     #'sphinx.ext.intersphinx',
 ]
 

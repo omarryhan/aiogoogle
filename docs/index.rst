@@ -4,7 +4,13 @@
    contain the root `toctree` directive.
 
 Aiogoogle
-==========
+===========
+
+.. image:: _static/github_64.png
+   :align: right
+   :scale: 100 %
+   :target: https://github.com/omarryhan/aiogoogle
+
 
 **Async** Discovery Service Client + 
 
@@ -22,14 +28,6 @@ Google's Discovery Serivce provides machine readable specifications known as dis
 In essence, Aiogoogle is a feature-rich yet easy to use Pythonic wrapper for discovery documents.
 
 For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
-
-Repository
-============
-
-.. github-repo:: omarryhan/aiogoogle
-    :travis: https://www.travis-ci.org/omarryhan/aiogoogle/
-    :docs: http://aiogoogle.readthedocs.org/en/latest/
-    :pypi: https://pypi.org/project/aiogoogle/
 
 Quickstart
 ============
