@@ -4,22 +4,28 @@ Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/cod
 
 ## Features
 
+### Discovery
+
 - batch requests
-- user_creds_jwt_auth
 - supportsSubscription and channels
-- additionalProperties (discovery)
-- etag caching (aiohttp)
-- Add asks (curio) session
-- Create tasks with timeouts (aiohttp)
+- Write format checkers for `aiogoogle.validate.IGNORABLE_FORMATS`
+
+### Auth
+
+- user_creds_jwt_auth
 - Auth device code flow
 - Service accounts
+
+### Session
+
+- Add Asks (curio) session
+- etag caching (aiohttp)
 - Resumable upload (aiohttp):
   - https://cloud.google.com/storage/docs/json_api/v1/how-tos/resumable-upload
   - https://developers.google.com/drive/api/v3/resumable-upload
   - https://googlecloudplatform.github.io/google-resumable-media-python/0.1.0/google.resumable_media.requests.html
   - https://docs.aiohttp.org/en/stable/multipart.html
-- validate repeated: Whether this parameter may appear multiple times. (add support for multidicts first)
-- Write format checkers for `aiogoogle.validate.IGNORABLE_FORMATS`
+
 
 ## Optimization
 
@@ -28,11 +34,9 @@ Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/cod
 ## Testing
 
 - Search for `TODO:` in the `tests` module and you'll find lots of unimplemented tests
-- test pattern vaildation.
 
 ## Docs
 
-- Rewrite auth section and include openidconnect
 - Add Spell checking
 
 ## Examples

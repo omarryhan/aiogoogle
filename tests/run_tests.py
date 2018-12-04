@@ -6,6 +6,7 @@ args = [
     '-s',
     '--cov',
     'aiogoogle/',
+    #'--tb=long',
     #'--fulltrace',
     #'--maxfail=5',
     #'-p no:warnings',

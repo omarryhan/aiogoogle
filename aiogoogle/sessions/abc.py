@@ -7,7 +7,11 @@ import inspect
 
 class AbstractSession(ABC):
     '''
-    Object with ``async def send`` method. Should represent an HTTP session that has an asynchronous context manager
+    Should represent an HTTP session that has an asynchronous context manager and a send method
+
+    Argumetnts:
+
+        Should return an instance without needing to pass it any args or kwargs
     '''
 
     def __new__(cls, *args, **kwargs):
@@ -25,7 +29,7 @@ class AbstractSession(ABC):
         return super(AbstractSession, cls).__new__(cls)
 
     @abstractmethod
-    async def send(self, *requests, timeout=None,  full_res=False):
+    async def send(self, *requests, timeout=None,  full_res=False, session_factory=None):
         '''
         Takes requests, sends them, returns contents of responses or full http responses.
 

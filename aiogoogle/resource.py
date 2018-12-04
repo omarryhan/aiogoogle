@@ -342,8 +342,22 @@ class Method:
 
         # Warn if not all uri_params were consumed/popped
         if uri_params:  # should be empty by now
-            warnings.warn('Parameters {} were not used and are being discarded.'
-                          ' Check if they\'re valid parameters'.format(str(uri_params)))
+            # If there's room for addtionalProperties, validate and add them to the URI
+            if validate:
+                if self.parameters.get('additionalProperties'):
+                    for _,v in uri_params.items():
+                        self._validate(v, self.parameters['additionalProperties'])
+                else:
+                    raise ValidationError('Invalid parameters: {} were passed')
+            else:
+                if not self.parameters.get('additionalProperties'):
+                    warnings.warn('Parameters {} were found and they\'re probably of no use.'
+                            ' Check if they\'re valid parameters'.format(str(uri_params)))
+            if '?' not in uri:
+                uri = uri + '?' + urlencode(uri_params)
+            else:
+                uri = uri + '&' + urlencode(uri_params)
+                
 
         # Ensure only one param for http req body.
         if json and data:

@@ -26,22 +26,6 @@ import rfc3339
 from .excs import ValidationError
 
 
-#------ Helpers -------#
-
-def remove_microseconds(value):
-    # 2014-02-11T14:13:26
-    if not isinstance(value, str):
-        raise ValidationError("datetime should be a string")
-    if '.' in value:
-        print(value)
-        print(value[:-5])
-        return value[:-5] + 'Z'
-    else:
-        return value
-
-def make_validation_error(checked_value, correct_criteria):
-    return f"{checked_value} isn't valid. Expected a value that meets those criteria: {correct_criteria}"
-
 #------- MAPPINGS -------#
 
 JSON_PYTHON_TYPE_MAPPING = {
@@ -57,7 +41,7 @@ JSON_PYTHON_TYPE_MAPPING = {
 
 KNOWN_FORMATS = ['int32', 'uint32', 'double', 'float', 'null', 'byte', 'date', 'date-time', 'int64', 'uint64', 'google-fieldmask', 'google-duration', 'google-datetime']
 
-IGNORABLE_FORMATS = ['google-fieldmask', 'google-duration', 'google-datetime']
+IGNORABLE_FORMATS = ['google-fieldmask', 'google-duration', 'google-datetime']  # After writing a format check for any of those formats, remove the format you wrote the checker for.
 
 TYPE_FORMAT_MAPPING = {
     # Given this type, if None then don't check for additional "format" property in the schema, else, format might be any of the mapped values
@@ -70,6 +54,22 @@ TYPE_FORMAT_MAPPING = {
     'object': [],
     'string': ['null', 'byte', 'date', 'date-time','int64','uint64']
 }
+
+#------ Helpers -------#
+
+def remove_microseconds(value):
+    # 2014-02-11T14:13:26
+    if not isinstance(value, str):
+        raise ValidationError("datetime should be a string")
+    if '.' in value:
+        print(value)
+        print(value[:-5])
+        return value[:-5] + 'Z'
+    else:
+        return value
+
+def make_validation_error(checked_value, correct_criteria):
+    return f"{checked_value} isn't valid. Expected a value that meets the following criteria: {correct_criteria}"
 
 #-------- VALIDATORS ---------#
 
@@ -257,20 +257,52 @@ def validate(instance, schema, schemas=None):
 
     def validate_object():
         # Validate instance is an object
-        object_validator(instance)
+        object_validator(instance)  # dict validator, nothing jsonschema related
 
-        # Objects sometimes do not have a properties item?? weird. 
-        # e.g. https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest schemas['Event']['extendedProperties']
-        # Not sure whether or not this should raise a validation error.
-        if 'properties' not in schema:
-            return
+        # 1. Resolve additional properties
+        additional_properties = schema.get('additionalProperties')
+        # Jsonschema draft 3
+        if additional_properties is False or (isinstance(additional_properties, dict) and len(additional_properties) ==0):
+            additional_properties = None
+        if not isinstance(additional_properties, dict): 
+            # Typically, additionalProperties should be either False, dict(schema) or empty.
+            # Empty will defailt to None, and False, as shown above, also defaults to None.
+            # Sometimes, it's a str. Strings shouldn't be schemas. Strings will be ignored. Bad strings..
+            # There's just too many of them to raise an error whenever we find one (around 75). So they'l just be ignored
+            #raise ValidationError(f'Invalid type of addiotional properties. Shoudl be either a dict or False')
+            additional_properties = None
 
-        # Raise warnings on passed dict keys that aren't mentioned in the schema
+        # 2. Resolve properties
+        if not schema.get('properties'):
+            if not additional_properties:
+                raise ValidationError(f'''
+                    Invalid Schema: {str(schema)}. 
+                    Neither properties nor addiotional properties found in this schema'''
+                )
+            props = {}
+        else:
+            props = schema['properties']
+
+        # 3. Raise warnings or fail on passed dict keys that aren't mentioned in the schema
         for k, _ in instance.items():
-            if k not in schema['properties']:
-                warnings.warn(f"Item {k} was passed, but not mentioned in the following schema {schema.get('id')}.\n\n It will probably be discarded by the API you're using")
-        # Validate
-        for k,v in schema['properties'].items():
+            if k not in props:
+                # If there's a schema for additional properties validate
+                if additional_properties is not None:
+                    # some additional properties are misused and 
+                    # have many properties instead of just one.
+                    # Basically, additionalProperties is sort of like **kwargs, 
+                    # you should only use one per statement/schema
+                    if 'properties' not in additional_properties:
+                        validate(instance[k], additional_properties)  # instace, schema for any additional props
+                else:
+                    warnings.warn(f"""
+                        Item {k} was passed, but not mentioned in the
+                        following schema {schema.get('id')}.\n\n
+                        It will probably be discarded by the API you're using"""
+                    )
+        
+        # 4. Validate existing properties
+        for k,v in props.items():
             # Check if there's a ref to resolve
             v = resolve(v)
             # Check if instance has the property, if not, check if it's required

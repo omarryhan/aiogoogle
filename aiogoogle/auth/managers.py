@@ -49,6 +49,7 @@ URLENCODED_CONTENT_TYPE = 'application/x-www-form-urlencoded'
 #  https://developers.google.com/api-client-library/python/auth/installed-app
 OOB_REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
+DEFAULT_ISS = 'https://accounts.google.com'
 
 ## The URL that provides public certificates for verifying ID tokens issued
 ## by Google's OAuth 2.0 authorization server.
@@ -436,8 +437,8 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
         except ValueError as e:
             raise AuthError(e)
         # Verify iss (The Issuer Identifier for the Issuer of the response) is https://accounts.google.com
-        if id_token['iss'] != 'https://accounts.google.com':
-            raise AuthError(f"Invalid issuer, got: {id_token['iss']}, expected: https://accounts.google.com")
+        if id_token['iss'] != DEFAULT_ISS:
+            raise AuthError(f"Invalid issuer, got: {id_token['iss']}, expected: {DEFAULT_ISS}")
         # Verify nonce if any
         if nonce is not None:
             if nonce != id_token['nonce']:

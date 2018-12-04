@@ -98,21 +98,6 @@ def test_build_revoke_request():
     # TODO:
     pass
 
-@pytest.mark.asyncio
-async def test_oauth2_manager_api_is_latest_version(manager):
-
-    CURRENT_OAUTH2_API_VERSION = 2
-
-    async with Aiogoogle() as google:
-        oauth2_apis_list = await google.list_api('oauth2')
-
-    apis = oauth2_apis_list['items']
-
-    versions_available = [int(api['version'][-1:]) for api in apis]
-
-    for version in versions_available:
-        assert CURRENT_OAUTH2_API_VERSION >= version
-
 def test_user_authorized_for_method(open_discovery_document):
     discovery_document = open_discovery_document('youtube', 'v3')
     youtube = GoogleAPI(discovery_document=discovery_document)

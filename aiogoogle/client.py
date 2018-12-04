@@ -37,8 +37,6 @@ class Aiogoogle:
 
         client_creds (aiogoogle.auth.creds.ClientCreds): OAuth2 Client Credentials
         
-        timeout (int): Timeout for this class's async context manager
-            
     Note: 
     
         In case you want to instantiate a custom session with initial parameters, you can pass an anonymous factory. e.g. ::
@@ -47,10 +45,9 @@ class Aiogoogle:
             >>> aiogoogle = Aiogoogle(session_factory=sess)
     '''
 
-    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None, timeout=None):
+    def __init__(self, session_factory=AiohttpSession, api_key=None, user_creds=None, client_creds=None):
 
         self.session_factory = session_factory
-        self.timeout = timeout
         self.active_session = None
 
         # Keys
@@ -272,7 +269,7 @@ class Aiogoogle:
         return await self.active_session.send(*requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
     async def __aenter__(self):
-        self.active_session = await self.session_factory(timeout=self.timeout).__aenter__()
+        self.active_session = await self.session_factory().__aenter__()
         return self
 
     async def __aexit__(self, *args, **kwargs):

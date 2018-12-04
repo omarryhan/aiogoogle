@@ -224,6 +224,7 @@ class Response:
     async def _next_page_generator(prev_res, session_factory, req_token_name=None, res_token_name=None, json_req=False):
         prev_url = None
         while prev_res is not None:
+            
             # Avoid infinite looping if google sent the same token twice
             if prev_url == prev_res.req.url:
                 break
@@ -272,6 +273,9 @@ class Response:
 
     def __aiter__(self):
         return self._next_page_generator(self, self.session_factory)
+
+    def __iter__(self):
+        raise TypeError('You probably forgot to use an "async for" statement instead of just a "for" statement.')
 
     @property
     def content(self):

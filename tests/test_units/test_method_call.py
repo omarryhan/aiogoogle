@@ -12,15 +12,16 @@ from aiogoogle.excs import ValidationError
 from ..test_globals import ALL_APIS
 
 
-def test_uri_params_that_are_NONE_are_removed():
-    # TODO
-    pass
+def test_NONE_uri_params_removed(create_api):
+    youtube = create_api('youtube', 'v3')
+    req = youtube.videos.list(part='snippet', alt=None)
+    assert req.url == 'https://www.googleapis.com/youtube/v3/videos?part=snippet'
 
-def test_url_query_extra_not_included_and_warns(create_api):
+def test_url_query_extra_warns(create_api):
     youtube = create_api('youtube', 'v3')
     with pytest.warns(UserWarning, match='i_am_extra'):
         req = youtube.videos.list(part='snippet', i_am_extra=True, validate=False)
-    assert req.url == 'https://www.googleapis.com/youtube/v3/videos?part=snippet'
+    assert req.url == 'https://www.googleapis.com/youtube/v3/videos?part=snippet&i_am_extra=True'
 
 def test_url_query_multi_query_arg(create_api):
     youtube = create_api('youtube', 'v3')
@@ -48,7 +49,7 @@ def test_url_path_args_reversed_with_extra_arg(create_api):
     calendar = create_api('calendar', 'v3')
     with pytest.warns(UserWarning, match='i_am_extra'):
         req = calendar.acl.get(ruleId='dos', calendarId='uno', i_am_extra=1, validate=False)
-    assert req.url == 'https://www.googleapis.com/calendar/v3/calendars/uno/acl/dos'
+    assert req.url == 'https://www.googleapis.com/calendar/v3/calendars/uno/acl/dos?i_am_extra=1'
 
 def test_url_path_args_and_query_path(create_api):
     calendar = create_api('calendar', 'v3')
@@ -59,11 +60,11 @@ def test_url_path_args_and_query_path_extra_arg(create_api):
     calendar = create_api('calendar', 'v3')
     with pytest.warns(UserWarning, match='i_am_extra'):
         req = calendar.events.get(i_am_extra='asdasdasdasd', eventId='dos', calendarId='uno', maxAttendees=1, validate=False)
-    assert req.url == 'https://www.googleapis.com/calendar/v3/calendars/uno/events/dos?maxAttendees=1'
+    assert req.url == 'https://www.googleapis.com/calendar/v3/calendars/uno/events/dos?maxAttendees=1&i_am_extra=asdasdasdasd'
 
 def test_method(create_api):
     calendar = create_api('calendar', 'v3')
-    req = calendar.events.get(eventId='dos', calendarId='uno')
+    req = calendar.events.get(eventId='dos', calendarId='uno', validate=False)
     assert req.method == 'GET'
 
 def test_timeout(create_api):
@@ -206,45 +207,42 @@ def test_upload_file_fails_unsupported_method(create_api):
         assert 'upload_file' in str(e)
 
 def test_resumable_upload(create_api):
-    # TODO: Rewrite this test
-    pass
-    #    RESUMABLE_UPLOAD_SPECS = {
-    #        'multipart': True,
-    #        'path': '/resumable/upload/example/v3/resource'
-    #    }
-    #    METHOD_SPECS = {
-    #        'path': 'resource/',
-    #        'httpMethod': 'GET',
-    #        'parameters': {},
-    #        'supportsMediaUpload': True,
-    #        'mediaUpload': {
-    #            'accept': [
-    #                "*/*",
-    #                "application/octet-stream",
-    #                "text/xml"
-    #            ],
-    #
-    #            'maxSize': "100MB",
-    #            
-    #            'protocols': {
-    #                'simple': {
-    #                    'multipart': True,
-    #                    'path': "resource"
-    #                },
-    #                'resumable': RESUMABLE_UPLOAD_SPECS
-    #            },
-    #        }
-    #    }
-    #    ROOT_URL = 'https://example.com/'
-    #    SERVICE_PATH = 'example/v3/'
-    #    BATCH_PATH = 'https://example.com/api/v1/batch'
-    #    SERVICE_PATH = 'service/'
-    #
-    #    method = Method(name='upload', method_specs=METHOD_SPECS, global_parameters={}, schemas={}, batch_path=BATCH_PATH, service_path=SERVICE_PATH, root_url=ROOT_URL, validate=False)
-    #    req = method(upload_file='/home/omar/resumable_file.file')
-    #    assert req.media_upload.resumable
-    #    assert req.media_upload.resumable.upload_path == 'https://example.com/resumable/upload/example/v3/resource'
-    #    assert req.media_upload.resumable.multipart is True
+    RESUMABLE_UPLOAD_SPECS = {
+        'multipart': True,
+        'path': '/resumable/upload/example/v3/resource'
+    }
+    METHOD_SPECS = {
+        'path': 'resource/',
+        'httpMethod': 'GET',
+        'parameters': {},
+        'supportsMediaUpload': True,
+        'mediaUpload': {
+            'accept': [
+                "*/*",
+                "application/octet-stream",
+                "text/xml"
+            ],
+
+            'maxSize': "100MB",
+            
+            'protocols': {
+                'simple': {
+                    'multipart': True,
+                    'path': "resource"
+                },
+                'resumable': RESUMABLE_UPLOAD_SPECS
+            },
+        }
+    }
+    ROOT_URL = 'https://example.com/'
+    SERVICE_PATH = 'example/v3/'
+    BATCH_PATH = 'https://example.com/api/v1/batch'
+
+    method = Method(name='upload', method_specs=METHOD_SPECS, global_parameters={}, schemas={}, batch_path=BATCH_PATH, service_path=SERVICE_PATH, root_url=ROOT_URL, validate=False)
+    req = method(upload_file='/home/omar/resumable_file.file')
+    assert req.media_upload.resumable
+    assert req.media_upload.resumable.upload_path == 'https://example.com/resumable/upload/example/v3/resource/'
+    assert req.media_upload.resumable.multipart is True
 
 def test_unresumable_upload(create_api):
     METHOD_SPECS = {

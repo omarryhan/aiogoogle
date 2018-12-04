@@ -19,7 +19,7 @@ def test_resource_constructor(open_discovery_document, name, version):
         assert api['schemas'] is resource_object._schemas
         assert api['parameters'] is resource_object._global_parameters
 
-def test_resources_property():
+def test_resources_available_property():
     resource = Resource(
         name='irrelevant',
         resource_specs={
@@ -42,7 +42,7 @@ def test_resources_property():
     assert 'first_resource' in resource.resources_available
     assert 'second_resource' in resource.resources_available
 
-def test_methods_property():
+def test_methods_available_property():
     resource = Resource(
         name='irrelevant',
         resource_specs={

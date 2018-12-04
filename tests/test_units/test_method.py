@@ -43,12 +43,29 @@ def test_required_parameters(open_discovery_document, name, version):
                 parameter = method.parameters[parameter_name]
                 assert parameter.get('required') is True
 
-# TODO:
-# test_path_parameteres
-# test_query_parameters
-# test_required_query_parameters
-# test_optional_query_parameters
-# test_ unfix wrapper
+@pytest.mark.parametrize('name,version', ALL_APIS)
+def test_path_parameters(open_discovery_document, name, version):
+    discovery_document = open_discovery_document(name, version)
+    api = GoogleAPI(discovery_document=discovery_document)
+    for resource_name, _ in discovery_document.get('resources').items():
+        resource = getattr(api, resource_name)
+        for method_name in resource.methods_available:
+            method = getattr(resource, method_name)
+            for parameter_name in method.path_parameters:
+                parameter = method.parameters[parameter_name]
+                assert parameter.get('location') == 'path'
+
+@pytest.mark.parametrize('name,version', ALL_APIS)
+def test_query_parameters(open_discovery_document, name, version):
+    discovery_document = open_discovery_document(name, version)
+    api = GoogleAPI(discovery_document=discovery_document)
+    for resource_name, _ in discovery_document.get('resources').items():
+        resource = getattr(api, resource_name)
+        for method_name in resource.methods_available:
+            method = getattr(resource, method_name)
+            for parameter_name in method.query_parameters:
+                parameter = method.parameters[parameter_name]
+                assert parameter.get('location') == 'query'
 
 def test_getitem():
     method = Method(

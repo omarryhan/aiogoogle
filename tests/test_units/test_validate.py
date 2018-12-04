@@ -11,14 +11,22 @@ from aiogoogle.excs import ValidationError
 from ..test_globals import ALL_APIS
 
 
+# TODO: Test additionalParameters (Tricky)
+
+def test_aiogoogle_compiles_discovery_re_pattern(create_api):
+    pass
+
 def test_validates_url_path_params(create_api):
     calendar = create_api('calendar', 'v3')
     assert calendar.acl.insert(calendarId='string', validate=True)
 
     with pytest.raises(ValidationError):
         calendar.acl.insert(calendarId=1, validate=True)
+    with pytest.raises(ValidationError):
         calendar.acl.insert(calendarId=None, validate=True)
+    with pytest.raises(ValidationError):
         calendar.acl.insert(calendarId=True, validate=True)
+    with pytest.raises(ValidationError):
         calendar.acl.insert(calendarId=['asdasd'], validate=True)
 
 
@@ -28,9 +36,12 @@ def test_validates_url_query_params(create_api):
 
     with pytest.raises(ValidationError):
         youtube.videos.list(part=0.8, validate=True)
+    with pytest.raises(ValidationError):
         youtube.videos.list(part=False, validate=True)
+    with pytest.raises(ValidationError):
         youtube.videos.list(part=1, validate=True)
-        youtube.videos.list(part=('snippet'), validate=True)
+    with pytest.raises(ValidationError):
+        youtube.videos.list(part=['snippet'], validate=True)
 
 def test_validates_body_data(create_api):
     youtube = create_api('youtube', 'v3')

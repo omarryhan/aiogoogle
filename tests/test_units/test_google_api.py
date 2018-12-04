@@ -1,9 +1,24 @@
 import pytest
 
 from aiogoogle import Aiogoogle
-from aiogoogle.resource import Resource, GoogleAPI, Method
+from aiogoogle.resource import Resource, GoogleAPI, Method, STACK_QUERY_PARAMETER_DEFAULT_VALUE, STACK_QUERY_PARAMETERS
 from ..test_globals import ALL_APIS
 
+
+@pytest.mark.parametrize('name,version', ALL_APIS)
+def test_getitem(open_discovery_document, name, version):
+    discovery_document = open_discovery_document(name, version)
+    api = GoogleAPI(discovery_document=discovery_document)
+    assert api['name'] == discovery_document.get('name')
+    assert api['version'] == discovery_document.get('version')
+    assert api['auth'] == discovery_document.get('auth')
+
+@pytest.mark.parametrize('name,version', ALL_APIS)
+def test_properties(open_discovery_document, name, version):
+    discovery_document = open_discovery_document(name, version)
+    api = GoogleAPI(discovery_document=discovery_document)
+    assert (name in str(api)) or (discovery_document.get('title') in str(api))
+    assert (version in str(api)) or (discovery_document.get('title') in str(api))
 
 @pytest.mark.parametrize('name,version', ALL_APIS)
 def test_constructor(open_discovery_document, name, version):
@@ -47,3 +62,11 @@ def test_resources_getattr_fails_on_unknown_resource(open_discovery_document, na
 
     with pytest.raises(AttributeError) as e:
         getattr(api, nonexistent_resource)
+
+@pytest.mark.parametrize('name,version', ALL_APIS)
+def test_add_global_params(open_discovery_document, name, version):
+    discovery_document = open_discovery_document(name, version)
+    api = GoogleAPI(discovery_document=discovery_document)
+    for param in STACK_QUERY_PARAMETERS:
+        assert param in api['parameters']
+        assert api['parameters'][param] == STACK_QUERY_PARAMETER_DEFAULT_VALUE
