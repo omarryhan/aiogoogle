@@ -598,7 +598,7 @@ Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figur
     +---------+       (w/ Optional Refresh Token)
 
 
-**OAuth2 Example**
+OAuth2 Example
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py
@@ -715,7 +715,7 @@ Install sanic
         )
         app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 
-**OpenID Connect Example**
+OpenID Connect Example
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/openid_connect.py
@@ -848,13 +848,15 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
 Design
 =======
 
-Aiogoogle does not and will not enforce the use of any async/await framework e.g. Asyncio, Curio or Trio. As a result, modules that handle *io* are easily pluggable.
+Aiogoogle does not and will not enforce the use of any async/await framework e.g. Asyncio, Curio or Trio. As a result, modules that handle *io* are made to be easily pluggable.
 
 If you want to use Curio instead of Asyncio:
 
 .. code-block:: bash
 
     pip install aiogoogle[curio-asks-session]
+
+e.g.
 
 .. code-block:: python3
 
@@ -868,6 +870,77 @@ If you want to use Curio instead of Asyncio:
             youtube = await google.discover('youtube', 'v3')
 
     curio.run(main)
+
+Another e.g.
+
+.. code-block:: python3
+
+    #!/usr/bin/python3.7
+
+    import curio, pprint
+
+    from aiogoogle import Aiogoogle
+    from aiogoogle.sessions.curio_asks_session import CurioAsksSession
+
+    async def list_events():
+        async with Aiogoogle(user_creds=user_creds, client_creds=client_creds, session_factory=CurioAsksSession) as aiogoogle:
+            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
+            events = await aiogoogle.as_user(
+                calendar_v3.events.list(calendarId='primary'),
+            )
+        pprint.pprint(events)
+
+    if __name__ == '__main__':
+        curio.run(list_events)
+
+The same with asyncio would look like this:
+
+.. code-block:: python3
+
+    #!/usr/bin/python3.7
+
+    import asyncio, pprint
+
+    from aiogoogle import Aiogoogle
+    from aiogoogle.sessions.aiohttp_session import AiohttpSession  # Default
+
+    async def list_events():
+        async with Aiogoogle(user_creds=user_creds, client_creds=client_creds, session_factory=AiohttpSession) as aiogoogle:
+            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
+            events = await aiogoogle.as_user(
+                calendar_v3.events.list(calendarId='primary'),
+            )
+        pprint.pprint(events)
+
+    if __name__ == '__main__':
+        asyncio.run(list_events)
+
+
+And Trio:
+
+.. code-block:: bash
+
+    pip install aiogoogle[trio-asks-session]
+
+.. code-block:: python3
+
+    #!/usr/bin/python3.7
+
+    import trio, pprint
+
+    from aiogoogle import Aiogoogle
+    from aiogoogle.sessions.trio_asks_session import TrioAsksSession   # Default
+
+    async def list_events():
+        async with Aiogoogle(user_creds=user_creds, client_creds=client_creds, session_factory=TrioAsksSession) as aiogoogle:
+            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
+            events = await aiogoogle.as_user(
+                calendar_v3.events.list(calendarId='primary'),
+            )
+        pprint.pprint(events)
+
+    if __name__ == '__main__':
+        trio.run(list_events)
 
 
 API
