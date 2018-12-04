@@ -62,8 +62,6 @@ def remove_microseconds(value):
     if not isinstance(value, str):
         raise ValidationError("datetime should be a string")
     if '.' in value:
-        print(value)
-        print(value[:-5])
         return value[:-5] + 'Z'
     else:
         return value

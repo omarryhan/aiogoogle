@@ -348,7 +348,7 @@ class Method:
                     for _,v in uri_params.items():
                         self._validate(v, self.parameters['additionalProperties'])
                 else:
-                    raise ValidationError('Invalid parameters: {} were passed')
+                    raise ValidationError(f'Invalid (extra) parameters: {uri_params} were passed')
             else:
                 if not self.parameters.get('additionalProperties'):
                     warnings.warn('Parameters {} were found and they\'re probably of no use.'
@@ -666,7 +666,7 @@ class GoogleAPI:
                 >>> google_service = GoogleAPI(google_service_discovery_doc)
                 >>> google_service.user
 
-                user resource @ google_service.com/api/
+                user resource @ google_service.com/api/v1/
 
         Returns:
 

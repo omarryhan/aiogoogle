@@ -33,6 +33,7 @@ Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/cod
 
 ## Testing
 
+- Currently, the library is extremely under tested. Writing some tests would be really appreciated.
 - Search for `TODO:` in the `tests` module and you'll find lots of unimplemented tests
 
 ## Docs

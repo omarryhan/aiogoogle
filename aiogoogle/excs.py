@@ -3,7 +3,7 @@ class AiogoogleError(Exception):
 
 class ValidationError(AiogoogleError):
     '''
-    Raised when the validate flag is set true and validation error occurs
+    Raised when the validate flag is set true and a validation error occurs
     '''
     pass
 

@@ -131,11 +131,15 @@ class Oauth2Manager(AbstractOAuth2Manager):
             res = await self.active_session.send(req)
         return res
 
-    async def refresh_openid_configs(self):
+    async def _refresh_openid_configs(self):
         '''
         Downloads fresh openid discovery document and sets it to the current manager.
 
-        OpenID configs are used for both OAuth2 manager and OpenID connect manager
+        OpenID configs are used for both OAuth2 manager and OpenID connect manager.
+
+        Unless this test is failing:
+
+        aiogoogle.tests.integ_online.latest_test_latest_openid_configs(), You shouldn't really need to use this. 
         '''
         req = Request('GET', url=OPENID_CONFIGS_DISCOVERY_DOC_URL)
         self.openid_configs = await self._send_request(req)
@@ -224,11 +228,11 @@ class Oauth2Manager(AbstractOAuth2Manager):
     @staticmethod
     def authorized_for_method(method, user_creds) -> bool:
         '''
-        Checks if oauth2 user_creds object has sufficient scopes for a method call.
+        Checks if oauth2 user_creds dict has sufficient scopes for a method call.
         
         .. note:: 
         
-            This method doesn't check whether creds are refreshed or valid. As this is done automatically before each request.
+            This method doesn't check whether creds are refreshed or valid.
 
         e.g.
 
@@ -377,7 +381,7 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
         return await self._send_request(req)
 
 
-    async def _get_openid_certs_openid_docs(self):
+    async def _get_openid_certs(self):
         request = Request(
             method='GET',
             url=GOOGLE_OAUTH2_CERTS_URL,
@@ -430,7 +434,7 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
         return user_creds
 
     async def decode_and_validate(self, id_token_jwt, client_id=None, nonce=None, hd=None):
-        certs = await self._get_openid_certs_openid_docs()  # refreshed once a day-ish
+        certs = await self._get_openid_certs()  # refreshed once a day-ish
         # Verify ID token is signed by google
         try:
             id_token = jwt.decode(id_token_jwt, certs=certs, verify=True)

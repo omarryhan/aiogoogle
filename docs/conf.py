@@ -26,7 +26,7 @@ author = 'Omar Ryhan'
 # The short X.Y version
 version = '0.0.1'
 # The full version, including alpha/beta/rc tags
-release = '0.0.1b1'
+release = '0.0.1b2'
 
 
 # -- General configuration ---------------------------------------------------

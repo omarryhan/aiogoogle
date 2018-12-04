@@ -26,6 +26,7 @@ class Aiogoogle:
         2. Aiogoogle's OAuth2 manager
         3. Aiogoogle's API key manager
         4. Aiogoogle's OpenID Connect manager
+        5. One of Aiogoogle's implementations of a session object
 
     Arguments:
 
@@ -202,6 +203,9 @@ class Aiogoogle:
 
             aiogoogle.models.Response:
         '''
+        if self.user_creds is None:
+            raise TypeError('No user credentials were found')
+
         # Refresh credentials
         if self.oauth2.is_expired(self.user_creds) is True:
             self.user_creds = await self.oauth2.refresh(
@@ -237,6 +241,8 @@ class Aiogoogle:
 
             aiogoogle.models.Response:
         '''
+        if self.api_key is None:
+            raise TypeError('No API key found')
 
         # Authorize requests
         authorized_requests = [self.api_key_manager.authorize(request, self.api_key) for request in requests]

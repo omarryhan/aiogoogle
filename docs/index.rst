@@ -6,11 +6,11 @@
 Aiogoogle
 ==========
 
-An **Asynchronous** Discovery Service Client + 
+**Async** Discovery Service Client + 
 
-Async Google OAuth2 Client + 
+**Async** Google OAuth2 Client + 
 
-Async Google OpenID Connect (Social Sign-in) Client
+**Async** Google OpenID Connect (Social Sign-in) Client
 
 Discovery Service?
 ===================
@@ -71,13 +71,13 @@ Download a File from Google Drive
 
 .. code-block:: python3
 
-    async def download_file(path):
+    async def download_file(file_id, path):
         async with Aiogoogle(user_creds=user_creds) as aiogoogle:
             drive_v3 = await aiogoogle.discover('drive', 'v3')
             await aiogoogle.as_user(
                 drive_v3.files.get(fileId=file_id, download_file=path, alt='media'),
             )
-    asyncio.run(download_file('/home/user/Desktop/my_file.zip'))
+    asyncio.run(download_file('abc123', '/home/user/Desktop/my_file.zip'))
 
 Upload a File to Google Drive
 --------------------------------
@@ -112,10 +112,8 @@ List Your Contacts
             )
         async for page in contacts_book:
             for connection in page['connections']:
-                # print name
-                print(connection['names'][0]['displayName']
-                # print phone number
-                print(connection['phoneNumbers'][0][cannonicalForm'])
+                print(connection['names'])
+                print(connection['phoneNumbers'])
 
     asyncio.run(list_contacts())
 
@@ -127,9 +125,8 @@ List Calendar Events
     async def list_events():
         async with Aiogoogle(user_creds=user_creds) as aiogoogle:
             calendar_v3 = await aiogoogle.discover('calendar', 'v3')
-            req = calendar_v3.events.list(calendarId='primary')
             res = await aiogoogle.as_user(
-                req
+                calendar_v3.events.list(calendarId='primary')
             )
             pprint.pprint(res)
 
@@ -246,7 +243,7 @@ Browse an API
 
 .. code-block:: python3
 
-    >>> request = list_url(start_token='a_string')
+    >>> request = list_url(start_token='a_string', key='a_secret_key')
 
     # Equivalent to:
 
@@ -268,16 +265,21 @@ Send a Request
     from aiogoogle import Aiogoogle
     from pprint import pprint
 
+    api_key = 'you_api_key'
+
     async def shorten_urls(long_url):
-        async with Aiogoogle() as google:
+        async with Aiogoogle(api_key=api_key) as google:
             url_shortener = await google.discover('urlshortener', 'v1')
-            short_url = await google.as_anon(
-                url_shortener.url.insert(longUrl=long_url)
+            short_url = await google.api_key(
+                url_shortener.url.insert(
+                    json=dict(
+                        longUrl=long_url
+                    )
             )
 
         return short_url
 
-    short_url = asyncio.run(shorten_urls('https://www.example.com'))
+    short_url = asyncio.run(shorten_urls('https://www.google.com'))
     pprint(short_url)
 
 .. code-block:: python
@@ -285,7 +287,7 @@ Send a Request
     {
         "kind": "urlshortener#url",
         "id": "https://goo.gl/Dk2j",
-        "longUrl": "https://www.example.com/"
+        "longUrl": "https://www.google.com/"
     }
 
 Send Requests Concurrently:
@@ -300,17 +302,25 @@ Send Requests Concurrently:
     from pprint import pprint
 
     async def shorten_url(long_urls):
-        async with Aiogoogle() as google:
+        async with Aiogoogle(api_key=api_key) as google:
             url_shortener = await google.discover('urlshortener', 'v1')
-            short_urls = await google.as_anon(
-                url_shortener.insert(longUrl=long_urls[0]),
-                url_shortener.insert(longUrl=long_urls[1])
+            short_urls = await google.as_api_key(
+
+                url_shortener.url.insert(
+                    json=dict(
+                        longUrl=long_url[0]
+                    ),
+                
+                url_shortener.url.insert(
+                    json=dict(
+                        longUrl=long_url[1]
+                    )
             )
         return short_urls
 
     short_urls = asyncio.run(
         shorten_url(
-            ['https://www.example.com', 'https://www.example.org']
+            ['https://www.google.com', 'https://www.google.org']
         )
     )
     pprint(short_urls)
@@ -321,12 +331,12 @@ Send Requests Concurrently:
         {
             "kind": "urlshortener#url",
             "id": "https://goo.gl/Dk2j",
-            "longUrl": "https://www.example.com/"
+            "longUrl": "https://www.google.com/"
         },
         {
             "kind": "urlshortener#url",
             "id": "https://goo.gl/Dk23",
-            "longUrl": "https://www.example.org/"
+            "longUrl": "https://www.google.org/"
         }
     ]
 
@@ -336,25 +346,24 @@ Send As Client
 
 .. code-block:: python
 
-    import asyncio
-    from aiogoogle import Aiogoole
-    from pprint import pprint
+    #!/usr/bin/python3.7
 
-    API_KEY = 'get_away_eve_this_is_only_for_bob'
+    import asyncio, pprint
+    from aiogoogle import Aiogoogle
+
+    api_key = 'abc123'
 
     async def translate_to_latin(words):
-        async with Aiogoogle(api_key=API_KEY) as google:
-            translator = await google.discover('translate', 'v2')
+        async with Aiogoogle(api_key=api_key) as aiogoogle:
+            language = await aiogoogle.discover('translate', 'v2')
             words = dict(q=[words], target='la')
-            result = await google.as_api_key(
-                translator.translations.translate(json=words)
+            result = await aiogoogle.as_api_key(
+                language.translations.translate(json=words)
             )
-        return result
+        pprint.pprint(result)
 
-    translation = asyncio.run(
-        translate_to_latin('Googleaio is awesome!')
-    )
-    pprint(translation)
+    if __name__ == '__main__':
+        asyncio.run(translate_to_latin('Aiogoogle is awesome'))
 
 .. code-block:: bash
 
@@ -362,7 +371,7 @@ Send As Client
         "data": {
             "translations": [
                 {
-                    "translatedText": "Googleaio est terribilis!",  
+                    "translatedText": "Aiogoogle est terribilis!",  
                     # Google probably meant "awesomelis", but whatever..
                     "detectedSourceLanguage": "en"
                 }
@@ -382,18 +391,17 @@ Send As User (`Authorization Code Flow`_)
     USER_CREDS = {'access_token': '...'}
 
     async def get_calendar_events():
-        async with Aiogoogle(user_creds=USER_CREDS) as google:
-            calendar_v3 = await google.discover('calendar', 'v3')
-            result = await google.as_user_creds(
-                calendar_v3.calendar.events.list(
+        async with Aiogoogle(user_creds=USER_CREDS) as aiogoogle:
+            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
+            result = await aiogoogle.as_user(
+                calendar_v3.events.list(
                     calendarId="primary",
                     maxResults=1
                 )
             )
-        return result
+        pprint.pprint(result)
 
-    user_events = asyncio.run(get_calendar_events())
-    pprint(user_events)
+    asyncio.run(get_calendar_events())
 
 .. code-block:: bash
 
@@ -828,7 +836,7 @@ If you want to use Curio instead of Asyncio:
 
 .. code-block:: bash
 
-    pip install aiogoogle[curio-asks-session]
+    pip install aiogoogle[curio_asks]
 
 e.g.
 
@@ -894,7 +902,7 @@ And Trio:
 
 .. code-block:: bash
 
-    pip install aiogoogle[trio-asks-session]
+    pip install aiogoogle[trio_asks]
 
 .. code-block:: python3
 

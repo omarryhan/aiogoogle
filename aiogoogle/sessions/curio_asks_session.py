@@ -18,12 +18,6 @@ class CurioAsksSession(Session, AbstractSession):
             kwargs.pop('timeout', None)
         super().__init__(*args, **kwargs)
 
-    async def __aiter__(self):
-        return self
-
-    async def __aexit__(self, *args):
-        pass
-
     async def send(self, *requests, timeout=None, full_res=False, raise_for_status=True, session_factory=None):
         def call_callback(request, response):
             if request.callback is not None:
@@ -41,7 +35,7 @@ class CurioAsksSession(Session, AbstractSession):
 
             # If downloading file:
             if request.media_download:
-                raise NotImplementedError('Downloading media isn\'t supported by AsksSession')
+                raise NotImplementedError('Downloading media isn\'t supported by this session')
             else:
                 if response.status_code != 204:  # If no (no content)
                     try:
@@ -77,7 +71,7 @@ class CurioAsksSession(Session, AbstractSession):
         async def fire_request(request):
             request.headers['Accept-Encoding'] = 'gzip'
             if request.media_upload:
-                raise NotImplementedError('Uploading media isn\'t supported by AsksSession')
+                raise NotImplementedError('Uploading media isn\'t supported by this session')
             else:
                 return await self.request(
                     method=request.method,

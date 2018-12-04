@@ -18,12 +18,6 @@ class TrioAsksSession(Session, AbstractSession):
             kwargs.pop('timeout', None)
         super().__init__(*args, **kwargs)
 
-    async def __aiter__(self):
-        return self
-
-    async def __aexit__(self, *args):
-        pass
-
     async def send(self, *requests, timeout=None, full_res=False, raise_for_status=True, session_factory=None):
         responses = []
 

@@ -19,11 +19,11 @@ with open("README.md", "r") as fh:
 setuptools.setup(
 
     name='aiogoogle',
-    version="0.0.1b1",
+    version="0.0.1b2",
     author='Omar Ryhan',
     author_email='omarryhan@gmail.com',
     license='GNU',
-    description="Aiogoogle is an async-framework agnostic async library for Google's Discovery Service",
+    description="Async Google-Python-Client",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,
