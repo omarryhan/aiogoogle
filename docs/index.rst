@@ -168,9 +168,7 @@ Create a Google API instance
     from aiogoogle import Aiogoogle
 
     async def create_api(name, version):
-
         async with Aiogoogle() as google:
-
             return await google.discover(name, version)
 
     url_shortener = asyncio.run(
@@ -271,15 +269,10 @@ Send a Request
     from pprint import pprint
 
     async def shorten_urls(long_url):
-
         async with Aiogoogle() as google:
-
             url_shortener = await google.discover('urlshortener', 'v1')
-        
             short_url = await google.as_anon(
-
                 url_shortener.url.insert(longUrl=long_url)
-
             )
 
         return short_url
@@ -307,18 +300,12 @@ Send Requests Concurrently:
     from pprint import pprint
 
     async def shorten_url(long_urls):
-
         async with Aiogoogle() as google:
-
             url_shortener = await google.discover('urlshortener', 'v1')
-        
             short_urls = await google.as_anon(
-
                 url_shortener.insert(longUrl=long_urls[0]),
                 url_shortener.insert(longUrl=long_urls[1])
-
             )
-
         return short_urls
 
     short_urls = asyncio.run(
@@ -356,19 +343,12 @@ Send As Client
     API_KEY = 'get_away_eve_this_is_only_for_bob'
 
     async def translate_to_latin(words):
-
         async with Aiogoogle(api_key=API_KEY) as google:
-
             translator = await google.discover('translate', 'v2')
-            
             words = dict(q=[words], target='la')
-
             result = await google.as_api_key(
-                
                 translator.translations.translate(json=words)
-
             )
-
         return result
 
     translation = asyncio.run(
@@ -402,20 +382,14 @@ Send As User (`Authorization Code Flow`_)
     USER_CREDS = {'access_token': '...'}
 
     async def get_calendar_events():
-
         async with Aiogoogle(user_creds=USER_CREDS) as google:
-
             calendar_v3 = await google.discover('calendar', 'v3')
-            
             result = await google.as_user_creds(
-                
                 calendar_v3.calendar.events.list(
                     calendarId="primary",
                     maxResults=1
                 )
-
             )
-
         return result
 
     user_events = asyncio.run(get_calendar_events())
@@ -1043,6 +1017,9 @@ Sessions
     :show-inheritance:
 
 .. autoclass:: aiogoogle.sessions.curio_asks_session.CurioAsksSession
+    :show-inheritance:
+
+.. autoclass:: aiogoogle.sessions.trio_asks_session.TrioAsksSession
     :show-inheritance:
 
 

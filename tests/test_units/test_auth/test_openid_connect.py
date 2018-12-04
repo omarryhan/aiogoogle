@@ -1,6 +1,6 @@
 # TODO:
 
-def authorization_url():
+def test_authorization_url():
     pass
 
 def test_decode_and_validate():
