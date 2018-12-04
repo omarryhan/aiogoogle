@@ -35,6 +35,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     extras_require={
-        'curio_asks': ["asks"]
+        'curio_asks': ["asks", "curio"],
+        'trio_asks': ["asks", "trio"]
     },
 )

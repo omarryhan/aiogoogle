@@ -18,13 +18,13 @@ Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/cod
 
 ### Session
 
-- Add Asks (curio) session
 - etag caching (aiohttp)
 - Resumable upload (aiohttp):
   - https://cloud.google.com/storage/docs/json_api/v1/how-tos/resumable-upload
   - https://developers.google.com/drive/api/v3/resumable-upload
   - https://googlecloudplatform.github.io/google-resumable-media-python/0.1.0/google.resumable_media.requests.html
   - https://docs.aiohttp.org/en/stable/multipart.html
+- Handle fileio with Asks-Curio
 
 
 ## Optimization

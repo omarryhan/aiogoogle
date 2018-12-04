@@ -3,3 +3,5 @@ pytest-cov
 pytest-asyncio
 tox
 asks
+trio
+curio
