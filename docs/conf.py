@@ -44,7 +44,9 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.asyncio',
     'sphinx.ext.napoleon',
-    #'sphinx.ext.todo'
+    #'sphinx.ext.todo',
+    'sphinxcontrib.github',
+    #'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

@@ -23,6 +23,13 @@ In essence, Aiogoogle is a feature-rich yet easy to use Pythonic wrapper for dis
 
 For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
 
+Repository
+============
+
+.. github-repo:: omarryhan/aiogoogle
+    :travis: https://www.travis-ci.org/omarryhan/aiogoogle/
+    :docs: http://aiogoogle.readthedocs.org/en/latest/
+    :pypi: https://pypi.org/project/aiogoogle/
 
 Quickstart
 ============
