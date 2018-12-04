@@ -5,3 +5,4 @@ tox
 asks
 trio
 curio
+async-timeout

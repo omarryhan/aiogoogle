@@ -10,6 +10,7 @@ from aiohttp import ClientTimeout
 from aiohttp.client_exceptions import ClientResponseError, ContentTypeError
 import aiofiles
 from aiofiles import os as async_os
+import async_timeout
 
 from ..models import Response
 from .abc import AbstractSession
@@ -19,12 +20,6 @@ from ..excs import HTTPError, ValidationError
 
 class AiohttpSession(ClientSession, AbstractSession):
     def __init__(self, *args, **kwargs):
-        if kwargs.get('timeout') is not None:
-            kwargs['timeout'] = ClientTimeout(total=kwargs['timeout'])
-        # Delete if None because aiohttp has a default timeout object set
-        # to it's constructor's signature and it won't function without it
-        elif 'timeout' in kwargs:
-            del kwargs['timeout']
         super().__init__(*args, **kwargs)
 
     async def send(self, *requests, timeout=None, full_res=False, raise_for_status=True, session_factory=None):
@@ -146,15 +141,22 @@ class AiohttpSession(ClientSession, AbstractSession):
             return response.content
         #----------------- /runners ------------------#
 
+        async def schedule_tasks():
+            if full_res is True:
+                tasks = [asyncio.create_task(get_response(request)) for request in requests]
+            else:
+                tasks = [asyncio.create_task(get_content(request)) for request in requests]
+            return await asyncio.gather(*tasks, return_exceptions=False)
+
         if session_factory is None:
             session_factory = self.__class__
 
-        if full_res is True:
-            tasks = [asyncio.create_task(get_response(request)) for request in requests]
+        if timeout is not None:
+            async with async_timeout.timeout(timeout):
+                results = await schedule_tasks()
         else:
-            tasks = [asyncio.create_task(get_content(request)) for request in requests]
+            results = await schedule_tasks()
 
-        results = await asyncio.gather(*tasks, return_exceptions=False)
         if isinstance(results, list) and len(results) == 1:
             return results[0]
         else:

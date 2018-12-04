@@ -100,15 +100,23 @@ class CurioAsksSession(Session, AbstractSession):
             return response.content
         #----------------- /runners ------------------#
 
+        async def execute_tasks():
+            async with curio.TaskGroup() as g:
+                if full_res is True:
+                    tasks = [await g.spawn(get_response, request) for request in requests]
+                else:
+                    tasks = [await g.spawn(get_content, request) for request in requests]
+            return await curio.gather(tasks)
+
         if session_factory is None:
             session_factory = self.__class__
 
-        async with curio.TaskGroup() as g:
-            if full_res is True:
-                tasks = [await g.spawn(get_response, request) for request in requests]
-            else:
-                tasks = [await g.spawn(get_content, request) for request in requests]
-        results = await curio.gather(tasks)
+        if timeout is not None:
+            async with curio.timeout_after(timeout):
+                results = await execute_tasks()
+        else:
+            results = await execute_tasks()
+    
         if isinstance(results, list) and len(results) == 1:
             return results[0]
         else:

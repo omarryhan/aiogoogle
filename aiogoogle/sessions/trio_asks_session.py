@@ -109,12 +109,18 @@ class TrioAsksSession(Session, AbstractSession):
         if session_factory is None:
             session_factory = self.__class__
 
-        async with trio.open_nursery() as nursery:
-            if full_res is True:
-                [nursery.start_soon(get_response, request) for request in requests]
-            else:
-                [nursery.start_soon(get_content, request) for request in requests]
+        async def execute_tasks():
+            async with trio.open_nursery() as nursery:
+                if full_res is True:
+                    [nursery.start_soon(get_response, request) for request in requests]
+                else:
+                    [nursery.start_soon(get_content, request) for request in requests]
 
+        if timeout is not None:
+            with trio.move_on_after(timeout):
+                await execute_tasks()
+        else:
+            await execute_tasks()
         if isinstance(responses, list) and len(responses) == 1:
             return responses[0]
         else:

@@ -11,7 +11,7 @@ async def list_events():
         calendar_v3 = await aiogoogle.discover('calendar', 'v3')
         events = await aiogoogle.as_user(
             calendar_v3.events.list(calendarId='primary'),
-            full_res=True
+            full_res=True,
         )
     async for page in events:
         pprint.pprint(page)
