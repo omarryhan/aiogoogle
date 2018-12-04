@@ -43,7 +43,7 @@ class TrioAsksSession(Session, AbstractSession):
 
             # If downloading file:
             if request.media_download:
-                raise NotImplementedError('Downloading media isn\'t supported by AsksSession')
+                raise NotImplementedError('Downloading media isn\'t supported by this session')
             else:
                 if response.status_code != 204:  # If no (no content)
                     try:
@@ -79,7 +79,7 @@ class TrioAsksSession(Session, AbstractSession):
         async def fire_request(request):
             request.headers['Accept-Encoding'] = 'gzip'
             if request.media_upload:
-                raise NotImplementedError('Uploading media isn\'t supported by AsksSession')
+                raise NotImplementedError('Uploading media isn\'t supported by this session')
             else:
                 return await self.request(
                     method=request.method,
