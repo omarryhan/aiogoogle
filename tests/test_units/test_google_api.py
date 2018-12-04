@@ -57,9 +57,7 @@ def test_len(open_discovery_document, name, version):
 def test_resources_getattr_fails_on_unknown_resource(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
-
     nonexistent_resource = 'I_MUST_NEVER_EXIST_ANYWHEREEEEEEEE'
-
     with pytest.raises(AttributeError) as e:
         getattr(api, nonexistent_resource)
 

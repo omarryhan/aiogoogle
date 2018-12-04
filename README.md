@@ -8,4 +8,6 @@
 
 # Aiogoogle
 
-### Still in alpha, API might break.
+## Beta
+
+Readthedocs: https://aiogoogle.readthedocs.io/en/latest/ 
