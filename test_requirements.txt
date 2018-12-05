@@ -7,3 +7,4 @@ async-timeout
 asks
 trio
 curio
+pytest
