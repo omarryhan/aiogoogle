@@ -8,3 +8,6 @@ asks
 trio
 curio
 pytest
+pytest-cov
+pytest-asyncio
+tox
