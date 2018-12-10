@@ -70,6 +70,7 @@ class CurioAsksSession(Session, AbstractSession):
 
         async def fire_request(request):
             request.headers['Accept-Encoding'] = 'gzip'
+            request.headers['User-Agent'] = 'Aiogoogle Asks Curio (gzip)'
             if request.media_upload:
                 raise NotImplementedError('Uploading media isn\'t supported by this session')
             else:

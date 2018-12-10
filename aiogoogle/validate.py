@@ -11,6 +11,9 @@ This module misses a lot of the features provided with more advanced jsonschema 
 
 1. collecting all validation errors and raising them all at once
 2. more descriptive errors with nice tracebacks
+3. Validating repeatable instances
+4. additionalItems
+and more: https://tools.ietf.org/html/draft-zyp-json-schema-03
 '''
 
 
@@ -318,7 +321,7 @@ def validate(instance, schema, schemas=None):
             validate(item, schema_, schemas)
 
     # Check schema and schemas are dicts. 
-    # These errors shouldn't normally be raised, unless there's some messed up schema(s) being passed
+    # These errors shouldn't normally be raised, unless there's some messed up schema(s) being passed/reffed
     if not isinstance(schema, dict):
         raise TypeError('Schema must be a dict')
     if schemas is not None:

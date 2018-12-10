@@ -149,7 +149,7 @@ Google Account Setup
 
 1. **Create a project:** `Google's APIs and Services dashboard <https://console.cloud.google.com/projectselector/apis/dashboard>`_.
 2. **Enable an API:** `API Library <https://console.cloud.google.com/apis/library>`_.
-3. **Create credentials:** `Credenitals wizard <https://console.cloud.google.com/apis/credentials/wizard?>`_.
+3. **Create credentials:** `Credentials wizard <https://console.cloud.google.com/apis/credentials/wizard?>`_.
 4. **Pick an API:** `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_ 
 
     .. note:: After choosing an API, get the API's *name* and *version* from the URL as they will be needed later.
@@ -536,7 +536,7 @@ Oauth2 serves as an authorization framework. It supports four main flows:
     - Not supported  
     - `RFC6749 section 4.2  <https://tools.ietf.org/html/rfc6749#section-4.2>`_.
 
-4. **Resource Owner Password Credenitals Flow**:
+4. **Resource Owner Password Credentials Flow**:
     
     - Not supported
     - `RFC6749 section 4.3  <https://tools.ietf.org/html/rfc6749#section-4.2>`_.
@@ -966,7 +966,7 @@ Method
     :undoc-members:
     :show-inheritance:
 
-Credenitals
+Credentials
 --------------
 
 .. automodule:: aiogoogle.auth.creds

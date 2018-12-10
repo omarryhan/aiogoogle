@@ -2,6 +2,13 @@
 
 Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/code-of-conduct), here are some ideas:
 
+## Sort
+
+make method generator global for test suite
+treat empty "nextPageToken" the same as not found
+contributing.md
+Deal with youtube error
+
 ## Features
 
 ### Discovery
@@ -14,7 +21,7 @@ Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/cod
 
 - user_creds_jwt_auth
 - Auth device code flow
-- Service accounts
+- Service accounts/ iam
 
 ### Session
 
@@ -29,19 +36,20 @@ Assuming you've read [this](https://www.contributor-covenant.org/version/1/4/cod
 
 ## Optimization
 
-- Chnage code with manual URL parsing to use a lightweight and reliable URL parsing lib
+- Chnage code with manual URL parsing to use a stdlib url parsing
 
 ## Testing
 
+- Test gzip
 - Currently, the library is extremely under tested. Writing some tests would be really appreciated.
 - Search for `TODO:` in the `tests` module and you'll find lots of unimplemented tests
 
 ## Docs
 
-- Add Spell checking
+- Spell check
 
 ## Examples
 
 ## General
 
-- Reonciliate aiogoogle.__version__.py.__verison__ && setup.py.version && docs.conf.py
+- Reonciliate `aiogoogle.__version__.py.__verison__` && `setup.py.version` && `docs.conf.py`

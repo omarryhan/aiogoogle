@@ -86,6 +86,7 @@ class AiohttpSession(ClientSession, AbstractSession):
 
         async def fire_request(request):
             request.headers['Accept-Encoding'] = 'gzip'
+            request.headers['User-Agent'] = 'Aiogoogle Aiohttp (gzip)'
             if request.media_upload:
                 # Validate
                 if request.media_upload.validate is True and request.media_upload.max_size is not None:

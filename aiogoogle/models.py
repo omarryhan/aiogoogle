@@ -1,7 +1,5 @@
 from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode, parse_qs
 from .excs import HTTPError, AuthError
-import pprint
-from async_generator import yield_
 
 
 DEFAULT_UPLOAD_CHUNK_SIZE = 1024*1024

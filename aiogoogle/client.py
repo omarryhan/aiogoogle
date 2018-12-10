@@ -178,7 +178,6 @@ class Aiogoogle:
             discovery_docuemnt = await self.as_anon(request)
         return GoogleAPI(discovery_docuemnt, validate)
 
-
     #-------- Send Requests ----------#
 
     async def as_user(self, *requests, timeout=None, full_res=False):

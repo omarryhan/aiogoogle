@@ -72,6 +72,7 @@ class TrioAsksSession(Session, AbstractSession):
 
         async def fire_request(request):
             request.headers['Accept-Encoding'] = 'gzip'
+            request.headers['User-Agent'] = 'Aiogoogle Asks Trio (gzip)'
             if request.media_upload:
                 raise NotImplementedError('Uploading media isn\'t supported by this session')
             else:
@@ -106,9 +107,9 @@ class TrioAsksSession(Session, AbstractSession):
         async def execute_tasks():
             async with trio.open_nursery() as nursery:
                 if full_res is True:
-                    [nursery.start_soon(get_response, request) for request in requests]
+                    list(map(lambda req: nursery.start_soon(get_response, req), requests))
                 else:
-                    [nursery.start_soon(get_content, request) for request in requests]
+                    list(map(lambda req: nursery.start_soon(get_content, req), requests))
 
         if timeout is not None:
             with trio.move_on_after(timeout):
