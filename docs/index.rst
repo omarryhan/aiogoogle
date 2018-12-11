@@ -21,11 +21,12 @@ Aiogoogle
 Discovery Service?
 ===================
 
-Most of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
+Many of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
 
-Google's Discovery Serivce provides machine readable specifications known as discovery documents. `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
+Google's Discovery Serivce provides machine readable specifications known as discovery documents 
+(similar to `Swagger/OpenAPI <https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml>`_). `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
 
-In essence, Aiogoogle is a feature-rich yet easy to use Pythonic wrapper for discovery documents.
+In essence, Aiogoogle is a feature-rich, yet easy to use Pythonic wrapper for discovery documents.
 
 For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
 
@@ -95,7 +96,7 @@ Upload a File to Google Drive
             await aiogoogle.as_user(
                 drive_v3.files.create(upload_file=path)
             )
-    asyncio.run(upload_file(path))
+    asyncio.run(upload_file('/home/aiogoogle/Documents/my_cool_gif.gif/'))
 
 List Your Contacts
 --------------------
@@ -257,6 +258,30 @@ Browse an API
     >>> request.url
      
     'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
+
+
+**Discovery Document Heierarchy**
+
+::
+
+    Root
+    |__ name
+    |__ version
+    |__ baseUrl
+    |__ Global Parameters
+    |__ Schemas
+    |__ Resources
+        |__ Resources
+            |_ Resources
+            |_ Methods
+        |__ Methods
+    |__ Methods
+        |_ Path
+        |_ Parameters
+        |_ Request Body
+        |_ Response Body
+    
+For more details, visit: https://developers.google.com/discovery/v1/reference/apis
 
 
 Send a Request

@@ -13,6 +13,7 @@ This module misses a lot of the features provided with more advanced jsonschema 
 2. more descriptive errors with nice tracebacks
 3. Validating repeatable instances
 4. additionalItems
+
 and more: https://tools.ietf.org/html/draft-zyp-json-schema-03
 '''
 

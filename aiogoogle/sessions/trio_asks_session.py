@@ -9,6 +9,7 @@ asks.init('trio')
 
 from .abc import AbstractSession
 from ..models import Response
+from .common import _call_callback
 
 
 class TrioAsksSession(Session, AbstractSession):
@@ -20,14 +21,6 @@ class TrioAsksSession(Session, AbstractSession):
 
     async def send(self, *requests, timeout=None, full_res=False, raise_for_status=True, session_factory=None):
         responses = []
-
-        def call_callback(request, response):
-            if request.callback is not None:
-                if response.json:
-                    response.json = request.callback(response.content)
-                elif response.data:
-                    response.data = request.callback(response.content)
-            return response
 
         async def resolve_response(request, response):
             data = None
@@ -90,14 +83,14 @@ class TrioAsksSession(Session, AbstractSession):
             response = await resolve_response(request, response)
             if raise_for_status is True:
                 response.raise_for_status()
-            response = call_callback(request, response)
+            response = _call_callback(request, response)
             responses.append(response)
         async def get_content(request):
             response = await fire_request(request)
             response = await resolve_response(request, response)
             if raise_for_status is True:
                 response.raise_for_status()
-            response = call_callback(request, response)
+            response = _call_callback(request, response)
             responses.append(response.content)
         #----------------- /runners ------------------#
 

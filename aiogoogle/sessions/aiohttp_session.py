@@ -15,22 +15,27 @@ import async_timeout
 from ..models import Response
 from .abc import AbstractSession
 from ..excs import HTTPError, ValidationError
+from .common import _call_callback
 
 
+
+async def _get_file_size(full_file_path):
+    stat = await async_os.stat(full_file_path)
+    return stat.st_size
+
+async def _aiter_file(file_name, chunk_size):
+    ''' Async file generator '''
+    async with aiofiles.open(file_name, 'rb') as f:
+        chunk = await f.read(chunk_size)
+        while chunk:
+            yield chunk
+            chunk = await f.read(chunk_size)
 
 class AiohttpSession(ClientSession, AbstractSession):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     async def send(self, *requests, timeout=None, full_res=False, raise_for_status=True, session_factory=None):
-        def call_callback(request, response):
-            if request.callback is not None:
-                if response.json:
-                    response.json = request.callback(response.content)
-                elif response.data:
-                    response.data = request.callback(response.content)
-            return response
-
         async def resolve_response(request, response):
             data = None
             json = None
@@ -72,25 +77,13 @@ class AiohttpSession(ClientSession, AbstractSession):
                 session_factory=session_factory
             )
 
-        async def aiter_file(file_name, chunk_size):
-            ''' Async file generator '''
-            async with aiofiles.open(file_name, 'rb') as f:
-                chunk = await f.read(chunk_size)
-                while chunk:
-                    yield chunk
-                    chunk = await f.read(chunk_size)
-
-        async def get_file_size(full_file_path):
-            stat = await async_os.stat(full_file_path)
-            return stat.st_size
-
         async def fire_request(request):
             request.headers['Accept-Encoding'] = 'gzip'
             request.headers['User-Agent'] = 'Aiogoogle Aiohttp (gzip)'
             if request.media_upload:
                 # Validate
                 if request.media_upload.validate is True and request.media_upload.max_size is not None:
-                    size = await get_file_size(request.media_upload.file_path)
+                    size = await _get_file_size(request.media_upload.file_path)
                     max_size = request.media_upload.max_size
                     if size > max_size:
                         raise ValidationError(
@@ -103,7 +96,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                         method=request.method,
                         url=request.media_upload.upload_path,
                         headers=request.headers,
-                        data=aiter_file(request.media_upload.file_path, request.media_upload.chunk_size),
+                        data=_aiter_file(request.media_upload.file_path, request.media_upload.chunk_size),
                         json=request.json,
                         timeout=request.timeout
                     )
@@ -119,6 +112,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                             json=request.json,
                             timeout=request.timeout
                     )
+            # Else, if no file upload
             else:
                 return await self.request(
                     method = request.method,
@@ -135,7 +129,7 @@ class AiohttpSession(ClientSession, AbstractSession):
             response = await resolve_response(request, response)
             if raise_for_status is True:
                 response.raise_for_status()
-            response = call_callback(request, response)
+            response = _call_callback(request, response)
             return response
         async def get_content(request):
             response = await get_response(request)

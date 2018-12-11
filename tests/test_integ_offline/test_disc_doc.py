@@ -280,10 +280,10 @@ def test_schemas_consistency(open_discovery_document, name, version):
 
         if schema['type'] == 'object':
             if 'properties' not in schema:
-                ###############################################################################
-                # Remove the following **line** for a proper test. This is just a temporary fix 
+                ####################################################################################
+                # Remove the following **line** for a proper test. This is just silencing the error
                 if schema_name not in ['TokenPagination','tokenPagination']:
-                ##############################################################################
+                ####################################################################################
                     assert 'additionalProperties' in schema
             else:
                 for name, prop in schema['properties'].items():
