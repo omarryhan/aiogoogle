@@ -1,4 +1,6 @@
 from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode, parse_qs
+import pprint
+
 from .excs import HTTPError, AuthError
 
 
@@ -308,6 +310,8 @@ class Response:
         if res_token_name is None:
             res_token_name = 'nextPageToken'
         res_token = self.json.get(res_token_name, None)
+        if res_token == '':
+            res_token = None
         if res_token is None:
             return None
         #request = Request.from_response(self)

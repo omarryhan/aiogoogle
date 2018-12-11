@@ -238,8 +238,8 @@ class Method:
         '''
         return self._method_specs.get(key)
 
-    def _validate(self, instance, schema):
-        return validate__(instance, schema, self._schemas)
+    def _validate(self, instance, schema, schema_name=None):
+        return validate__(instance, schema, self._schemas, schema_name)
 
     @staticmethod
     def _rm_none_params(uri_params):
@@ -328,7 +328,7 @@ class Method:
         if validate is True:
             if passed_query_params:
                 for param_name, passed_param in passed_query_params.items():
-                    self._validate(passed_param, self.parameters[param_name])
+                    self._validate(passed_param, self.parameters[param_name], schema_name=param_name)
         
         # Join query params
         if passed_query_params:
@@ -346,7 +346,7 @@ class Method:
             if validate:
                 if self.parameters.get('additionalProperties'):
                     for _,v in uri_params.items():
-                        self._validate(v, self.parameters['additionalProperties'])
+                        self._validate(v, self.parameters['additionalProperties'], schema_name='Additional Url Parameters')
                 else:
                     raise ValidationError(f'Invalid (extra) parameters: {uri_params} were passed')
             else:
@@ -479,26 +479,30 @@ class Method:
 
     def _validate_url(self, sorted_required_path_params):
         for path_param_name, path_param_info in sorted_required_path_params.items():
-            self._validate(instance=path_param_info, schema=self.parameters[path_param_name])
+            self._validate(instance=path_param_info, schema=self.parameters[path_param_name], schema_name=path_param_name)
 
     def _validate_body(self, req):
         request_schema = self._method_specs.get('request')
         if request_schema is not None:
+            schema_name = 'Request Body'
             if '$ref' in request_schema:
-                request_schema = self._schemas[request_schema['$ref']]
-            self._validate(req, request_schema)
+                schema_name = request_schema['$ref']
+                request_schema = self._schemas[schema_name]
+            self._validate(req, request_schema, schema_name=schema_name)
         else:
             raise ValidationError('Request body should\'ve been validated, but wasn\'t because the method doesn\'t accept a JSON body')
 
     def _validate_response(self, res, validate):
         if validate is True and res is not None:
+            schema_name = 'Response_body'
             response_schema = self._method_specs.get('response')
             if response_schema is not None:
                 if '$ref' in response_schema:
-                    response_schema = self._schemas[response_schema['$ref']]
+                    schema_name = response_schema['$ref']
+                    response_schema = self._schemas[schema_name]
             else:
                 raise ValidationError('Response body should\'ve been validated, but wasn\'t because a schema body wasn\'nt found')
-            self._validate(res, response_schema)
+            self._validate(res, response_schema, schema_name)
         return res
 
     def __contains__(self, item):

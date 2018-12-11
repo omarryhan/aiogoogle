@@ -70,80 +70,80 @@ def remove_microseconds(value):
     else:
         return value
 
-def make_validation_error(checked_value, correct_criteria):
-    return f"{checked_value} isn't valid. Expected a value that meets the following criteria: {correct_criteria}"
+def make_validation_error(checked_value, correct_criteria, schema_name=None):
+    return f"\n\n Invalid instance: \"{str(schema_name)}\"\n\n{checked_value} isn't valid. Expected a value that meets the following criteria: {correct_criteria}"
 
 #-------- VALIDATORS ---------#
 
 # Type validators (JSON schema)
 
-def any_validator(value):
+def any_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING['any']
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error(value, str(req_types)))
+        raise ValidationError(make_validation_error(value, str(req_types), schema_name))
 
-def array_validator(value):
+def array_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING['array']
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error(value, str(req_types)))
+        raise ValidationError(make_validation_error(value, str(req_types), schema_name))
 
-def boolean_validator(value):
+def boolean_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING['boolean']
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error(value, str(req_types)))
+        raise ValidationError(make_validation_error(value, str(req_types), schema_name))
 
-def integer_validator(value):
+def integer_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING['integer']
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error(value, str(req_types)))
+        raise ValidationError(make_validation_error(value, str(req_types), schema_name))
 
-def number_valdator(value):
+def number_valdator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING['number']
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error(value, str(req_types)))
+        raise ValidationError(make_validation_error(value, str(req_types), schema_name))
 
-def object_validator(value):
+def object_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING['object']
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error(value, str(req_types)))
+        raise ValidationError(make_validation_error(value, str(req_types), schema_name))
 
-def string_validator(value):
+def string_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING['string']
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error(value, str(req_types)))
+        raise ValidationError(make_validation_error(value, str(req_types), schema_name))
 
 # Format validators (Discovery Specific)  https://developers.google.com/discovery/v1/type-format
 
-def int32_validator(value):
+def int32_validator(value, schema_name=None):
     if (value > 2147483648) or (value < -2147483648) :
-        raise ValidationError(make_validation_error(value, 'Integer between -2147483648 and 2147483648'))
+        raise ValidationError(make_validation_error(value, 'Integer between -2147483648 and 2147483648', schema_name))
 
-def uint32_validator(value):
+def uint32_validator(value, schema_name=None):
     if (value < 0) or (value > 4294967295):
-        raise ValidationError(make_validation_error(value, 'Integer between 0 and 4294967295'))
+        raise ValidationError(make_validation_error(value, 'Integer between 0 and 4294967295', schema_name))
 
-def int64_validator(value):
+def int64_validator(value, schema_name=None):
     if (value > 9223372036854775807) or (value < -9223372036854775807):
-        raise ValidationError(make_validation_error(value, 'Integer between -9,223,372,036,854,775,807 and -9,223,372,036,854,775,807'))
+        raise ValidationError(make_validation_error(value, 'Integer between -9,223,372,036,854,775,807 and -9,223,372,036,854,775,807', schema_name))
 
-def uint64_validator(value):
+def uint64_validator(value, schema_name=None):
     if (value > 9223372036854775807*2) or (value < 0):
-        raise ValidationError(make_validation_error(value, 'Integer between 0 and 9,223,372,036,854,775,807 * 2'))
+        raise ValidationError(make_validation_error(value, 'Integer between 0 and 9,223,372,036,854,775,807 * 2', schema_name))
 
-def double_validator(value):
+def double_validator(value, schema_name=None):
     if not isinstance(value, float):
-        raise ValidationError(make_validation_error(value, 'Double type'))
+        raise ValidationError(make_validation_error(value, 'Double type', schema_name))
 
-def float_validator(value):
+def float_validator(value, schema_name=None):
     if not isinstance(value, float):
-        raise ValidationError(make_validation_error(value, 'Float type'))
+        raise ValidationError(make_validation_error(value, 'Float type', schema_name))
 
-def byte_validator(value):
+def byte_validator(value, schema_name=None):
     if not isinstance(value, bytes):
-        raise ValidationError(make_validation_error(value, 'Bytes type'))
+        raise ValidationError(make_validation_error(value, 'Bytes type', schema_name))
 
-def date_validator(value):
-    msg = make_validation_error(value, 'JSON date value. Hint: use datetime.date.isoformat(), instead of datetime.date')
+def date_validator(value, schema_name=None):
+    msg = make_validation_error(value, 'JSON date value. Hint: use datetime.date.isoformat(), instead of datetime.date', schema_name)
     try:
         pvalue = rfc3339.parse_date(value)
         #pvalue = datetime.date.fromisoformat(value)
@@ -152,8 +152,8 @@ def date_validator(value):
     if not isinstance(pvalue, datetime.date):
         raise ValidationError(msg)
 
-def datetime_validator(value):
-    msg = make_validation_error(value, 'JSON datetime value. Hint: use datetime.datetime.isoformat(), instead of datetime.datetime')
+def datetime_validator(value, schema_name=None):
+    msg = make_validation_error(value, 'JSON datetime value. Hint: use datetime.datetime.isoformat(), instead of datetime.datetime', schema_name)
     try:
         pvalue = rfc3339.parse_datetime(value)
         #pvalue = datetime.datetime.fromisoformat(value)
@@ -162,23 +162,23 @@ def datetime_validator(value):
     if not isinstance(pvalue, datetime.datetime):
         raise ValidationError(msg)
 
-def null_validator(value):
+def null_validator(value, schema_name=None):
     if value != 'null':
-        raise ValidationError(make_validation_error(value, "'null' NOT None"))
+        raise ValidationError(make_validation_error(value, "'null' NOT None", schema_name))
 
 # Other Validators
 
-def minimum_validator(value, minimum):
+def minimum_validator(value, minimum, schema_name=None):
     if value < int(minimum):
-        raise ValidationError(make_validation_error(value, f'Not less than {minimum}'))
+        raise ValidationError(make_validation_error(value, f'Not less than {minimum}', schema_name))
 
-def maximum_validator(value, maximum):
+def maximum_validator(value, maximum, schema_name=None):
     if value > int(maximum):
-        raise ValidationError(make_validation_error(value, f'Not less than {maximum}'))
+        raise ValidationError(make_validation_error(value, f'Not less than {maximum}', schema_name))
 
 #-- Sub validators ---------------------------
 
-def validate_type(instance, schema):
+def validate_type(instance, schema, schema_name=None):
     type_validator_name = schema['type']
     # Check if type in list of possible types to avoid calling globals() maliciously
     if type_validator_name not in JSON_PYTHON_TYPE_MAPPING:
@@ -188,9 +188,9 @@ def validate_type(instance, schema):
             issue @ https://github.com/omarryhan/aiogoogle and report this warning msg.""")
         return
     type_validator = globals()[type_validator_name + '_validator']
-    type_validator(instance)
+    type_validator(instance, schema_name)
 
-def validate_format(instance, schema):
+def validate_format(instance, schema, schema_name=None):
     if schema.get('format'):
         # Exception for format: mostly protobuf formats
         if schema['format'] in IGNORABLE_FORMATS:
@@ -207,32 +207,32 @@ def validate_format(instance, schema):
         if format_validator_name == 'date-time':
             format_validator_name = 'datetime'
         format_validator = globals()[format_validator_name + '_validator']
-        format_validator(instance)
+        format_validator(instance, schema_name)
 
-def validate_range(instance, schema):
+def validate_range(instance, schema, schema_name=None):
     if schema.get('minimum'):
-        minimum_validator(instance, schema['minimum'])
+        minimum_validator(instance, schema['minimum'], schema_name)
     elif schema.get('maximum'):
-        maximum_validator(instance, schema['maximum'])
+        maximum_validator(instance, schema['maximum'], schema_name)
 
-def validate_pattern(instance, schema):
+def validate_pattern(instance, schema, schema_name=None):
     pattern = schema.get('pattern')
     if pattern is not None:
         match = re.match(pattern, instance)
         if match is None:
-            raise ValidationError(instance, f'Match this pattern: {pattern}')
+            raise ValidationError(make_validation_error(instance, f'Match this pattern: r"{pattern}"', schema_name))
 
 #-- Main Validator ---------------
 
-def validate_all(instance, schema):
-    validate_type(instance, schema)
-    validate_format(instance, schema)
-    validate_range(instance, schema)
-    validate_pattern(instance, schema)
+def validate_all(instance, schema, schema_name=None):
+    validate_type(instance, schema, schema_name)
+    validate_format(instance, schema, schema_name)
+    validate_range(instance, schema, schema_name)
+    validate_pattern(instance, schema, schema_name)
 
 #-- API --------------------
 
-def validate(instance, schema, schemas=None):
+def validate(instance, schema, schemas=None, schema_name=None):
     '''
     Arguments:
 
@@ -241,6 +241,8 @@ def validate(instance, schema, schemas=None):
         schema: schema to validate instance against
 
         schemas: Full schamas dict to resolve refs if any
+
+        schema_name: Name of the schema (Useful if you want more meaningful errors)
     '''
 
     def resolve(schema):
@@ -295,7 +297,7 @@ def validate(instance, schema, schemas=None):
                     # Basically, additionalProperties is sort of like **kwargs, 
                     # you should only use one per statement/schema
                     if 'properties' not in additional_properties:
-                        validate(instance[k], additional_properties)  # instace, schema for any additional props
+                        validate(instance[k], additional_properties, schema_name=str(schema_name)+'/additionalProperties')  # instace, schema for any additional props
                 else:
                     warnings.warn(f"""
                         Item {k} was passed, but not mentioned in the
@@ -312,14 +314,14 @@ def validate(instance, schema, schemas=None):
                 if v.get('required') is True:
                     raise ValidationError(f"Instance {k} is required")
             else:
-                validate(instance[k], v, schemas)
+                validate(instance[k], v, schemas, schema_name=k)
 
     def validate_array():
         array_validator(instance)
         schema_ = resolve(schema['items'])
         # Check if instance has the property, if not, check if it's required
         for item in instance:
-            validate(item, schema_, schemas)
+            validate(item, schema_, schemas, schema_name=schema_name)
 
     # Check schema and schemas are dicts. 
     # These errors shouldn't normally be raised, unless there's some messed up schema(s) being passed/reffed
@@ -339,4 +341,4 @@ def validate(instance, schema, schemas=None):
         validate_array()
     # Else we reached the lowest level of a schema, validate
     else:
-        validate_all(instance, schema)
+        validate_all(instance, schema, schema_name)

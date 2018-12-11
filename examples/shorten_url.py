@@ -10,7 +10,7 @@ async def shorten_urls(long_url):
         short_url = await google.as_api_key(
             url_shortener.url.insert(
                 json=dict(
-                    longUrl=long_url
+                    longUrl=long_url,
                 )
             )
         )

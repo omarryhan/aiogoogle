@@ -260,30 +260,6 @@ Browse an API
     'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
 
 
-**Discovery Document Heierarchy**
-
-::
-
-    Root
-    |__ name
-    |__ version
-    |__ baseUrl
-    |__ Global Parameters
-    |__ Schemas
-    |__ Resources
-        |__ Resources
-            |_ Resources
-            |_ Methods
-        |__ Methods
-    |__ Methods
-        |_ Path
-        |_ Parameters
-        |_ Request Body
-        |_ Response Body
-    
-For more details, visit: https://developers.google.com/discovery/v1/reference/apis
-
-
 Send a Request
 ------------------
 
@@ -1069,16 +1045,37 @@ More
     
     One of the main objectives of this library is to act as a layer of abstraction over discovery documents.
 
-    If you find any leaks in this abstraction (which you likely will) and find yourself wanting to know more about the discovery document and how it's structured:
+    If you find any leaks in this abstraction (which you likely will) and find yourself wanting to know more about the discovery document and how it's structured,
 
-    then checkout `Overview of the discovery document <https://developers.google.com/discovery/v1/reference/apis>`_.
+    then take a look at a basic overview of a discovery document:
 
+    ::
 
+        Root
+        |__ name
+        |__ version
+        |__ baseUrl
+        |__ Global Parameters
+        |__ Schemas
+        |__ Resources
+            |__ Resources
+                |_ Resources
+                |_ Methods
+            |__ Methods
+        |__ Methods
+            |_ Path
+            |_ Parameters
+            |_ Request Body
+            |_ Response Body
+
+    `Full reference: <https://developers.google.com/discovery/v1/reference/apis>`_.
 
 Contribute
 ===========
 
-All contributions are welcome :)
+All contributions are welcome :).
+
+Check: https://github.com/omarryhan/aiogoogle/blob/master/CONTRIBUTING.md for some ideas.
 
 Contributors
 ============
