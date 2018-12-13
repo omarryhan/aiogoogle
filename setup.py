@@ -23,7 +23,7 @@ setuptools.setup(
     author='Omar Ryhan',
     author_email='omarryhan@gmail.com',
     license='GNU',
-    description="Async Google-Python-Client",
+    description="Async Discovery API Client + Authentication",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=requirements,

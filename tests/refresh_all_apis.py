@@ -27,7 +27,12 @@ async def refresh_disc_docs_json():
         apis_pref = await sess.get('https://www.googleapis.com/discovery/v1/apis?preferred=true')
         apis_pref = await apis_pref.json()
     for api in apis_pref['items']:
-        ALL_APIS.append((api['name'], api['version']))
+        ##############################
+        # Remove me 
+        if api['name'] != 'partners':
+        # /Remove me
+        ##############################
+            ALL_APIS.append((api['name'], api['version']))
     with open('tests/test_globals.py', 'w') as f:
         f.write(f'ALL_APIS = {pprint.pformat(ALL_APIS)}')
         print('SUCCESS!')
