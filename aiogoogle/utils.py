@@ -1,7 +1,7 @@
 __all__ = []
 
 from functools import wraps
-from .models import Request, Response
+
 
 def _toggle2x_dashed_params(f):
     @wraps(f)

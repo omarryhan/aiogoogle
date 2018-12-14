@@ -11,7 +11,7 @@ from aiogoogle.excs import ValidationError
 from ..test_globals import ALL_APIS
 
 
-# TODO: Test additionalParameters (Tricky)
+# TODO: Test additionalParameters (Tricky as it's not in compliance with jsonschema3)
 
 def test_aiogoogle_compiles_discovery_re_pattern(create_api):
     pass

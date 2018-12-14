@@ -12,19 +12,19 @@ All examples listed in this directory should use the file `keys.yaml` for storin
 
 ## GoogleAPI Examples
 
-### 0.{cookiecutter}.py
+### 0.boilerplate.py
 
 What it does:
 
-* A cookiecutter
+* A boilerplate
 
 API name and API version required:
 
-* cookiecutter-v1
+* boilerplate-v1
 
 Scopes Required:
 
-* "https://www.googleapis.com/auth/cookiecutter"
+* "https://www.googleapis.com/auth/boilerplate"
 
 User Credentials Required:
 
@@ -36,7 +36,7 @@ API Key Required:
 
 API explorer link:
 
-* https://developers.google.com/apis-explorer/#p/cookiecutter/cookiecutter_version/cookiecutter.resource.method
+* https://developers.google.com/apis-explorer/#p/boilerplate/boilerplate_version/boilerplate.resource.method
 
 Extra Dependencies (Other than aiogoogle's)):
 

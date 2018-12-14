@@ -29,6 +29,8 @@ async def refresh_disc_docs_json():
     for api in apis_pref['items']:
         ##############################
         # Remove me 
+            #  https://www.googleapis.com/discovery/v1/apis/partners/v2/rest 
+            # raises 502 as of datetime.datetime(2018, 12, 1, 17, 46, 38, 39391)
         if api['name'] != 'partners':
         # /Remove me
         ##############################
@@ -42,8 +44,6 @@ async def refresh_disc_docs_json():
         aiogoogle = Aiogoogle()
         print(f'Downloading {name}-{version}')
         try:
-            #  https://www.googleapis.com/discovery/v1/apis/partners/v2/rest 
-            # raises 502 as of datetime.datetime(2018, 12, 1, 17, 46, 38, 39391)
             google_api = await aiogoogle.discover(name, version)
         except Exception as e:
             file_errors.append(
