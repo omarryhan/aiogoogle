@@ -8,6 +8,4 @@
 
 # Aiogoogle
 
-## Beta
-
-Readthedocs: https://aiogoogle.readthedocs.io/en/latest/ 
+readthedocs: https://aiogoogle.readthedocs.io/en/latest/
