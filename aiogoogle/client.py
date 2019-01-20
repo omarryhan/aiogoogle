@@ -57,9 +57,9 @@ class Aiogoogle:
         self.client_creds = client_creds
 
         # Auth managers
-        self.api_key_manager = ApiKeyManager()
-        self.oauth2 = Oauth2Manager(self.session_factory)
-        self.openid_connect = OpenIdConnectManager(self.session_factory)
+        self.api_key_manager = ApiKeyManager(api_key=self.api_key)
+        self.oauth2 = Oauth2Manager(self.session_factory, client_creds=self.client_creds)
+        self.openid_connect = OpenIdConnectManager(self.session_factory, client_creds=self.client_creds)
 
         # Discovery service
         self.discovery_service = GoogleAPI(DISCOVERY_SERVICE_V1_DISCOVERY_DOC)
@@ -138,7 +138,7 @@ class Aiogoogle:
 
             It is recommended that you explicitly specify an API version.
             
-            When you leave the API version to None, Aiogoogle uses the ``list_api`` method to search for the best fit version of the given API name.
+            When you leave the API version as None, Aiogoogle uses the ``list_api`` method to search for the best fit version of the given API name.
             
             This will result in sending two http requests instead of just one.
         
@@ -180,7 +180,7 @@ class Aiogoogle:
 
     #-------- Send Requests ----------#
 
-    async def as_user(self, *requests, timeout=None, full_res=False):
+    async def as_user(self, *requests, timeout=None, full_res=False, user_creds=None):
         ''' 
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
         
@@ -202,23 +202,28 @@ class Aiogoogle:
 
             aiogoogle.models.Response:
         '''
-        if self.user_creds is None:
+        user_creds = user_creds or self.user_creds
+        if user_creds is None:
             raise TypeError('No user credentials were found')
 
         # Refresh credentials
-        if self.oauth2.is_expired(self.user_creds) is True:
-            self.user_creds = await self.oauth2.refresh(
-                self.user_creds,
+        if self.oauth2.is_expired(user_creds) is True:
+            user_creds = await self.oauth2.refresh(
+                user_creds,
                 client_creds=self.client_creds
             )
+        
+            # Set refreshed user_creds if ones were already existing
+            if self.user_creds is not None:
+                self.user_creds = user_creds
 
         # Authroize requests
-        authorized_requests = [self.oauth2.authorize(request, self.user_creds) for request in requests]
+        authorized_requests = [self.oauth2.authorize(request, user_creds) for request in requests]
 
         # Send authorized requests
         return await self.active_session.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
-    async def as_api_key(self, *requests, timeout=None, full_res=False):
+    async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None):
         ''' 
         Sends requests on behalf of ``self.api_key`` (OAuth2)
         

@@ -24,6 +24,7 @@ from .data import OAUTH2_V2_DISCVOCERY_DOC, WELLKNOWN_OPENID_CONFIGS
 from ..excs import HTTPError, AuthError
 from ..models import Request
 from ..resource import GoogleAPI
+from ..sessions.aiohttp_session import AiohttpSession
 
 
 # ID token contents: https://openid.net/specs/openid-connect-core-1_0.html#IDToken
@@ -73,9 +74,12 @@ TOKEN_INFO_URI = 'https://www.googleapis.com/oauth2/v4/tokeninfo'
 
 
 class ApiKeyManager(AbstractAPIKeyManager):
+    def __init__(self, api_key=None):
+        self.key = api_key
 
     @staticmethod
-    def authorize(request, key: str) -> Request:
+    def authorize(request, key=None) -> Request:
+        key = key or self.key
         if 'key=' in request.url:
             return request
         else:
@@ -91,12 +95,13 @@ class ApiKeyManager(AbstractAPIKeyManager):
             return request
 
 class Oauth2Manager(AbstractOAuth2Manager):
-    def __init__(self, session_factory, verify=True):
+    def __init__(self, session_factory=AiohttpSession, verify=True, client_creds=None):
         self.oauth2_api = GoogleAPI(OAUTH2_V2_DISCVOCERY_DOC)
         self.openid_configs = WELLKNOWN_OPENID_CONFIGS
         self.session_factory = session_factory
         self.active_session = None
         self.verify = verify
+        self.client_creds = client_creds
 
     def __getitem__(self, key):
         '''
@@ -152,7 +157,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
         return request
 
     @staticmethod
-    def is_ready(client_creds):
+    def is_ready(client_creds=None):
         '''
         Checks passed ``client_creds`` whether or not the client has enough information to perform OAuth2 Authorization code flow
 
@@ -164,6 +169,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
 
             bool: 
         '''
+        client_creds = client_creds or self.client_creds
         if client_creds.get('client_id') and \
         client_creds.get('client_secret') and \
         client_creds.get('scopes') and \
@@ -172,7 +178,9 @@ class Oauth2Manager(AbstractOAuth2Manager):
             return True
         return False
 
-    def authorization_url(self, client_creds, state=None, access_type=None, include_granted_scopes=None, login_hint=None, prompt=None, response_type=AUTH_CODE_RESPONSE_TYPE) -> (str):
+    def authorization_url(self, client_creds=None, state=None, access_type=None, include_granted_scopes=None, login_hint=None, prompt=None, response_type=AUTH_CODE_RESPONSE_TYPE, scopes=None) -> (str):
+        client_creds = client_creds or self.client_creds
+        scopes = scopes or client_creds['scopes']
         scopes = ' '.join(client_creds['scopes'])
         uri = self['authorization_endpoint'] + f'?redirect_uri={client_creds["redirect_uri"]}&scope={scopes}&'
         for param_name, param in {
@@ -189,7 +197,8 @@ class Oauth2Manager(AbstractOAuth2Manager):
                 uri += parse.urlencode({param_name: param})
         return uri
 
-    async def build_user_creds(self, grant, client_creds, grant_type=AUTH_CODE_GRANT_TYPE) -> dict:
+    async def build_user_creds(self, grant, client_creds=None, grant_type=AUTH_CODE_GRANT_TYPE) -> dict:
+        client_creds = client_creds or self.client_creds
         request = self._build_user_creds_req(grant, client_creds, grant_type)
         json_res = await self._send_request(request)
         return self._build_user_creds_from_res(json_res)
@@ -205,7 +214,6 @@ class Oauth2Manager(AbstractOAuth2Manager):
         headers = {'content-type': URLENCODED_CONTENT_TYPE}
         method = 'POST'
         url = self['token_endpoint']
-        data = data
         return Request(method, url, headers, data=data)
 
     def _build_user_creds_from_res(self, json_res):
@@ -301,7 +309,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
         '''
         Gets information of a user given his access token. User must also be the client.
         (Not sure whether or not that's the main purpose of this endpoint and how it differs from get_user_info.
-        If someone can confirm/deny this, please edit (or remove) this message and make a pull request)
+        If someone can confirm/deny the description above, please edit (or remove) this message and make a pull request)
 
         Arguments:
 
@@ -327,7 +335,8 @@ class Oauth2Manager(AbstractOAuth2Manager):
         else:
             return False
 
-    async def refresh(self, user_creds, client_creds):
+    async def refresh(self, user_creds, client_creds=None):
+        client_creds = client_creds or self.client_creds
         request = self._build_refresh_request(user_creds, client_creds)
         json_res = await self._send_request(request)
         return self._build_user_creds_from_res(json_res)
@@ -392,8 +401,8 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
 
     def authorization_url(
         self,
-        client_creds,
-        nonce,
+        client_creds=None,
+        nonce=None,
         state=None,
         prompt=None,
         display=None,
@@ -403,8 +412,13 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
         openid_realm=None,
         hd=None,
         response_type=AUTH_CODE_RESPONSE_TYPE,
+        scopes=None
     ):
-        scopes = ' '.join(client_creds['scopes'])
+        client_creds = client_creds or self.client_creds
+        if nonce is None:
+            raise TypeError('Nonce is required')
+        scopes = scopes or client_creds['scopes']
+        scopes = ' '.join(scopes)
         uri = self['authorization_endpoint'] + f'?redirect_uri={client_creds["redirect_uri"]}&scope={scopes}&'
         for param_name, param in {
             'client_id': client_creds['client_id'],
@@ -424,7 +438,8 @@ class OpenIdConnectManager(Oauth2Manager, AbstractOpenIdConnectManager):
                 uri += parse.urlencode({param_name: param})
         return uri
 
-    async def build_user_creds(self, grant, client_creds, grant_type=AUTH_CODE_GRANT_TYPE, nonce=None, hd=None, verify=True):
+    async def build_user_creds(self, grant, client_creds=None, grant_type=AUTH_CODE_GRANT_TYPE, nonce=None, hd=None, verify=True):
+        client_creds = client_creds or self.client_creds
         user_creds = await super().build_user_creds(grant, client_creds, grant_type=grant_type)
         user_creds['id_token_jwt'] = user_creds['id_token']
         if verify is False:
