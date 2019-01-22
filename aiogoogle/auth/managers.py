@@ -178,7 +178,17 @@ class Oauth2Manager(AbstractOAuth2Manager):
             return True
         return False
 
-    def authorization_url(self, client_creds=None, state=None, access_type=None, include_granted_scopes=None, login_hint=None, prompt=None, response_type=AUTH_CODE_RESPONSE_TYPE, scopes=None) -> (str):
+    def authorization_url(
+        self, 
+        client_creds=None, 
+        state=None, 
+        access_type=None, 
+        include_granted_scopes=None, 
+        login_hint=None, 
+        prompt=None, 
+        response_type=AUTH_CODE_RESPONSE_TYPE, 
+        scopes=None
+    ) -> (str):
         client_creds = client_creds or self.client_creds
         scopes = scopes or client_creds['scopes']
         scopes = ' '.join(client_creds['scopes'])

@@ -29,9 +29,9 @@ copyright = '2018, Omar Ryhan'
 author = 'Omar Ryhan'
 
 # The short X.Y version
-version = '0.1.0'
+version = '0.1.1'
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = '0.1.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -93,15 +93,15 @@ pygments_style = None
 # documentation.
 #
 
+html_theme = 'sphinx_rtd_theme'
 #sys.path.insert(0, os.path.abspath('.'))
 #import sphinx_nameko_theme
 #html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
 #html_theme = 'nameko'
 #html_theme = 'alabaster'
-html_theme = 'sphinx_rtd_theme'
 
 html_favicon = '_static/google_logo.png'
-html_logo = '_static/google_logo.png'
+html_logo = '_static/google2.png'
 
 
 html_theme_options = {
