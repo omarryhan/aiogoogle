@@ -339,7 +339,11 @@ class Oauth2Manager(AbstractOAuth2Manager):
 
     @staticmethod
     def is_expired(creds) -> bool:
-        expires_at = datetime.datetime.fromisoformat(creds['expires_at'])
+        expires_at = creds['expires_at']
+        if not isinstance(expires_at, datetime.datetime):
+            expires_at = datetime.datetime.fromisoformat(
+                expires_at
+            )
         if datetime.datetime.utcnow() >= expires_at:
             return True
         else:
