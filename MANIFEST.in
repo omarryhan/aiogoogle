@@ -1,5 +1,3 @@
-graft tests/
-include tox.ini
 graft aiogoogle/
 include requirements.txt
 include test_requirements.txt

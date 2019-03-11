@@ -154,12 +154,12 @@ def uint64_validator(value, schema_name=None):
 
 @handle_type_and_value_errors
 def double_validator(value, schema_name=None):
-    if not isinstance(float(value), float):
+    if not isinstance(value, float):
         raise ValidationError(make_validation_error(value, 'Double type', schema_name))
 
 @handle_type_and_value_errors
 def float_validator(value, schema_name=None):
-    if not isinstance(float(value), float):
+    if not isinstance(value, float):
         raise ValidationError(make_validation_error(value, 'Float type', schema_name))
 
 @handle_type_and_value_errors
@@ -197,11 +197,11 @@ def null_validator(value, schema_name=None):
 # Other Validators
 
 def minimum_validator(value, minimum, schema_name=None):
-    if value < float(minimum):
+    if float(value) < float(minimum):
         raise ValidationError(make_validation_error(value, f'Not less than {minimum}', schema_name))
 
 def maximum_validator(value, maximum, schema_name=None):
-    if value > float(maximum):
+    if float(value) > float(maximum):
         raise ValidationError(make_validation_error(value, f'Not less than {maximum}', schema_name))
 
 #-- Sub validators ---------------------------
