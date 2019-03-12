@@ -76,11 +76,11 @@ def make_validation_error(checked_value, correct_criteria, schema_name=None):
 
 def handle_type_and_value_errors(fn):
     @wraps(fn)
-    def wrapper(value, schema_name=None):
+    def wrapper(*args, schema_name=None):
         try:
-            return fn(value, schema_name=schema_name)
+            return fn(*args, schema_name=schema_name)
         except (ValueError, TypeError) as e:
-            raise ValidationError(f'{e.__class__.__name__}:\nValue: {value}\nSchema name: {schema_name}\nValidator\'s name: {fn.__name__}\nError: {str(e)}')
+            raise ValidationError(f'{e.__class__.__name__}:\nValue: {args[0]}\nSchema name: {schema_name}\nValidator\'s name: {fn.__name__}\nError: {str(e)}')
     return wrapper
 
 #-------- VALIDATORS ---------#
@@ -196,10 +196,12 @@ def null_validator(value, schema_name=None):
 
 # Other Validators
 
+@handle_type_and_value_errors
 def minimum_validator(value, minimum, schema_name=None):
     if float(value) < float(minimum):
         raise ValidationError(make_validation_error(value, f'Not less than {minimum}', schema_name))
 
+@handle_type_and_value_errors
 def maximum_validator(value, maximum, schema_name=None):
     if float(value) > float(maximum):
         raise ValidationError(make_validation_error(value, f'Not less than {maximum}', schema_name))
@@ -216,7 +218,7 @@ def validate_type(instance, schema, schema_name=None):
             issue @ https://github.com/omarryhan/aiogoogle and report this warning msg.""")
         return
     type_validator = globals()[type_validator_name + '_validator']
-    type_validator(instance, schema_name)
+    type_validator(instance, schema_name=schema_name)
 
 def validate_format(instance, schema, schema_name=None):
     if schema.get('format'):
@@ -235,20 +237,20 @@ def validate_format(instance, schema, schema_name=None):
         if format_validator_name == 'date-time':
             format_validator_name = 'datetime'
         format_validator = globals()[format_validator_name + '_validator']
-        format_validator(instance, schema_name)
+        format_validator(instance, schema_name=schema_name)
 
 def validate_range(instance, schema, schema_name=None):
     if schema.get('minimum'):
-        minimum_validator(instance, schema['minimum'], schema_name)
+        minimum_validator(instance, schema['minimum'], schema_name=schema_name)
     elif schema.get('maximum'):
-        maximum_validator(instance, schema['maximum'], schema_name)
+        maximum_validator(instance, schema['maximum'], schema_name=schema_name)
 
 def validate_pattern(instance, schema, schema_name=None):
     pattern = schema.get('pattern')
     if pattern is not None:
         match = re.match(pattern, instance)
         if match is None:
-            raise ValidationError(make_validation_error(instance, f'Match this pattern: r"{pattern}"', schema_name))
+            raise ValidationError(make_validation_error(instance, f'Match this pattern: r"{pattern}"', schema_name=schema_name))
 
 #-- Main Validator ---------------
 
