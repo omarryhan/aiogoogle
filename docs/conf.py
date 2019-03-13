@@ -101,7 +101,7 @@ html_theme = 'sphinx_rtd_theme'
 #html_theme = 'alabaster'
 
 html_favicon = '_static/google_logo.png'
-html_logo = '_static/google2.png'
+html_logo = '_static/google-developers.png'
 
 
 html_theme_options = {
