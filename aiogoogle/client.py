@@ -50,7 +50,6 @@ class Aiogoogle:
 
         self.session_factory = session_factory
         self.active_session = None
-        self._closed = True  # Using this instead of active_session.closed because I couldn't find an equivelant method in "Asks"
 
         # Keys
         self.api_key = api_key
@@ -270,22 +269,18 @@ class Aiogoogle:
         '''
         return await self.send(*requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
+    async def ensure_session_set(self):
+        if self.active_session is None:
+            self.active_session = self.session_factory()
+
     async def send(self, *args, **kwargs):
-        await self.__aenter__()
+        await self.ensure_session_set()
         return await self.active_session.send(*args, **kwargs)
 
     async def __aenter__(self):
-        if self.active_session is None:
-            self.active_session = self.session_factory()
-        
-        if self._closed is True:
-            await self.active_session.__aenter__()
-            self._closed = False
-
+        await self.ensure_session_set()
+        await self.active_session.__aenter__()
         return self
 
     async def __aexit__(self, *args):
-        if self._closed is False:
-            await self.active_session.__aexit__(*args)
-            self._closed = True
-
+        await self.active_session.__aexit__(*args)
