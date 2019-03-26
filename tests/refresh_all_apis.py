@@ -40,33 +40,33 @@ async def refresh_disc_docs_json():
         print('SUCCESS!')
 
     # Refresh discovery files in tests/data
-    for name, version in ALL_APIS:
-        aiogoogle = Aiogoogle()
-        print(f'Downloading {name}-{version}')
-        try:
-            google_api = await aiogoogle.discover(name, version)
-        except Exception as e:
-            file_errors.append(
-                {
-                    f'{name}-{version}': str(e)
-                }
-            )
-            continue
+    async with Aiogoogle() as aiogoogle:
+        for name, version in ALL_APIS:
+            print(f'Downloading {name}-{version}')
+            try:
+                google_api = await aiogoogle.discover(name, version)
+            except Exception as e:
+                file_errors.append(
+                    {
+                        f'{name}-{version}': str(e)
+                    }
+                )
+                continue
 
-        data_dir_name = current_dir + '/tests/data/'
-        try:
-            if not os.path.exists(data_dir_name):
-                os.makedirs(data_dir_name)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        
-        # Save discovery docuemnt as .json file to the newly created data dir
-        file_name = current_dir + '/tests/data/' + name + '_' + version + '_discovery_doc.json'
-        with open(file_name, 'w') as discovery_file:
-            json.dump(google_api.discovery_document, discovery_file)
-        print(f'saved {name}-{version} to {file_name}')
-    
+            data_dir_name = current_dir + '/tests/data/'
+            try:
+                if not os.path.exists(data_dir_name):
+                    os.makedirs(data_dir_name)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
+            
+            # Save discovery docuemnt as .json file to the newly created data dir
+            file_name = current_dir + '/tests/data/' + name + '_' + version + '_discovery_doc.json'
+            with open(file_name, 'w') as discovery_file:
+                json.dump(google_api.discovery_document, discovery_file)
+            print(f'saved {name}-{version} to {file_name}')
+
     print('Done')
     if file_errors:
         print(f'Errors found: {str(file_errors)}')

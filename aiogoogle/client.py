@@ -50,6 +50,7 @@ class Aiogoogle:
 
         self.session_factory = session_factory
         self.active_session = None
+        self._closed = True  # Using this instead of active_session.closed because I couldn't find an equivelant method in "Asks"
 
         # Keys
         self.api_key = api_key
@@ -123,12 +124,7 @@ class Aiogoogle:
         '''
         
         request = self.discovery_service.apis.list(name=name, preferred=preferred, fields=fields)
-        if self.active_session is None:
-            async with self:
-                res = await self.as_anon(request)
-        else:
-            res = await self.as_anon(request)
-        return res
+        return await self.as_anon(request)
 
     async def discover(self, api_name, api_version=None, validate=True):
         ''' 
@@ -171,11 +167,7 @@ class Aiogoogle:
                 raise ValueError('Invalid API name')
         
         request = self.discovery_service.apis.getRest(api=api_name, version=api_version, validate=False)
-        if self.active_session is None:
-            async with self:
-                discovery_docuemnt = await self.as_anon(request)
-        else:
-            discovery_docuemnt = await self.as_anon(request)
+        discovery_docuemnt = await self.as_anon(request)
         return GoogleAPI(discovery_docuemnt, validate)
 
     #-------- Send Requests ----------#
@@ -221,7 +213,7 @@ class Aiogoogle:
         authorized_requests = [self.oauth2.authorize(request, user_creds) for request in requests]
 
         # Send authorized requests
-        return await self.active_session.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
+        return await self.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
     async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None):
         ''' 
@@ -252,7 +244,7 @@ class Aiogoogle:
         authorized_requests = [self.api_key_manager.authorize(request, self.api_key) for request in requests]
 
         # Send authorized requests
-        return await self.active_session.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
+        return await self.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
     async def as_anon(self, *requests, timeout=None, full_res=False):
         ''' 
@@ -276,12 +268,24 @@ class Aiogoogle:
 
             aiogoogle.models.Response:
         '''
-        return await self.active_session.send(*requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
+        return await self.send(*requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
+
+    async def send(self, *args, **kwargs):
+        await self.__aenter__()
+        return await self.active_session.send(*args, **kwargs)
 
     async def __aenter__(self):
-        self.active_session = await self.session_factory().__aenter__()
+        if self.active_session is None:
+            self.active_session = self.session_factory()
+        
+        if self._closed is True:
+            await self.active_session.__aenter__()
+            self._closed = False
+
         return self
 
-    async def __aexit__(self, *args, **kwargs):
-        await self.active_session.__aexit__(*args, **kwargs)
-        self.active_session = None
+    async def __aexit__(self, *args):
+        if self._closed is False:
+            await self.active_session.__aexit__(*args)
+            self._closed = True
+
