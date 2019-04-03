@@ -75,7 +75,7 @@ class CurioAsksSession(Session, AbstractSession):
                     json=request.json,
                 )
 
-        #----------------- runners ------------------#
+        #----------------- send sequence ------------------#
         async def get_response(request):
             response = await fire_request(request)
             response = await resolve_response(request, response)
@@ -86,7 +86,7 @@ class CurioAsksSession(Session, AbstractSession):
         async def get_content(request):
             response = await get_response(request)
             return response.content
-        #----------------- /runners ------------------#
+        #----------------- /send sequence ------------------#
 
         async def execute_tasks():
             async with curio.TaskGroup() as g:

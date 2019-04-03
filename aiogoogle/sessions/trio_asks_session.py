@@ -77,7 +77,7 @@ class TrioAsksSession(Session, AbstractSession):
                     json=request.json,
                 )
 
-        #----------------- runners ------------------#
+        #----------------- send sequence ------------------#
         async def get_response(request):
             response = await fire_request(request)
             response = await resolve_response(request, response)
@@ -92,10 +92,7 @@ class TrioAsksSession(Session, AbstractSession):
                 response.raise_for_status()
             response = _call_callback(request, response)
             responses.append(response.content)
-        #----------------- /runners ------------------#
-
-        if session_factory is None:
-            session_factory = self.__class__
+        #----------------- /send sequence ------------------#
 
         async def execute_tasks():
             async with trio.open_nursery() as nursery:
@@ -109,6 +106,7 @@ class TrioAsksSession(Session, AbstractSession):
                 await execute_tasks()
         else:
             await execute_tasks()
+
         if isinstance(responses, list) and len(responses) == 1:
             return responses[0]
         else:

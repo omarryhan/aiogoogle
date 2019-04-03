@@ -11,7 +11,7 @@ from functools import wraps
 import datetime
 
 from .excs import ValidationError
-from .utils import _dict, _safe_getitem, _toggle2x_dashed_params
+from .utils import _dict, _safe_getitem
 from .excs import ValidationError
 from .models import MediaDownload, MediaUpload, ResumableUpload, Request
 from .validate import validate as validate__
@@ -37,6 +37,32 @@ STACK_QUERY_PARAMETER_DEFAULT_VALUE = {
 # Note: etagRequired is only mentioned once in all of the discovery documents available from Google. (In discovery_service-v1. So, it isn't actually being used)
 
 
+def _toggle2x_dashed_params(f):
+    @wraps(f)
+    def wrapper(self, validate=None, data=None, json=None, upload_file=None, 
+                download_file=None, timeout=None, **uri_params):
+        '''
+        Momentarily adds back '-' to url parameters and passed uri_params
+        in order to be processed correctly and comply with the disc doc
+        Reverts back to '_' after wrapped function is done
+        '''
+        # unfix urls
+        uri_params = self._add_dash_user_uri_params(uri_params)
+        
+        # unfix params
+        self._method_specs['parameters'] = self._add_dash_params(self._method_specs.get('parameters'))
+        self._global_parameters = self._add_dash_params(self._global_parameters)
+
+        # Run function
+        results = f(self, validate, data, json, upload_file, download_file, timeout, **uri_params)
+
+        # fix params again
+        self._method_specs['parameters'] = self._rm_dash_params(self._method_specs.get('parameters'))
+        self._global_parameters = self._rm_dash_params(self._global_parameters)
+
+        return results
+    return wrapper
+
 class Method:
     def __init__(self, name, method_specs, global_parameters, schemas, root_url, service_path, batch_path, validate):
         # Replaces '-'s with '_'s and preserve old names to revert back to them after this method is called
@@ -52,7 +78,7 @@ class Method:
         self._service_path = service_path
         self._batch_path = batch_path
         
-        # Not gonna use it, because it's useless. Maybe I'm wrong?
+        # Not gonna use it, because it's useless. Not sure though.
         if self['useMediaDownloadService'] is True and self['supportsMediaDownload'] is True:
             self._download_base_url = self._root_url + 'download/' + self._service_path
         else:

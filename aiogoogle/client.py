@@ -166,7 +166,9 @@ class Aiogoogle:
                 raise ValueError('Invalid API name')
         
         request = self.discovery_service.apis.getRest(api=api_name, version=api_version, validate=False)
+
         discovery_docuemnt = await self.as_anon(request)
+
         return GoogleAPI(discovery_docuemnt, validate)
 
     #-------- Send Requests ----------#
@@ -203,15 +205,13 @@ class Aiogoogle:
                 user_creds,
                 client_creds=self.client_creds
             )
-        
+
             # Set refreshed user_creds if ones were already existing
             if self.user_creds is not None:
                 self.user_creds = user_creds
 
-        # Authroize requests
         authorized_requests = [self.oauth2.authorize(request, user_creds) for request in requests]
 
-        # Send authorized requests
         return await self.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
     async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None):
@@ -239,10 +239,8 @@ class Aiogoogle:
         if self.api_key is None:
             raise TypeError('No API key found')
 
-        # Authorize requests
         authorized_requests = [self.api_key_manager.authorize(request, self.api_key) for request in requests]
 
-        # Send authorized requests
         return await self.send(*authorized_requests, timeout=timeout, full_res=full_res, session_factory=self.session_factory)
 
     async def as_anon(self, *requests, timeout=None, full_res=False):

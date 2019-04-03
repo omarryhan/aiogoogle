@@ -5,8 +5,7 @@ __all__ = [
 import asyncio
 from json import JSONDecodeError
 
-from aiohttp import ClientSession
-from aiohttp import ClientTimeout
+from aiohttp import ClientSession, ClientTimeout
 from aiohttp.client_exceptions import ClientResponseError, ContentTypeError
 import aiofiles
 from aiofiles import os as async_os
@@ -16,7 +15,6 @@ from ..models import Response
 from .abc import AbstractSession
 from ..excs import HTTPError, ValidationError
 from .common import _call_callback
-
 
 
 async def _get_file_size(full_file_path):
@@ -32,9 +30,6 @@ async def _aiter_file(file_name, chunk_size):
             chunk = await f.read(chunk_size)
 
 class AiohttpSession(ClientSession, AbstractSession):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     async def send(self, *requests, timeout=None, full_res=False, raise_for_status=True, session_factory=None):
         async def resolve_response(request, response):
             data = None
@@ -123,7 +118,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                     timeout = request.timeout
                 )
 
-        #----------------- runners ------------------#
+        #----------------- send sequence ------------------#
         async def get_response(request):
             response = await fire_request(request)
             response = await resolve_response(request, response)
@@ -134,7 +129,7 @@ class AiohttpSession(ClientSession, AbstractSession):
         async def get_content(request):
             response = await get_response(request)
             return response.content
-        #----------------- /runners ------------------#
+        #----------------- /send sequence ------------------#
 
         async def schedule_tasks():
             if full_res is True:
@@ -143,8 +138,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                 tasks = [asyncio.create_task(get_content(request)) for request in requests]
             return await asyncio.gather(*tasks, return_exceptions=False)
 
-        if session_factory is None:
-            session_factory = self.__class__
+        session_factory = self.__class__ if session_factory is None else None
 
         if timeout is not None:
             async with async_timeout.timeout(timeout):
@@ -152,7 +146,4 @@ class AiohttpSession(ClientSession, AbstractSession):
         else:
             results = await schedule_tasks()
 
-        if isinstance(results, list) and len(results) == 1:
-            return results[0]
-        else:
-            return results
+        return results[0] if isinstance(results, list) and len(results) == 1 else results
