@@ -510,7 +510,7 @@ Most of Google's APIs that are supported by the discovery service support these 
 
 3. **Service Accounts**
 
-    For bot to bot communication. `See here <https://cloud.google.com/iam/docs/overview>`_
+    `See here <https://cloud.google.com/iam/docs/overview>`_
     
     Useful if you run an application on any of Google Cloud Products.
     
