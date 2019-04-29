@@ -214,6 +214,29 @@ API explorer link:
 * https://developers.google.com/apis-explorer/#p/drive/v3/drive.files.create
 * https://developers.google.com/apis-explorer/#p/drive/v3/drive.files.update
 
+### 7. get_email_header.py
+
+What it does:
+
+* Prints the headers for an email returned by the gmail list API
+
+API name and API version required:
+
+* gmail-v1
+
+Scopes Required:
+
+* "https://www.googleapis.com/auth/gmail.readonly"
+
+User Credentials Required:
+
+* yes
+
+API explorer link:
+
+* https://developers.google.com/gmail/api/v1/reference/users/messages/list
+* https://developers.google.com/gmail/api/v1/reference/users/messages/get
+
 ## OAuth2
 
 
