@@ -29,9 +29,9 @@ copyright = '2018, Omar Ryhan'
 author = 'Omar Ryhan'
 
 # The short X.Y version
-version = '0.1.9'
+version = '0.1.10'
 # The full version, including alpha/beta/rc tags
-release = '0.1.9'
+release = '0.1.10'
 
 
 # -- General configuration ---------------------------------------------------
