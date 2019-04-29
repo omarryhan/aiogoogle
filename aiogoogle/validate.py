@@ -22,6 +22,7 @@ __all__ = [
     'validate',
 ]
 
+import base64
 import datetime
 import warnings
 import re
@@ -164,8 +165,7 @@ def float_validator(value, schema_name=None):
 
 @handle_type_and_value_errors
 def byte_validator(value, schema_name=None):
-    if not isinstance(value, bytes):
-        raise ValidationError(make_validation_error(value, 'Bytes type', schema_name))
+    base64.urlsafe_b64decode(value)
 
 @handle_type_and_value_errors
 def date_validator(value, schema_name=None):
