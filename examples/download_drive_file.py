@@ -4,7 +4,7 @@ import asyncio, pprint, sys, os
 
 from helpers import Aiogoogle, user_creds, client_creds, api_key, email
 
-usage = '''
+usage = """
 Usage:
 
     argv1: ID of the file you want to download (see hint)
@@ -24,31 +24,30 @@ Example:
     Now run:
     
         ./download_drive_file.py 0Bw9MwYF2OXbSc0d0ZmNlRjVhMmM /home/omar/Desktop
-'''
+"""
 
 
 async def download_file(file_id, dir_path):
     async with Aiogoogle(user_creds=user_creds, client_creds=client_creds) as aiogoogle:
-        drive_v3 = await aiogoogle.discover('drive', 'v3')
+        drive_v3 = await aiogoogle.discover("drive", "v3")
 
         # First get the name of the file
-        info_res = await aiogoogle.as_user(
-            drive_v3.files.get(fileId=file_id)
-        )
+        info_res = await aiogoogle.as_user(drive_v3.files.get(fileId=file_id))
 
         # Make full path
-        file_name = info_res['name']
+        file_name = info_res["name"]
         full_path = os.path.join(dir_path, file_name)
 
         # Second download the file
         await aiogoogle.as_user(
-            drive_v3.files.get(fileId=file_id, download_file=full_path, alt='media'),
-            full_res=True
+            drive_v3.files.get(fileId=file_id, download_file=full_path, alt="media"),
+            full_res=True,
         )
 
-        print('Downloaded file to {} successfully!'.format(full_path))
+        print("Downloaded file to {} successfully!".format(full_path))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
         file_id = sys.argv[1]
         dir_path = sys.argv[2]

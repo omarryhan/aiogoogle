@@ -9,8 +9,10 @@ def _safe_getitem(dct, *keys):
             return None
     return dct
 
+
 class _dict(dict):  # pragma: no cover
-    ''' A simple dict subclass for use with Creds modelling. No surprises '''
+    """ A simple dict subclass for use with Creds modelling. No surprises """
+
     def __init__(self, *args, **kwargs):  # pragma: no cover
         super(_dict, self).__init__(*args, **kwargs)
         for arg in args:

@@ -1,11 +1,10 @@
-__all__ = [
-    'TrioAsksSession'
-]
+__all__ = ["TrioAsksSession"]
 
 import trio
 import asks
 from asks import Session
-asks.init('trio')
+
+asks.init("trio")
 
 from .abc import AbstractSession
 from ..models import Response
@@ -14,12 +13,19 @@ from .common import _call_callback
 
 class TrioAsksSession(Session, AbstractSession):
     def __init__(self, *args, **kwargs):
-        if kwargs.get('timeout'):
-            del kwargs['timeout']
-            kwargs.pop('timeout', None)
+        if kwargs.get("timeout"):
+            del kwargs["timeout"]
+            kwargs.pop("timeout", None)
         super().__init__(*args, **kwargs)
 
-    async def send(self, *requests, timeout=None, full_res=False, raise_for_status=True, session_factory=None):
+    async def send(
+        self,
+        *requests,
+        timeout=None,
+        full_res=False,
+        raise_for_status=True,
+        session_factory=None
+    ):
         responses = []
 
         async def resolve_response(request, response):
@@ -30,7 +36,9 @@ class TrioAsksSession(Session, AbstractSession):
 
             # If downloading file:
             if request.media_download:
-                raise NotImplementedError('Downloading media isn\'t supported by this session')
+                raise NotImplementedError(
+                    "Downloading media isn't supported by this session"
+                )
             else:
                 if response.status_code != 204:  # If no (no content)
                     try:
@@ -46,7 +54,7 @@ class TrioAsksSession(Session, AbstractSession):
                                     data = response.body
                                 except:
                                     data = None
-            
+
             if request.media_upload:
                 upload_file = request.media_upload.file_path
 
@@ -56,18 +64,22 @@ class TrioAsksSession(Session, AbstractSession):
                 status_code=response.status_code,
                 json=json,
                 data=data,
-                reason=response.reason_phrase if getattr(response, 'reason_phrase') else None,
+                reason=response.reason_phrase
+                if getattr(response, "reason_phrase")
+                else None,
                 req=request,
                 download_file=download_file,
                 upload_file=upload_file,
-                session_factory=session_factory
+                session_factory=session_factory,
             )
 
         async def fire_request(request):
-            request.headers['Accept-Encoding'] = 'gzip'
-            request.headers['User-Agent'] = 'Aiogoogle Asks Trio (gzip)'
+            request.headers["Accept-Encoding"] = "gzip"
+            request.headers["User-Agent"] = "Aiogoogle Asks Trio (gzip)"
             if request.media_upload:
-                raise NotImplementedError('Uploading media isn\'t supported by this session')
+                raise NotImplementedError(
+                    "Uploading media isn't supported by this session"
+                )
             else:
                 return await self.request(
                     method=request.method,
@@ -77,7 +89,7 @@ class TrioAsksSession(Session, AbstractSession):
                     json=request.json,
                 )
 
-        #----------------- send sequence ------------------#
+        # ----------------- send sequence ------------------#
         async def get_response(request):
             response = await fire_request(request)
             response = await resolve_response(request, response)
@@ -85,6 +97,7 @@ class TrioAsksSession(Session, AbstractSession):
                 response.raise_for_status()
             response = _call_callback(request, response)
             responses.append(response)
+
         async def get_content(request):
             response = await fire_request(request)
             response = await resolve_response(request, response)
@@ -92,14 +105,19 @@ class TrioAsksSession(Session, AbstractSession):
                 response.raise_for_status()
             response = _call_callback(request, response)
             responses.append(response.content)
-        #----------------- /send sequence ------------------#
+
+        # ----------------- /send sequence ------------------#
 
         async def execute_tasks():
             async with trio.open_nursery() as nursery:
                 if full_res is True:
-                    list(map(lambda req: nursery.start_soon(get_response, req), requests))
+                    list(
+                        map(lambda req: nursery.start_soon(get_response, req), requests)
+                    )
                 else:
-                    list(map(lambda req: nursery.start_soon(get_content, req), requests))
+                    list(
+                        map(lambda req: nursery.start_soon(get_content, req), requests)
+                    )
 
         if timeout is not None:
             with trio.move_on_after(timeout):

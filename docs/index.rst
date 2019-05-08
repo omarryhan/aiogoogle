@@ -143,7 +143,7 @@ Library Setup
 
 .. code-block:: bash
 
-    $ python3.7 -m pip install --user --upgrade aiogoogle
+    $ python3.7 -m pip install --upgrade aiogoogle
 
 Google Account Setup
 ====================
@@ -595,7 +595,7 @@ Install sanic
 
 .. code-block:: bash
 
-    pip install --user --upgrade sanic
+    pip install --upgrade sanic
 
 .. warning::
 

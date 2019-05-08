@@ -1,8 +1,4 @@
-__all__ = [
-    'ApiKey',
-    'UserCreds',
-    'ClientCreds'
-]
+__all__ = ["ApiKey", "UserCreds", "ClientCreds"]
 
 
 from ..utils import _dict
@@ -11,8 +7,9 @@ from ..utils import _dict
 class ApiKey(str):
     pass
 
+
 class IdToken(_dict):
-    '''
+    """
     OpenID connect ID token
 
     Example:
@@ -140,11 +137,13 @@ class IdToken(_dict):
         hd (str):
         
             * The hosted G Suite domain of the user. Provided only if the user belongs to a hosted domain.
-    '''
+    """
+
     pass
 
+
 class UserCreds(_dict):
-    '''
+    """
     OAuth2 User Credentials Dictionary
 
     Attributes:
@@ -163,7 +162,8 @@ class UserCreds(_dict):
         token_info_uri (str): URI where one could get more info about this token
         revoke_uri (str): URI where this token should be revoked
         
-    '''
+    """
+
     def __init__(
         self,
         access_token=None,
@@ -171,10 +171,8 @@ class UserCreds(_dict):
         expires_in=None,
         expires_at=None,
         scopes=None,
-        
         id_token=None,
         id_token_jwt=None,
-        
         token_type=None,
         token_uri=None,
         token_info_uri=None,
@@ -185,17 +183,18 @@ class UserCreds(_dict):
         self.expires_in = expires_in
         self.expires_at = expires_at
         self.scopes = scopes
-        
+
         self.id_token = id_token
         self.id_token_jwt = id_token_jwt
-        
+
         self.token_type = token_type
         self.token_uri = token_uri
         self.token_info_uri = token_info_uri
         self.revoke_uri = revoke_uri
 
+
 class ClientCreds(_dict):
-    '''
+    """
     OAuth2 Client Credentials Dictionary
 
     Examples:
@@ -208,8 +207,11 @@ class ClientCreds(_dict):
         client_secret (str): OAuth2 client secret
         scopes (list): List of scopes that this client should request from resource server
         redirect_uri (str): client's redirect uri
-    '''
-    def __init__(self, client_id=None, client_secret=None, scopes=None, redirect_uri=None):
+    """
+
+    def __init__(
+        self, client_id=None, client_secret=None, scopes=None, redirect_uri=None
+    ):
         self.client_id = client_id
         self.client_secret = client_secret
         self.scopes = scopes

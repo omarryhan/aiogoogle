@@ -5,7 +5,7 @@ from ..models import Request
 
 
 class AbstractOAuth2Manager(ABC):
-    '''
+    """
     OAuth2 manager that only supports Authorization Code Flow (https://tools.ietf.org/html/rfc6749#section-1.3.1)
 
     Arguments:
@@ -17,18 +17,20 @@ class AbstractOAuth2Manager(ABC):
     Note:
     
         For a flow similar to Client Credentials Flow (https://tools.ietf.org/html/rfc6749#section-1.3.4) use an ``api_key``
-    '''
+    """
 
     def __new__(cls, *args, **kwargs):
         # Get all coros of this the abstract class
-        parent_abstract_coros = inspect.getmembers(AbstractOAuth2Manager, predicate=inspect.iscoroutinefunction)
+        parent_abstract_coros = inspect.getmembers(
+            AbstractOAuth2Manager, predicate=inspect.iscoroutinefunction
+        )
 
         # Ensure all relevant child methods are implemented as coros
         for coro in parent_abstract_coros:
             coro_name = coro[0]
             child_method = getattr(cls, coro_name)
             if not inspect.iscoroutinefunction(child_method):
-                raise RuntimeError(f'{child_method} must be a coroutine')
+                raise RuntimeError(f"{child_method} must be a coroutine")
 
         # Resume with normal behavior of a Python constructor
         return super(AbstractOAuth2Manager, cls).__new__(cls)
@@ -47,7 +49,7 @@ class AbstractOAuth2Manager(ABC):
 
     @abstractmethod
     def authorize(self, request, user_creds) -> Request:
-        '''
+        """
         Adds OAuth2 authorization headers to requests given user creds
 
         Arguments:
@@ -63,12 +65,22 @@ class AbstractOAuth2Manager(ABC):
         Returns:
 
             aiogoogle.models.Request: Request with OAuth2 authorization header
-        '''
+        """
         raise NotImplementedError
 
     @abstractmethod
-    def authorization_url(self, client_creds=None, state=None, access_type=None, include_granted_scopes=None, login_hint=None, prompt=None, response_type=None, scopes=None)-> str:
-        ''' 
+    def authorization_url(
+        self,
+        client_creds=None,
+        state=None,
+        access_type=None,
+        include_granted_scopes=None,
+        login_hint=None,
+        prompt=None,
+        response_type=None,
+        scopes=None,
+    ) -> str:
+        """ 
         First step of OAuth2 authoriztion code flow. Creates an OAuth2 authorization URI.
 
         Arguments:
@@ -214,12 +226,12 @@ class AbstractOAuth2Manager(ABC):
         Returns:
 
             (str): An Authorization URI
-        '''
+        """
         raise NotImplementedError
 
     @abstractmethod
     async def build_user_creds(self, grant, client_creds, grant_type=None):
-        '''
+        """
         Second step of Oauth2 authrization code flow. Creates a User Creds object with access and refresh token
 
         Arguments:
@@ -257,12 +269,12 @@ class AbstractOAuth2Manager(ABC):
         Raises:
 
             aiogoogle.excs.AuthError: Auth Error
-        '''
+        """
         raise NotImplementedError
 
     @abstractmethod
     def is_expired(self, user_creds):
-        '''
+        """
         Checks if user_creds expired
 
         Arguments:
@@ -273,12 +285,12 @@ class AbstractOAuth2Manager(ABC):
 
             bool:
 
-        '''
+        """
         raise NotImplementedError
 
     @abstractmethod
     async def refresh(self, user_creds, client_creds):
-        '''
+        """
         Refreshes user_creds
         
         Arguments:
@@ -294,13 +306,12 @@ class AbstractOAuth2Manager(ABC):
         Raises:
 
             aiogoogle.excs.AuthError: Auth Error
-        '''
+        """
         raise NotImplementedError
 
-    
     @abstractmethod
     async def revoke(self, user_creds):
-        '''
+        """
         Revokes user_creds
 
         In some cases a user may wish to revoke access given to an application. A user can revoke access by visiting Account Settings.
@@ -319,20 +330,23 @@ class AbstractOAuth2Manager(ABC):
         Raises:
 
             aiogoogle.excs.AuthError:
-        '''
+        """
         raise NotImplementedError
+
 
 class AbstractOpenIdConnectManager(AbstractOAuth2Manager):
     def __new__(cls, *args, **kwargs):
         # Get all coros of this the abstract class
-        parent_abstract_coros = inspect.getmembers(AbstractOpenIdConnectManager, predicate=inspect.iscoroutinefunction)
+        parent_abstract_coros = inspect.getmembers(
+            AbstractOpenIdConnectManager, predicate=inspect.iscoroutinefunction
+        )
 
         # Ensure all relevant child methods are implemented as coros
         for coro in parent_abstract_coros:
             coro_name = coro[0]
             child_method = getattr(cls, coro_name)
             if not inspect.iscoroutinefunction(child_method):
-                raise RuntimeError(f'{child_method} must be a coroutine')
+                raise RuntimeError(f"{child_method} must be a coroutine")
 
         # Resume with normal behavior of a Python constructor
         return super(AbstractOpenIdConnectManager, cls).__new__(cls)
@@ -353,7 +367,7 @@ class AbstractOpenIdConnectManager(AbstractOAuth2Manager):
         response_type=None,
         scopes=None,
     ):
-        ''' 
+        """ 
         First step of OAuth2 authoriztion code flow. Creates an OAuth2 authorization URI.
 
         Arguments:
@@ -547,12 +561,14 @@ class AbstractOpenIdConnectManager(AbstractOAuth2Manager):
         Returns:
 
             (str): An Authorization URI
-        '''
+        """
         raise NotImplementedError
 
     @abstractmethod
-    def build_user_creds(self, grant, client_creds, grant_type=None, nonce=None, hd=None, verify=True):
-        '''
+    def build_user_creds(
+        self, grant, client_creds, grant_type=None, nonce=None, hd=None, verify=True
+    ):
+        """
         Second step of Oauth2 authrization code flow and OpenID connect. Creates a User Creds object with access and refresh token
 
         Arguments:
@@ -608,12 +624,12 @@ class AbstractOpenIdConnectManager(AbstractOAuth2Manager):
         Raises:
 
             aiogoogle.excs.AuthError: Auth Error
-        '''
+        """
         raise NotImplementedError
 
     @abstractmethod
     def decode_and_validate(self, id_token_jwt, client_id=None, nonce=None, hd=None):
-        '''
+        """
         Decodes then validates an openid_connect jwt with Google's oaauth2 certificates
 
         Arguments:
@@ -629,13 +645,12 @@ class AbstractOpenIdConnectManager(AbstractOAuth2Manager):
         Returns:
 
             dict: Decoded OpenID connect JWT
-        '''
+        """
         raise NotImplementedError
-
 
     @abstractmethod
     def get_user_info(self, user_creds):
-        '''
+        """
         https://developers.google.com/+/web/api/rest/openidconnect/getOpenIdConnect
     
         People: getOpenIdConnect
@@ -671,14 +686,14 @@ class AbstractOpenIdConnectManager(AbstractOAuth2Manager):
         Arguments:
 
             user_creds (aiogoogle.auth.creds.UserCreds): User credentials
-        '''
+        """
         raise NotImplementedError
 
-class AbstractAPIKeyManager(ABC):
 
+class AbstractAPIKeyManager(ABC):
     @abstractmethod
     def authorize(self, request, api_key):
-        '''
+        """
         Adds API Key authorization query argument to URL of a request given an API key
 
         Arguments:
@@ -694,6 +709,5 @@ class AbstractAPIKeyManager(ABC):
         Returns:
 
             aiogoogle.models.Request: Request with API key in URL
-        '''
+        """
         raise NotImplementedError
-

@@ -4,10 +4,11 @@ import pprint
 from .excs import HTTPError, AuthError
 
 
-DEFAULT_UPLOAD_CHUNK_SIZE = 1024*1024
+DEFAULT_UPLOAD_CHUNK_SIZE = 1024 * 1024
+
 
 class ResumableUpload:
-    '''
+    """
     Resumable Upload Object. Works in conjuction with media upload 
     
     Arguments:
@@ -20,7 +21,8 @@ class ResumableUpload:
 
         chunksize (int): Size of a chunk of bytes that a session should read at a time when uploading in multipart.
 
-    '''
+    """
+
     def __init__(self, file_path, multipart=None, chunk_size=None, upload_path=None):
         self.file_path = file_path
         self.upload_path = upload_path
@@ -29,8 +31,9 @@ class ResumableUpload:
             chunk_size = DEFAULT_UPLOAD_CHUNK_SIZE
         self.chunk_size = chunk_size
 
+
 class MediaUpload:
-    '''
+    """
 
     Media Upload
 
@@ -52,8 +55,19 @@ class MediaUpload:
 
         validate (bool): Whether or not a session should validate the upload size before sending
 
-    '''
-    def __init__(self, file_path, upload_path=None, mime_range=None, max_size=None, multipart=False, chunk_size=None, resumable=None, validate=True):
+    """
+
+    def __init__(
+        self,
+        file_path,
+        upload_path=None,
+        mime_range=None,
+        max_size=None,
+        multipart=False,
+        chunk_size=None,
+        resumable=None,
+        validate=True,
+    ):
         self.file_path = file_path
         self.upload_path = upload_path
         self.mime_range = mime_range
@@ -61,24 +75,27 @@ class MediaUpload:
         self.multipart = multipart
         if chunk_size is None:
             chunk_size = DEFAULT_UPLOAD_CHUNK_SIZE
-        self.chunk_size=chunk_size
+        self.chunk_size = chunk_size
         self.resumable = resumable
         self.validate = validate
 
+
 class MediaDownload:
-    '''
+    """
     Media Download
 
     Arguments:
 
         file_path (str): Full path of the file to be downloaded
 
-    '''
+    """
+
     def __init__(self, file_path):
         self.file_path = file_path
 
+
 class Request:
-    '''
+    """
     Request class for the whole library. Auth Managers, GoogleAPI and Sessions should all use this.
 
     .. note::
@@ -110,10 +127,21 @@ class Request:
         timeout (int): Individual timeout for this request
 
         callback (callable): Synchronous callback that takes the content of the response as the only argument. Should also return content.
-        '''
+        """
+
     def __init__(
-        self, method=None, url=None, batch_url=None, headers=None, json=None, data=None,
-        media_upload=None, media_download=None, timeout=None, callback=None):
+        self,
+        method=None,
+        url=None,
+        batch_url=None,
+        headers=None,
+        json=None,
+        data=None,
+        media_upload=None,
+        media_download=None,
+        timeout=None,
+        callback=None,
+    ):
         self.method = method
         self.url = url
         self.batch_url = batch_url
@@ -130,15 +158,15 @@ class Request:
 
     def _add_query_param(self, query: dict):
         if not self.url:
-            raise TypeError('no url to add query to')
+            raise TypeError("no url to add query to")
 
         url = self.url
-        if '?' not in url:
-            if url.endswith('/'):
+        if "?" not in url:
+            if url.endswith("/"):
                 url = url[:-1]
-            url += '?'
+            url += "?"
         else:
-            url += '&'
+            url += "&"
         query = urlencode(query)
         url += query
         self.url = url
@@ -152,7 +180,7 @@ class Request:
 
     @classmethod
     def batch_requests(cls, *requests):
-        '''
+        """
         Given many requests, will create a batch request per https://developers.google.com/discovery/v1/batch
 
         Arguments:
@@ -162,20 +190,21 @@ class Request:
         Returns:
 
             aiogoogle.models.Request:
-        '''
+        """
         raise NotImplementedError
 
     @classmethod
     def from_response(cls, response):
         return Request(
-            url = response.url,
-            headers = response.headers,
-            json = response.json,
-            data = response.data
+            url=response.url,
+            headers=response.headers,
+            json=response.json,
+            data=response.data,
         )
 
+
 class Response:
-    '''
+    """
     Respnse Object
 
     Arguments:
@@ -203,12 +232,24 @@ class Response:
     Attributes:
 
         content (any): equals either ``self.json`` or ``self.data``
-    '''
-    
-    def __init__(self, status_code=None, headers=None, url=None, json=None, data=None, reason=None, req=None, download_file=None, upload_file=None, session_factory=None):
+    """
+
+    def __init__(
+        self,
+        status_code=None,
+        headers=None,
+        url=None,
+        json=None,
+        data=None,
+        reason=None,
+        req=None,
+        download_file=None,
+        upload_file=None,
+        session_factory=None,
+    ):
         if json and data:
-            raise TypeError('Pass either json or data, not both.')
-        
+            raise TypeError("Pass either json or data, not both.")
+
         self.status_code = status_code
         self.headers = headers
         self.url = url
@@ -221,28 +262,44 @@ class Response:
         self.session_factory = session_factory
 
     @staticmethod
-    async def _next_page_generator(prev_res, session_factory, req_token_name=None, res_token_name=None, json_req=False):
+    async def _next_page_generator(
+        prev_res,
+        session_factory,
+        req_token_name=None,
+        res_token_name=None,
+        json_req=False,
+    ):
         prev_url = None
         while prev_res is not None:
-            
+
             # Avoid infinite looping if google sent the same token twice
             if prev_url == prev_res.req.url:
                 break
             prev_url = prev_res.req.url
-            
+
             # yield
             yield prev_res.content
-            
+
             # get request for next page
-            next_req = prev_res.next_page(req_token_name=req_token_name, res_token_name=res_token_name, json_req=json_req)
+            next_req = prev_res.next_page(
+                req_token_name=req_token_name,
+                res_token_name=res_token_name,
+                json_req=json_req,
+            )
             if next_req is not None:
                 async with session_factory() as sess:
                     prev_res = await sess.send(next_req, full_res=True)
             else:
                 prev_res = None
 
-    def __call__(self, session_factory=None, req_token_name=None, res_token_name=None, json_req=False):
-        '''
+    def __call__(
+        self,
+        session_factory=None,
+        req_token_name=None,
+        res_token_name=None,
+        json_req=False,
+    ):
+        """
         Returns a generator that yields the contents of the next pages if any (and this page as well)
 
         Arguments:
@@ -266,23 +323,29 @@ class Response:
         Returns:
 
             async generator: self._next_page_generator (staticmethod)
-        '''
+        """
         if session_factory is None:
             session_factory = self.session_factory
-        return self._next_page_generator(self, session_factory, req_token_name, res_token_name, json_req)
+        return self._next_page_generator(
+            self, session_factory, req_token_name, res_token_name, json_req
+        )
 
     def __aiter__(self):
         return self._next_page_generator(self, self.session_factory)
 
     def __iter__(self):
-        raise TypeError('You probably forgot to use an "async for" statement instead of just a "for" statement.')
+        raise TypeError(
+            'You probably forgot to use an "async for" statement instead of just a "for" statement.'
+        )
 
     @property
     def content(self):
         return self.json or self.data
 
-    def next_page(self, req_token_name=None, res_token_name=None, json_req=False) -> Request:
-        '''
+    def next_page(
+        self, req_token_name=None, res_token_name=None, json_req=False
+    ) -> Request:
+        """
         Method that returns a request object that requests the next page of a resource
 
         Arguments:
@@ -304,35 +367,35 @@ class Response:
         Returns:
 
             A request object (aiogoogle.models.Request):
-        '''
+        """
         if req_token_name is None:
-            req_token_name = 'pageToken'
+            req_token_name = "pageToken"
         if res_token_name is None:
-            res_token_name = 'nextPageToken'
+            res_token_name = "nextPageToken"
         res_token = self.json.get(res_token_name, None)
-        if res_token == '':
+        if res_token == "":
             res_token = None
         if res_token is None:
             return None
-        #request = Request.from_response(self)
+        # request = Request.from_response(self)
         request = self.req
         if json_req:
             request.json[req_token_name] = res_token
         else:
             request._rm_query_param(req_token_name)
-            request._add_query_param({req_token_name : res_token})
+            request._add_query_param({req_token_name: res_token})
         return request
 
     @property
     def error_msg(self):
-        if self.json is not None and self.json.get('error') is not None:
-            return pprint.pformat(self.json['error'])
+        if self.json is not None and self.json.get("error") is not None:
+            return pprint.pformat(self.json["error"])
 
     def raise_for_status(self):
         if self.status_code >= 400:
             if self.error_msg is not None:
-                self.reason = '\n\n' + self.reason + '\n\nContent:\n' + self.error_msg
-            self.reason = '\n\n' + self.reason + '\n\nRequest URL:\n' + self.req.url
+                self.reason = "\n\n" + self.reason + "\n\nContent:\n" + self.error_msg
+            self.reason = "\n\n" + self.reason + "\n\nRequest URL:\n" + self.req.url
             if self.status_code == 401:
                 raise AuthError(msg=self.reason, req=self.req, res=self)
             else:
@@ -342,5 +405,4 @@ class Response:
         return str(self.content)
 
     def __repr__(self):
-        return f'Aiogoogle response model. Status: {str(self.status_code)}'
-
+        return f"Aiogoogle response model. Status: {str(self.status_code)}"

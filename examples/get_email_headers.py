@@ -4,6 +4,7 @@ import asyncio
 
 from helpers import Aiogoogle, user_creds, client_creds
 
+
 async def get_email_headers():
     async with Aiogoogle(user_creds=user_creds, client_creds=client_creds) as google:
         gmail = await google.discover("gmail", "v1")
@@ -16,6 +17,7 @@ async def get_email_headers():
     headers = email["payload"]["headers"]
     for header in headers:
         print(f"{header['name']}: {header['value']}")
+
 
 if __name__ == "__main__":
     asyncio.run(get_email_headers())
