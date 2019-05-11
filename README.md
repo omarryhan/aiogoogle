@@ -10,13 +10,97 @@
 
 # Aiogoogle
 
+## Quick Start
+
+**List your Google Drive Files**
+
+```python 3.7
+import asyncio
+from aiogoogle import Aiogoogle
+
+
+user_creds = {'access_token': 'an_access_token'}
+
+async def list_files():
+    async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+        drive_v3 = await aiogoogle.discover('drive', 'v3')
+        full_res = await aiogoogle.as_user(
+            drive_v3.files.list(),
+            full_res=True
+        )
+
+    async for page in full_res:
+        for file in page['files']:
+            print(file['name'])
+
+asyncio.run(list_files())
+```
+
+**List your Google Calendar events using [Trio](https://github.com/python-trio/trio)**
+
+```bash
+$ pip install aiogoogle[trio_asks]
+```
+
+```python 3.7
+import trio
+from aiogoogle import Aiogoogle
+from aiogoogle.sessions.trio_asks_session import TrioAsksSession
+
+
+user_creds = {'access_token': 'an_access_token'}
+
+async def list_events():
+    async with Aiogoogle(
+        user_creds=user_creds,
+        session_factory=TrioAsksSession,
+    ) as aiogoogle:
+        calendar_v3 = await aiogoogle.discover("calendar", "v3")
+        events = await aiogoogle.as_user(
+            calendar_v3.events.list(calendarId="primary"), full_res=True
+        )
+    async for page in events:
+        print(page)
+
+trio.run(list_events)
+```
+
+**List your Youtube Videos using [curio](https://github.com/dabeaz/curio)**
+
+```bash
+$ pip install aiogoogle[curio_asks]
+```
+
+```python 3.7
+import curio
+from aiogoogle import Aiogoogle
+from aiogoogle.sessions.curio_asks_session import CurioAsksSession
+
+
+user_creds = {'access_token': 'an_access_token'}
+
+async def list_playlists():
+    async with Aiogoogle(
+        user_creds=user_creds,
+        session_factory=CurioAsksSession,
+    ) as aiogoogle:
+        youtube_v3 = await aiogoogle.discover("youtube", "v3")
+        req = youtube_v3.playlists.list(part="snippet", mine=True)
+        res = await aiogoogle.as_user(req)
+    print(res)
+
+curio.run(list_playlists())
+```
+
 ## Documentation 📑
 
 readthedocs: https://aiogoogle.readthedocs.io/en/latest/
 
 ## Setup ⚙️
 
-    $ pip install aiogoogle
+```bash
+$ pip install aiogoogle
+```
 
 ## Contact 📧
 
