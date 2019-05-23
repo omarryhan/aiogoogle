@@ -1,6 +1,10 @@
 #!/usr/bin/python3.7
 
-import sys, os, webbrowser, yaml, json, pprint
+import sys, os, webbrowser, json, pprint
+try:
+    import yaml
+except:
+    print('couldn\'t import yaml. Install "pyyaml" first')
 
 sys.path.append("../..")
 
