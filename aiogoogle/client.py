@@ -299,16 +299,16 @@ class Aiogoogle:
             session_factory=self.session_factory
         )
 
-    async def ensure_session_set(self):
+    async def _ensure_session_set(self):
         if self.active_session is None:
             self.active_session = self.session_factory()
 
     async def send(self, *args, **kwargs):
-        await self.ensure_session_set()
+        await self._ensure_session_set()
         return await self.active_session.send(*args, **kwargs)
 
     async def __aenter__(self):
-        await self.ensure_session_set()
+        await self._ensure_session_set()
         await self.active_session.__aenter__()
         return self
 

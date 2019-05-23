@@ -13,7 +13,7 @@ from aiogoogle.auth.creds import UserCreds, ClientCreds, ApiKey
 
 try:
     with open("keys.yaml", "r") as stream:
-        config = yaml.load(stream)
+        config = yaml.load(stream, Loader=yaml.FullLoader)
 except Exception as e:
     print("Rename _keys.yaml to keys.yaml")
     raise e
