@@ -76,17 +76,6 @@ TYPE_FORMAT_MAPPING = {
 
 # ------ Helpers -------#
 
-
-def remove_microseconds(value):
-    # 2014-02-11T14:13:26
-    if not isinstance(value, str):
-        raise ValidationError("datetime should be a string")
-    if "." in value:
-        return value[:-5] + "Z"
-    else:
-        return value
-
-
 def make_validation_error(checked_value, correct_criteria, schema_name=None):
     return f'\n\n Invalid instance: "{str(schema_name)}"\n\n{checked_value} isn\'t valid. Expected a value that meets the following criteria: {correct_criteria}'
 
