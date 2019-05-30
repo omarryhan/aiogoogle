@@ -232,12 +232,28 @@ User Credentials Required:
 
 * yes
 
+### 8. create_document_firestore.py
+
+What it does:
+
+* Creates a generic document on Firestore
+
+API name and API version required:
+
+* firestore-v1
+
+Scopes Required:
+
+* "https://www.googleapis.com/auth/cloud-platform"
+
+User Credentials Required:
+
+* yes
+
 API explorer link:
 
-* https://developers.google.com/gmail/api/v1/reference/users/messages/list
-* https://developers.google.com/gmail/api/v1/reference/users/messages/get
+* https://developers.google.com/apis-explorer/#search/firestore/firestore/v1/firestore.projects.databases.documents.createDocument
 
 ## OAuth2
-
 
 ## OpenID Connect
