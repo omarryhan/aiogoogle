@@ -76,6 +76,7 @@ TYPE_FORMAT_MAPPING = {
 
 # ------ Helpers -------#
 
+
 def make_validation_error(checked_value, correct_criteria, schema_name=None):
     return f'\n\n Invalid instance: "{str(schema_name)}"\n\n{checked_value} isn\'t valid. Expected a value that meets the following criteria: {correct_criteria}'
 
