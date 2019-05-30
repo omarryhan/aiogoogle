@@ -80,4 +80,4 @@ async def refresh_disc_docs_json():
 
 
 if __name__ == "__main__":
-    asyncio.run(refresh_disc_docs_json())
+    asyncio.get_event_loop().run_until_complete(refresh_disc_docs_json())

@@ -151,11 +151,11 @@ class AiohttpSession(ClientSession, AbstractSession):
         async def schedule_tasks():
             if full_res is True:
                 tasks = [
-                    asyncio.create_task(get_response(request)) for request in requests
+                    asyncio.ensure_future(get_response(request)) for request in requests
                 ]
             else:
                 tasks = [
-                    asyncio.create_task(get_content(request)) for request in requests
+                    asyncio.ensure_future(get_content(request)) for request in requests
                 ]
             return await asyncio.gather(*tasks, return_exceptions=False)
 
