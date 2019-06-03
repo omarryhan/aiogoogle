@@ -14,12 +14,12 @@ with open("requirements.txt", "r") as f:
 with open("test_requirements.txt", "r") as f:
     test_requirements = f.read().splitlines()
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="aiogoogle",
-    version="0.1.12",
+    version="0.1.13",
     author="Omar Ryhan",
     author_email="omarryhan@gmail.com",
     license="GNU",
