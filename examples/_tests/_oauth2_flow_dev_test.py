@@ -4,7 +4,7 @@ import sys, os, webbrowser, json
 
 try:
     import yaml
-except:
+except:  # noqa: E722  bare-except
     print('couldn\'t import yaml. Install "pyyaml" first')
 
 sys.path.append("../..")

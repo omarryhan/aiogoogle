@@ -1,6 +1,6 @@
 __all__ = ["client", "excs", "resource", "utils", "validate"]
 
-from .__version__ import (
+from .__version__ import (  # noqa: F401  imported but unused
     __name__,
     __about__,
     __url__,

@@ -1,8 +1,9 @@
 #!/usr/bin/python3.7
 
-import curio, pprint
+import curio
+import pprint
 
-from helpers import Aiogoogle, user_creds, client_creds, api_key, email
+from helpers import Aiogoogle, user_creds, client_creds
 
 from aiogoogle.sessions.curio_asks_session import CurioAsksSession
 

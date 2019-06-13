@@ -15,7 +15,7 @@ import datetime
 
 try:
     import ujson as json
-except:
+except:  # noqa: E722  bare-except
     import json
 from google.auth import jwt
 

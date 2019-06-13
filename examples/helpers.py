@@ -4,13 +4,13 @@ import sys
 
 try:
     import yaml
-except:
+except:  # noqa: E722  bare-except
     print('couldn\'t import yaml. Install "pyyaml" first')
 
 sys.path.append("..")
 
-from aiogoogle import Aiogoogle
-from aiogoogle.auth.creds import UserCreds, ClientCreds, ApiKey
+from aiogoogle import Aiogoogle  # noqa: F401  imported but unused
+from aiogoogle.auth.creds import UserCreds, ClientCreds, ApiKey  # noqa: F401  imported but unused
 
 try:
     with open("keys.yaml", "r") as stream:

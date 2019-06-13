@@ -43,16 +43,16 @@ class TrioAsksSession(Session, AbstractSession):
                 if response.status_code != 204:  # If no (no content)
                     try:
                         json = response.json()
-                    except:
+                    except:  # noqa: E722  bare-except
                         try:
                             data = response.text
-                        except:
+                        except:  # noqa: E722  bare-except
                             try:
                                 data = response.content
-                            except:
+                            except:  # noqa: E722  bare-except
                                 try:
                                     data = response.body
-                                except:
+                                except:  # noqa: E722  bare-except
                                     data = None
 
             if request.media_upload:

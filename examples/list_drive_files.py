@@ -1,6 +1,6 @@
 #!/usr/bin/python3.7
 
-import asyncio, pprint
+import asyncio
 
 from helpers import Aiogoogle, user_creds, client_creds, api_key, email
 
