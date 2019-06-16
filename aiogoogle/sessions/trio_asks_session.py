@@ -4,11 +4,11 @@ import trio
 import asks
 from asks import Session
 
-asks.init("trio")
-
 from .abc import AbstractSession
 from ..models import Response
 from .common import _call_callback
+
+asks.init("trio")
 
 
 class TrioAsksSession(Session, AbstractSession):

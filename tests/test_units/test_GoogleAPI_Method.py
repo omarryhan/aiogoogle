@@ -1,18 +1,11 @@
 import pytest
 
-from aiogoogle import Aiogoogle
-from aiogoogle.resource import (
-    Resource,
-    GoogleAPI,
-    Method,
-    STACK_QUERY_PARAMETER_DEFAULT_VALUE,
-    STACK_QUERY_PARAMETERS,
-)
+from aiogoogle.resource import GoogleAPI, Method, STACK_QUERY_PARAMETERS
 from ..test_globals import ALL_APIS
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_parameters(open_discovery_document, name, version):
+def test_parameters_exist_in_discovery_document(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():
@@ -30,7 +23,9 @@ def test_parameters(open_discovery_document, name, version):
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_optional_parameters(open_discovery_document, name, version):
+def test_optional_parameters_are_filtered_correctly(
+    open_discovery_document, name, version
+):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():
@@ -43,7 +38,9 @@ def test_optional_parameters(open_discovery_document, name, version):
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_required_parameters(open_discovery_document, name, version):
+def test_required_parameters_are_filtered_correctly(
+    open_discovery_document, name, version
+):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():
@@ -56,7 +53,7 @@ def test_required_parameters(open_discovery_document, name, version):
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_path_parameters(open_discovery_document, name, version):
+def test_path_parameters_are_filtered_correctly(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():
@@ -69,7 +66,9 @@ def test_path_parameters(open_discovery_document, name, version):
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_query_parameters(open_discovery_document, name, version):
+def test_query_parameters_are_filtered_correctly(
+    open_discovery_document, name, version
+):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():
@@ -99,7 +98,7 @@ def test_getitem():
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_len(open_discovery_document, name, version):
+def test__len__returns_int(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():
@@ -110,18 +109,7 @@ def test_len(open_discovery_document, name, version):
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_str_repr(open_discovery_document, name, version):
-    discovery_document = open_discovery_document(name, version)
-    api = GoogleAPI(discovery_document=discovery_document)
-    for resource_name, _ in discovery_document.get("resources").items():
-        resource = getattr(api, resource_name)
-        for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
-            assert str(method)
-
-
-@pytest.mark.parametrize("name,version", ALL_APIS)
-def test_stack_parameters(open_discovery_document, name, version):
+def test_stack_parameters_are_passed_correctly(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():

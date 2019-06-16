@@ -1,6 +1,5 @@
 import pytest
 
-from aiogoogle import Aiogoogle
 from aiogoogle.resource import (
     Resource,
     GoogleAPI,
@@ -68,7 +67,7 @@ def test_methods_available_property():
     assert "forth_method" in resource.methods_available
 
 
-def test_resource_len():
+def test_resource_len_are_counted_correctly():
     resource = Resource(
         name="irrelevant",
         resource_specs={
@@ -105,7 +104,7 @@ def test_resource_returns_available_methods(open_discovery_document, name, versi
     for resource_name, _ in discovery_document.get("resources", {}).items():
         resource = getattr(api, resource_name)
         if resource.methods_available:
-            # Assert that it returns resources not methods
+            # Assert that it returns methods not resources
             for available_method_name in resource.methods_available:
                 available_method = getattr(resource, available_method_name)
                 assert isinstance(available_method, Method)
@@ -158,7 +157,9 @@ def test_calling_resource_fails(open_discovery_document, name, version):
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_str_resource(open_discovery_document, name, version):
+def test_str_resource_has_the_word_resource_in_it(
+    open_discovery_document, name, version
+):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():
@@ -168,7 +169,7 @@ def test_str_resource(open_discovery_document, name, version):
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_stack_parameters(open_discovery_document, name, version):
+def test_stack_parameters_are_passed_correctly(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for resource_name, _ in discovery_document.get("resources").items():

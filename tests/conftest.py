@@ -3,8 +3,6 @@ import json
 
 import pytest
 
-from aiogoogle.models import Request
-from aiogoogle import Aiogoogle
 from aiogoogle.resource import GoogleAPI
 
 
@@ -27,5 +25,38 @@ def create_api(open_discovery_document):
     def wrapped(name, version):
         disc_doc = open_discovery_document(name, version)
         return GoogleAPI(discovery_document=disc_doc)
+
+    return wrapped
+
+
+@pytest.fixture("function")
+def methods_generator(create_api):
+    def wrapped(name, version):
+        gapi = create_api(name, version)
+
+        def generator(resource):
+            for method_name in resource.methods_available:
+                yield getattr(resource, method_name)
+            for nested_resource in resource.resources_available:
+                yield from generator(getattr(resource, nested_resource))
+
+        return generator(gapi)
+
+    return wrapped
+
+
+@pytest.fixture("function")
+def resources_generator(create_api):
+    def wrapped(name, version):
+        gapi = create_api(name, version)
+
+        def generator(resource):
+            yield resource
+            for resource_name in resource.resources_available:
+                yield getattr(resource, resource_name)
+            for nested_resource in resource.resources_available:
+                yield from generator(getattr(resource, nested_resource))
+
+        return generator(gapi)
 
     return wrapped

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-import os, sys
+import os
+import sys
 import pytest
 
 args = [
@@ -8,11 +9,11 @@ args = [
     "-s",
     "--cov",
     "aiogoogle/",
-    #'--tb=long',
-    #'--fulltrace',
-    #'--maxfail=5',
-    #'-p no:warnings',
-    #'--disable-warnings',
+    # '--tb=long',
+    # '--fulltrace',
+    # '--maxfail=5',
+    # '-p no:warnings',
+    # '--disable-warnings',
 ]
 
 

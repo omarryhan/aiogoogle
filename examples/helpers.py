@@ -10,7 +10,11 @@ except:  # noqa: E722  bare-except
 sys.path.append("..")
 
 from aiogoogle import Aiogoogle  # noqa: F401  imported but unused
-from aiogoogle.auth.creds import UserCreds, ClientCreds, ApiKey  # noqa: F401  imported but unused
+from aiogoogle.auth.creds import (
+    UserCreds,
+    ClientCreds,
+    ApiKey,
+)  # noqa: F401  imported but unused
 
 try:
     with open("keys.yaml", "r") as stream:

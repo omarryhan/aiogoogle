@@ -1,15 +1,7 @@
-import json
-import os
-
 import pytest
 
-from aiogoogle import Aiogoogle
-from aiogoogle.resource import Resource, GoogleAPI, Method
-from aiogoogle.models import Request, MediaDownload, MediaUpload, ResumableUpload
+from aiogoogle.resource import Method
 from aiogoogle.excs import ValidationError
-
-
-from ..test_globals import ALL_APIS
 
 
 def test_NONE_uri_params_removed(create_api):

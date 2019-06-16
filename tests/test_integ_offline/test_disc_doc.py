@@ -2,48 +2,37 @@ import re
 
 import pytest
 
-from aiogoogle import Aiogoogle
-from aiogoogle.resource import RESERVED_KEYWORDS, GoogleAPI
+from aiogoogle.resource import RESERVED_KEYWORDS
 from aiogoogle.validate import KNOWN_FORMATS, JSON_PYTHON_TYPE_MAPPING
 from ..test_globals import ALL_APIS
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_parameters_not_included_twice(open_discovery_document, name, version):
+def test_parameters_not_included_twice(name, version, methods_generator):
     """ 
     I was curious whether global parameters might have identical names
     with Method.parameters.
     Fails if similarities found
     """
-    discovery_document = open_discovery_document(name, version)
-    google_api = GoogleAPI(discovery_document=discovery_document)
-    for resource_name, _ in discovery_document.get("resources").items():
-        resource = getattr(google_api, resource_name)
-        for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
-            local_params = method["parameters"] or {}
-            for parameter_name, _ in local_params.items():
-                assert parameter_name not in method._global_parameters
+    for method in methods_generator(name, version):
+        local_params = method["parameters"] or {}
+        for parameter_name, _ in local_params.items():
+            assert parameter_name not in method._global_parameters
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
 def test_parameters_not_colliding_with_google_api__call__(
-    open_discovery_document, name, version
+    name, version, methods_generator
 ):
-    discovery_document = open_discovery_document(name, version)
-    google_api = GoogleAPI(discovery_document=discovery_document)
-    for resource_name, _ in discovery_document.get("resources").items():
-        resource = getattr(google_api, resource_name)
-        for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
-            params = method.parameters
-            for param_name, _ in params.items():
-                assert param_name not in RESERVED_KEYWORDS
+    for method in methods_generator(name, version):
+        params = method.parameters
+        for param_name, _ in params.items():
+            assert param_name not in RESERVED_KEYWORDS
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
 def test_parameters_not_colliding_with_google_api__call__fails(
-    open_discovery_document, name, version
+    name, version, methods_generator
 ):
     """ asserts previous test catches collisions if any"""
 
@@ -56,28 +45,20 @@ def test_parameters_not_colliding_with_google_api__call__fails(
         if param_name in COLLIDING_RESERVED_KEYWORDS:
             raise CollisionError()
 
-    discovery_document = open_discovery_document(name, version)
-    google_api = GoogleAPI(discovery_document=discovery_document)
-    for resource_name, _ in discovery_document.get("resources").items():
-        resource = getattr(google_api, resource_name)
-        for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
-            params = method.parameters
-            with pytest.raises(CollisionError):
-                for param_name, _ in params.items():
-                    check_collision(param_name)
+    for method in methods_generator(name, version):
+        params = method.parameters
+        with pytest.raises(CollisionError):
+            for param_name, _ in params.items():
+                check_collision(param_name)
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_properties_only_in_objects_not_any_other_type(
-    open_discovery_document, name, version
-):
+def test_properties_only_in_objects_not_any_other_type(create_api, name, version):
     """
     Disc doc sanity check.
     Checks if objects are the only google-jsonschema type that has a an attribute call "Properties"
     """
-    discovery_document = open_discovery_document(name, version)
-    google_api = GoogleAPI(discovery_document=discovery_document)
+    google_api = create_api(name, version)
     if google_api.discovery_document.get("schemas"):
         for _, v in google_api.discovery_document["schemas"].items():
             if v["type"] != "object":
@@ -145,40 +126,36 @@ def test_schemas_for_unknown_formats_and_types(open_discovery_document, name, ve
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_parameters_are_not_objects(open_discovery_document, name, version):
+def test_parameters_are_not_objects(
+    open_discovery_document, name, version, methods_generator
+):
     """ 
     I was curious whether global parameters might have identical names
     with Method.parameters.
     Fails if similarities found
     """
-    discovery_document = open_discovery_document(name, version)
-    google_api = GoogleAPI(discovery_document=discovery_document)
-    for resource_name, _ in discovery_document.get("resources").items():
-        resource = getattr(google_api, resource_name)
-        for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
-            if method.parameters:
-                for _, v in method.parameters.items():
-                    assert v.get("type") != "object"
-                    assert not v.get("properties")
+    for method in methods_generator(name, version):
+        if method.parameters:
+            for _, v in method.parameters.items():
+                assert v.get("type") != "object"
+                assert not v.get("properties")
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_resources_and_methods_dont_share_name(open_discovery_document, name, version):
+def test_resources_and_methods_dont_share_name(
+    open_discovery_document, name, version, resources_generator
+):
     """ Asserts no resources and methods that are on the same level share the same name.
     If a name was being shared, Aiogoogle will give precedence to the resource, rendering the method
     inaccessible """
 
-    def assert_no_similarity(resource):
+    for resource in resources_generator(name, version):
         for resource_name in resource.resources_available:
             assert resource_name not in resource.methods_available
-            assert_no_similarity(getattr(resource, resource_name))
-
-    assert_no_similarity(GoogleAPI(open_discovery_document(name, version)))
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_schemas_consistency(open_discovery_document, name, version):
+def test_schemas_consistency(open_discovery_document, name, version, methods_generator):
     """
     Tests the following:
 
@@ -278,13 +255,6 @@ def test_schemas_consistency(open_discovery_document, name, version):
             schema = schemas[schema["$ref"]]
         return schema
 
-    def methods_gen(resource):
-        """ Generates all methods available in a given resource/googleAPI """
-        for method in resource.methods_available:
-            yield getattr(resource, method)
-        for n_resource in resource.resources_available:
-            yield from methods_gen(getattr(resource, n_resource))
-
     def validate(schema_name, schema, schemas):
         schema = resolve(schema, schemas)
 
@@ -332,8 +302,7 @@ def test_schemas_consistency(open_discovery_document, name, version):
     assert isinstance(schemas, dict)
 
     # Validate methods
-    gapi = GoogleAPI(disc_doc)
-    for method in methods_gen(gapi):
+    for method in methods_generator(name, version):
         for name, param in method.parameters.items():
             validate(name, param, schemas)
 

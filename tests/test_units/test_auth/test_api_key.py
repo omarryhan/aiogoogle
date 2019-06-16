@@ -1,6 +1,5 @@
 from aiogoogle.auth.managers import ApiKeyManager
 from aiogoogle.models import Request
-from aiogoogle.resource import GoogleAPI
 import pytest
 
 

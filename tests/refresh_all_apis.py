@@ -1,8 +1,8 @@
 #!/usr/bin/python3.7
 
-from test_globals import ALL_APIS
 from aiogoogle import Aiogoogle
-import os, sys
+import os
+import sys
 import errno
 import json
 import asyncio
@@ -10,16 +10,19 @@ from aiohttp import ClientSession
 import pprint
 
 
-async def refresh_disc_docs_json():
-
-    file_errors = []
-
-    # Create new .data/ dir if one doesn't exists
-    current_dir = os.getcwd()
+def _check_for_correct_cwd(current_dir):
     if current_dir[-9:] != "aiogoogle":  # current dir is aiogoogle
         print(current_dir)
         print("must be in aiogoogle's dir, not test dir")
         sys.exit()
+
+
+async def refresh_disc_docs_json():
+    file_errors = []
+    current_dir = os.getcwd()
+
+    # Create new .data/ dir if one doesn't exists
+    _check_for_correct_cwd(current_dir)
 
     # Refresh ALL_APIS in tests/tests_globals.py
     ALL_APIS = []
@@ -30,14 +33,7 @@ async def refresh_disc_docs_json():
         )
         apis_pref = await apis_pref.json()
     for api in apis_pref["items"]:
-        ##############################
-        # Remove me
-        #  https://www.googleapis.com/discovery/v1/apis/partners/v2/rest
-        # raises 502 as of datetime.datetime(2018, 12, 1, 17, 46, 38, 39391)
-        if api["name"] != "partners":
-            # /Remove me
-            ##############################
-            ALL_APIS.append((api["name"], api["version"]))
+        ALL_APIS.append((api["name"], api["version"]))
     with open("tests/test_globals.py", "w") as f:
         f.write(f"ALL_APIS = {pprint.pformat(ALL_APIS)}")
         print("SUCCESS!")

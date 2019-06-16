@@ -4,11 +4,9 @@ import re
 import warnings
 from urllib.parse import urlencode
 from functools import wraps
-import datetime
 
 from .excs import ValidationError
-from .utils import _dict, _safe_getitem
-from .excs import ValidationError
+from .utils import _safe_getitem
 from .models import MediaDownload, MediaUpload, ResumableUpload, Request
 from .validate import validate as validate__
 
@@ -38,6 +36,12 @@ STACK_QUERY_PARAMETER_DEFAULT_VALUE = {"type": "string", "location": "query"}
 
 
 def _toggle2x_dashed_params(f):
+    """
+        Momentarily adds back '-' to url parameters and passed uri_params
+        in order to be processed correctly and comply with the disc doc
+        Reverts back to '_' after wrapped function is done
+    """
+
     @wraps(f)
     def wrapper(
         self,
@@ -49,11 +53,6 @@ def _toggle2x_dashed_params(f):
         timeout=None,
         **uri_params,
     ):
-        """
-        Momentarily adds back '-' to url parameters and passed uri_params
-        in order to be processed correctly and comply with the disc doc
-        Reverts back to '_' after wrapped function is done
-        """
         # unfix urls
         uri_params = self._add_dash_user_uri_params(uri_params)
 
@@ -957,8 +956,8 @@ class GoogleAPI:
         """
         return self.discovery_document.get(k)
 
-    def __contains__(self, item):
-        return (item in self.resources_available) or (item in self.methods_available)
+    def __contains__(self, name):
+        return (name in self.resources_available) or (name in self.methods_available)
 
     def __repr__(self):
         labels = f'\nLabels:\n{self["labels"]}' if self["labels"] is not None else ""

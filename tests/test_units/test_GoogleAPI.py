@@ -1,10 +1,8 @@
 import pytest
 
-from aiogoogle import Aiogoogle
 from aiogoogle.resource import (
     Resource,
     GoogleAPI,
-    Method,
     STACK_QUERY_PARAMETER_DEFAULT_VALUE,
     STACK_QUERY_PARAMETERS,
 )
@@ -80,12 +78,12 @@ def test_resources_getattr_fails_on_unknown_resource(
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     nonexistent_resource = "I_MUST_NEVER_EXIST_ANYWHEREEEEEEEE"
-    with pytest.raises(AttributeError) as e:
+    with pytest.raises(AttributeError):
         getattr(api, nonexistent_resource)
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_add_global_params(open_discovery_document, name, version):
+def test_attaches_global_params(open_discovery_document, name, version):
     discovery_document = open_discovery_document(name, version)
     api = GoogleAPI(discovery_document=discovery_document)
     for param in STACK_QUERY_PARAMETERS:
