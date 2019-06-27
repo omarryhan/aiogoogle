@@ -4,12 +4,15 @@ import re
 import warnings
 from urllib.parse import urlencode
 from functools import wraps
+from typing import List, Generic, TypeVar
 
 from .excs import ValidationError
 from .utils import _safe_getitem
 from .models import MediaDownload, MediaUpload, ResumableUpload, Request
-from .validate import validate as validate__
+from .validate import validate as validate_
 
+
+T = TypeVar('T')  # Generic type var
 
 # These are the hard-coded kwargs in Method.__call__
 # They're used for testing whether those names will collide with any of the url parameters that are provided by any of the discovery docs.
@@ -33,13 +36,19 @@ MEDIA_SIZE_BIT_SHIFTS = {"KB": 10, "MB": 20, "GB": 30, "TB": 40}
 #    type: "boolean",
 #    description: "Whether this method requires an ETag to be specified. The ETag is sent as an HTTP If-Match or If-None-Match header."
 #    }
-# Note: etagRequired is only mentioned once in all of the discovery documents available from Google. (In discovery_service-v1. So, it isn't actually being used)
+# NOTE: etagRequired is only mentioned once in all of the discovery documents available from Google. (In discovery_service-v1. So, it isn't actually being used)
 
 
 def _toggle2x_dashed_params(f):
     """
-        Momentarily adds back '-' to url parameters and passed uri_params
-        in order to be processed correctly and comply with the disc doc
+        When instantiating a Method, Method's constructor will remove all 
+        dashes from the names of its URI params and global params in order
+        to make it possible to pass uri params through function calls
+        e.g. this is viable get_videos(my_videos=True)
+        this is will fail get_videos(my-videos=True)
+
+        This function momentarily adds back '-' to url parameters and passed uri_params
+        in order to be processed and validated correctly and comply with the disc doc
         Reverts back to '_' after wrapped function is done
     """
 
@@ -55,7 +64,7 @@ def _toggle2x_dashed_params(f):
         **uri_params,
     ):
         # unfix urls
-        uri_params = self._add_dash_user_uri_params(uri_params)
+        uri_params = self._add_dash_user_uri_params(uri_params, self.parameters)
 
         # unfix params
         self._method_specs["parameters"] = self._add_dash_params(
@@ -113,7 +122,6 @@ class Method:
         self._service_path = service_path
         self._batch_path = batch_path
 
-        # Not gonna use it, because it's useless. Not sure though.
         if (
             self["useMediaDownloadService"] is True
             and self["supportsMediaDownload"] is True
@@ -131,9 +139,9 @@ class Method:
     # Depends on how you view it, but this section also changes robots with small mouths to robots with big mouths
 
     @staticmethod
-    def _rm_dash_params(param_set) -> dict:
+    def _rm_dash_params(param_set: Generic[T]) -> T:
         if param_set:
-            for name, schema in param_set.items():
+            for name, schema in list(param_set.items()):
                 if "-" in name:
                     new_name = name.replace("-", "_")  # See?!
                     schema["orig_name"] = name
@@ -142,23 +150,29 @@ class Method:
         return param_set
 
     @staticmethod
-    def _add_dash_params(param_set) -> dict:
+    def _add_dash_params(param_set: Generic[T]) -> T:
         if param_set:
-            # list() forces the creation of a new copy in memory
-            # to avoid having the dict size changing during iteration
             for name, schema in list(param_set.items()):
                 if "orig_name" in schema:
                     param_set[schema["orig_name"]] = schema
                     del param_set[name]
         return param_set
 
-    def _add_dash_user_uri_params(self, uri_params):
-        for k, v in uri_params.items():
+    @staticmethod
+    def _add_dash_user_uri_params(uri_params: Generic[T], parameters) -> T:
+        for k, v in list(uri_params.items()):
             if "_" in k:
-                if k in self.parameters:
-                    if "orig_name" in self.parameters[k]:
-                        uri_params[self.parameters[k]["orig_name"]] = v
+                if k in parameters:
+                    if "orig_name" in parameters[k]:
+                        uri_params[parameters[k]["orig_name"]] = v
                         del uri_params[k]
+        return uri_params
+
+    @staticmethod
+    def _rm_none_params(uri_params: Generic[T]) -> T:
+        for k, v in list(uri_params.items()):
+            if v is None:
+                del uri_params[k]
         return uri_params
 
     # ---- / Changes URL parameters with a "-" to "_" -----#
@@ -200,7 +214,7 @@ class Method:
             return {**self["parameters"], **self._global_parameters}
 
     @property
-    def optional_parameters(self) -> [str, str]:
+    def optional_parameters(self) -> List[str]:
         """
         Optional Parameters
 
@@ -219,7 +233,7 @@ class Method:
         )
 
     @property
-    def required_parameters(self) -> [str, str]:
+    def required_parameters(self) -> List[str]:
         """
         Required Parameters
 
@@ -238,7 +252,7 @@ class Method:
         )
 
     @property
-    def path_parameters(self) -> [str, str]:
+    def path_parameters(self) -> List[str]:
         """
         Path Parameters
 
@@ -257,7 +271,7 @@ class Method:
         )
 
     @property
-    def query_parameters(self) -> [str, str]:
+    def query_parameters(self) -> List[str]:
         """
         Query Parameters
 
@@ -276,7 +290,7 @@ class Method:
         )
 
     @property
-    def required_query_parameters(self) -> [str, str]:
+    def required_query_parameters(self) -> List[str]:
         """
         Required Query Parameters
 
@@ -295,7 +309,7 @@ class Method:
         )
 
     @property
-    def optional_query_parameters(self) -> [str, str]:
+    def optional_query_parameters(self) -> List[str]:
         """
         Optional Query Parameters
 
@@ -351,14 +365,7 @@ class Method:
         return self._method_specs.get(key)
 
     def _validate(self, instance, schema, schema_name=None):
-        return validate__(instance, schema, self._schemas, schema_name)
-
-    @staticmethod
-    def _rm_none_params(uri_params):
-        for k, v in list(uri_params.items()):
-            if v is None:
-                del uri_params[k]
-        return uri_params
+        return validate_(instance, schema, self._schemas, schema_name)
 
     @_toggle2x_dashed_params
     def __call__(
@@ -564,7 +571,7 @@ class Method:
 
             # Build full path
             # replace named placeholders with empty ones. e.g. {param} --> {}
-            # Why? Because some endpoints have different names in their url path placeholders than in their parameters
+            # Why? Because some endpoints have different names in their url path placeholders than in their parameter defenitions
             # e.g. path: {"v1/{+resourceName}/connections"}. e.g. param name: resourceName NOT +resourceName
             self._method_specs["path"] = re.sub(
                 r"\{(.*?)\}", r"{}", self._method_specs["path"]
@@ -605,7 +612,6 @@ class Method:
         mime_range = _safe_getitem(self._method_specs, "mediaUpload", "accept")
         multipart = self["mediaUpload"]["protocols"]["simple"].get("multipart", True)
 
-        # Return
         return MediaUpload(
             file_path=upload_file,
             upload_path=media_upload_url,
@@ -718,14 +724,14 @@ class Resource:
         self._validate = validate
 
     @property
-    def methods_available(self) -> [str, str]:
+    def methods_available(self) -> List[str]:
         """
         Returns the names of the methods that this resource provides
         """
         return [k for k, v in self["methods"].items()] if self["methods"] else []
 
     @property
-    def resources_available(self) -> [str, str]:
+    def resources_available(self) -> List[str]:
         """
         Returns the names of the nested resources in this resource
         """
@@ -838,14 +844,14 @@ class GoogleAPI:
         return discovery_document
 
     @property
-    def methods_available(self) -> [str, str]:
+    def methods_available(self) -> List[str]:
         """
         Returns names of the methods provided by this resource
         """
         return [k for k, v in self["methods"].items()] if self["methods"] else []
 
     @property
-    def resources_available(self) -> [str, str]:
+    def resources_available(self) -> List[str]:
         """
         Returns names of the resources in a given API if any
         """
