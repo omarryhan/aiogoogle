@@ -27,6 +27,7 @@ RESERVED_KEYWORDS = [
 # Parameters accepted by the stack, but not visible via discovery.
 STACK_QUERY_PARAMETERS = frozenset(["trace", "pp", "strict"])
 STACK_QUERY_PARAMETER_DEFAULT_VALUE = {"type": "string", "location": "query"}
+MEDIA_SIZE_BIT_SHIFTS = {"KB": 10, "MB": 20, "GB": 30, "TB": 40}
 
 # TODO: etagRequired: {
 #    type: "boolean",
@@ -635,7 +636,6 @@ class Method:
         Returns:
             The size as an integer value.
         """
-        MEDIA_SIZE_BIT_SHIFTS = {"KB": 10, "MB": 20, "GB": 30, "TB": 40}
         if size is None:
             return None
         if len(size) < 2:
