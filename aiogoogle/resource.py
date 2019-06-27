@@ -678,7 +678,7 @@ class Method:
                     response_schema = self._schemas[schema_name]
             else:
                 raise ValidationError(
-                    "Response body should've been validated, but wasn't because a schema body wasn'nt found"
+                    "Response body should've been validated, but wasn't because a schema body wasn't found"
                 )
             self._validate(res, response_schema, schema_name)
         return res
