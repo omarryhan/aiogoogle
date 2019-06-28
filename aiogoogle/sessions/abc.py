@@ -1,10 +1,7 @@
 __all__ = ["AbstractSession"]
 
 
-from abc import (
-    ABC,
-    abstractmethod,
-)
+from abc import ABC, abstractmethod
 import inspect
 
 

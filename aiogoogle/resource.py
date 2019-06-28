@@ -12,7 +12,7 @@ from .models import MediaDownload, MediaUpload, ResumableUpload, Request
 from .validate import validate as validate_
 
 
-T = TypeVar('T')  # Generic type var
+T = TypeVar("T")  # Generic type var
 
 # These are the hard-coded kwargs in Method.__call__
 # They're used for testing whether those names will collide with any of the url parameters that are provided by any of the discovery docs.
@@ -39,7 +39,7 @@ MEDIA_SIZE_BIT_SHIFTS = {"KB": 10, "MB": 20, "GB": 30, "TB": 40}
 # NOTE: etagRequired is only mentioned once in all of the discovery documents available from Google. (In discovery_service-v1. So, it isn't actually being used)
 
 
-def _toggle2x_dashed_params(f):
+def _temporarily_add_back_dashes_to_param_definitions(f):
     """
         When instantiating a Method, Method's constructor will remove all 
         dashes from the names of its URI params and global params in order
@@ -64,13 +64,17 @@ def _toggle2x_dashed_params(f):
         **uri_params,
     ):
         # unfix urls
-        uri_params = self._add_dash_user_uri_params(uri_params, self.parameters)
+        uri_params = self._replace_dashes_with_underscores_in_user_provided_params(
+            uri_params, self.parameters
+        )
 
         # unfix params
-        self._method_specs["parameters"] = self._add_dash_params(
+        self._method_specs["parameters"] = self._restore_dashes_to_params(
             self._method_specs.get("parameters")
         )
-        self._global_parameters = self._add_dash_params(self._global_parameters)
+        self._global_parameters = self._restore_dashes_to_params(
+            self._global_parameters
+        )
 
         # Run function
         results = f(
@@ -85,10 +89,14 @@ def _toggle2x_dashed_params(f):
         )
 
         # fix params again
-        self._method_specs["parameters"] = self._rm_dash_params(
+        self._method_specs[
+            "parameters"
+        ] = self._replace_dashes_with_underscores_in_params(
             self._method_specs.get("parameters")
         )
-        self._global_parameters = self._rm_dash_params(self._global_parameters)
+        self._global_parameters = self._replace_dashes_with_underscores_in_params(
+            self._global_parameters
+        )
 
         return results
 
@@ -108,8 +116,10 @@ class Method:
         validate,
     ):
         # Replaces '-'s with '_'s and preserve old names to revert back to them after this method is called
-        global_parameters = self._rm_dash_params(global_parameters)
-        method_specs["parameters"] = self._rm_dash_params(
+        global_parameters = self._replace_dashes_with_underscores_in_params(
+            global_parameters
+        )
+        method_specs["parameters"] = self._replace_dashes_with_underscores_in_params(
             method_specs.get("parameters")
         )
 
@@ -139,7 +149,7 @@ class Method:
     # Depends on how you view it, but this section also changes robots with small mouths to robots with big mouths
 
     @staticmethod
-    def _rm_dash_params(param_set: Generic[T]) -> T:
+    def _replace_dashes_with_underscores_in_params(param_set: Generic[T]) -> T:
         if param_set:
             for name, schema in list(param_set.items()):
                 if "-" in name:
@@ -150,7 +160,7 @@ class Method:
         return param_set
 
     @staticmethod
-    def _add_dash_params(param_set: Generic[T]) -> T:
+    def _restore_dashes_to_params(param_set: Generic[T]) -> T:
         if param_set:
             for name, schema in list(param_set.items()):
                 if "orig_name" in schema:
@@ -159,7 +169,9 @@ class Method:
         return param_set
 
     @staticmethod
-    def _add_dash_user_uri_params(uri_params: Generic[T], parameters) -> T:
+    def _replace_dashes_with_underscores_in_user_provided_params(
+        uri_params: Generic[T], parameters
+    ) -> T:
         for k, v in list(uri_params.items()):
             if "_" in k:
                 if k in parameters:
@@ -169,7 +181,7 @@ class Method:
         return uri_params
 
     @staticmethod
-    def _rm_none_params(uri_params: Generic[T]) -> T:
+    def _del_none_params(uri_params: Generic[T]) -> T:
         for k, v in list(uri_params.items()):
             if v is None:
                 del uri_params[k]
@@ -367,7 +379,7 @@ class Method:
     def _validate(self, instance, schema, schema_name=None):
         return validate_(instance, schema, self._schemas, schema_name)
 
-    @_toggle2x_dashed_params
+    @_temporarily_add_back_dashes_to_param_definitions
     def __call__(
         self,
         validate=None,
@@ -427,7 +439,7 @@ class Method:
         #
 
         # Remove params that are None
-        uri_params = self._rm_none_params(uri_params)
+        uri_params = self._del_none_params(uri_params)
 
         # Assert timeout is int
         if timeout is not None:
@@ -737,6 +749,30 @@ class Resource:
         """
         return [k for k, v in self["resources"].items()] if self["resources"] else []
 
+    def _get_resource(self, resource_name):
+        return Resource(
+            name=resource_name,
+            resource_specs=self["resources"][resource_name],
+            global_parameters=self._global_parameters,
+            schemas=self._schemas,
+            root_url=self._root_url,
+            service_path=self._service_path,
+            batch_path=self._batch_path,
+            validate=self._validate,
+        )
+
+    def _get_method(self, method_name):
+        return Method(
+            name=method_name,
+            method_specs=self["methods"][method_name],
+            global_parameters=self._global_parameters,
+            schemas=self._schemas,
+            root_url=self._root_url,
+            service_path=self._service_path,
+            batch_path=self._batch_path,
+            validate=self._validate,
+        )
+
     def __str__(self):
         return self.name + " resource @ " + self._root_url + self._service_path
 
@@ -781,28 +817,10 @@ class Resource:
         """
         # 1. Search in nested resources
         if method_or_resource in self.resources_available:
-            return Resource(
-                name=method_or_resource,
-                resource_specs=self["resources"][method_or_resource],
-                global_parameters=self._global_parameters,
-                schemas=self._schemas,
-                root_url=self._root_url,
-                service_path=self._service_path,
-                batch_path=self._batch_path,
-                validate=self._validate,
-            )
+            return self._get_resource(method_or_resource)
         # 2. Search in methods
         elif method_or_resource in self.methods_available:
-            return Method(
-                name=method_or_resource,
-                method_specs=self["methods"][method_or_resource],
-                global_parameters=self._global_parameters,
-                schemas=self._schemas,
-                root_url=self._root_url,
-                service_path=self._service_path,
-                batch_path=self._batch_path,
-                validate=self._validate,
-            )
+            return self._get_method(method_or_resource)
         else:
             raise AttributeError(
                 f"""Resource/Method {method_or_resource} doesn't exist.
@@ -825,11 +843,15 @@ class GoogleAPI:
     """
 
     def __init__(self, discovery_document, validate=True):
-        self.discovery_document = self._add_extra_params(discovery_document)
+        self.discovery_document = self._add_extra_query_param_definitions(
+            discovery_document
+        )
         self._validate = validate
 
-    def _add_extra_params(self, discovery_document):
-        """ Adds extra parameters that aren't mentioned in the discovery docuemnt """
+    def _add_extra_query_param_definitions(self, discovery_document):
+        """ Adds extra parameters that aren't explicitly defined in discovery docuemnts
+            i.e. "trace", "pp", "strict"
+        """
         extra_params = {
             param: STACK_QUERY_PARAMETER_DEFAULT_VALUE
             for param in STACK_QUERY_PARAMETERS
@@ -856,6 +878,32 @@ class GoogleAPI:
         Returns names of the resources in a given API if any
         """
         return [k for k, v in self["resources"].items()] if self["resources"] else []
+
+    def _get_resource(self, resource_name):
+        return Resource(
+            name=resource_name,
+            resource_specs=self["resources"][resource_name],
+            global_parameters=self["parameters"],
+            schemas=self["schemas"]
+            or {},  # josnschema validator will fail if schemas isn't a dict
+            root_url=self["rootUrl"],
+            service_path=self["servicePath"],
+            batch_path=self["batchPath"],
+            validate=self._validate,
+        )
+
+    def _get_method(self, method_name):
+        return Method(
+            name=method_name,
+            method_specs=self["methods"][method_name],
+            global_parameters=self["parameters"],
+            schemas=self["schemas"]
+            or {},  # josnschema validator will fail if schemas isn't a dict
+            root_url=self["rootUrl"],
+            service_path=self["servicePath"],
+            batch_path=self["batchPath"],
+            validate=self._validate,
+        )
 
     def __getattr__(self, method_or_resource) -> Resource:
         """
@@ -887,29 +935,9 @@ class GoogleAPI:
             AttributeError:
         """
         if method_or_resource in self.resources_available:
-            return Resource(
-                name=method_or_resource,
-                resource_specs=self["resources"][method_or_resource],
-                global_parameters=self["parameters"],
-                schemas=self["schemas"]
-                or {},  # josnschema validator will fail if schemas isn't a dict
-                root_url=self["rootUrl"],
-                service_path=self["servicePath"],
-                batch_path=self["batchPath"],
-                validate=self._validate,
-            )
+            return self._get_resource(method_or_resource)
         elif method_or_resource in self.methods_available:
-            return Method(
-                name=method_or_resource,
-                method_specs=self["methods"][method_or_resource],
-                global_parameters=self["parameters"],
-                schemas=self["schemas"]
-                or {},  # josnschema validator will fail if schemas isn't a dict
-                root_url=self["rootUrl"],
-                service_path=self["servicePath"],
-                batch_path=self["batchPath"],
-                validate=self._validate,
-            )
+            return self._get_method(method_or_resource)
         else:
             documentation_link = (
                 self.discovery_document.get("documentationLink")
