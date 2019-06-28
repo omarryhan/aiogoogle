@@ -36,9 +36,9 @@ def methods_generator(create_api):
 
         def generator(resource):
             for method_name in resource.methods_available:
-                yield getattr(resource, method_name)
+                yield resource._get_method(method_name)
             for nested_resource in resource.resources_available:
-                yield from generator(getattr(resource, nested_resource))
+                yield from generator(resource._get_resource(nested_resource))
 
         return generator(gapi)
 
@@ -53,9 +53,9 @@ def resources_generator(create_api):
         def generator(resource):
             yield resource
             for resource_name in resource.resources_available:
-                yield getattr(resource, resource_name)
+                yield resource._get_resource(resource_name)
             for nested_resource in resource.resources_available:
-                yield from generator(getattr(resource, nested_resource))
+                yield from generator(resource._get_resource(nested_resource))
 
         return generator(gapi)
 

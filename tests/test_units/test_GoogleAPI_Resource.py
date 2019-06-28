@@ -106,7 +106,7 @@ def test_resource_returns_available_methods(open_discovery_document, name, versi
         if resource.methods_available:
             # Assert that it returns methods not resources
             for available_method_name in resource.methods_available:
-                available_method = getattr(resource, available_method_name)
+                available_method = resource._get_method(available_method_name)
                 assert isinstance(available_method, Method)
 
 
@@ -117,7 +117,7 @@ def test_method_construction(open_discovery_document, name, version):
     for resource_name, _ in discovery_document.get("resources").items():
         resource = getattr(api, resource_name)
         for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
+            method = resource._get_method(method_name)
             # Assert a resource has the returned method
             assert (
                 method.name in discovery_document["resources"][resource_name]["methods"]

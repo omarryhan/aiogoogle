@@ -11,7 +11,7 @@ def test_parameters_exist_in_discovery_document(open_discovery_document, name, v
     for resource_name, _ in discovery_document.get("resources").items():
         resource = getattr(api, resource_name)
         for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
+            method = resource._get_method(method_name)
             for parameter_name, _ in method.parameters.items():
                 assert (
                     parameter_name in discovery_document.get("parameters")
@@ -31,7 +31,7 @@ def test_optional_parameters_are_filtered_correctly(
     for resource_name, _ in discovery_document.get("resources").items():
         resource = getattr(api, resource_name)
         for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
+            method = resource._get_method(method_name)
             for parameter_name in method.optional_parameters:
                 parameter = method.parameters[parameter_name]
                 assert parameter.get("required") is not True
@@ -46,7 +46,7 @@ def test_required_parameters_are_filtered_correctly(
     for resource_name, _ in discovery_document.get("resources").items():
         resource = getattr(api, resource_name)
         for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
+            method = resource._get_method(method_name)
             for parameter_name in method.required_parameters:
                 parameter = method.parameters[parameter_name]
                 assert parameter.get("required") is True
@@ -59,7 +59,7 @@ def test_path_parameters_are_filtered_correctly(open_discovery_document, name, v
     for resource_name, _ in discovery_document.get("resources").items():
         resource = getattr(api, resource_name)
         for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
+            method = resource._get_method(method_name)
             for parameter_name in method.path_parameters:
                 parameter = method.parameters[parameter_name]
                 assert parameter.get("location") == "path"
@@ -74,7 +74,7 @@ def test_query_parameters_are_filtered_correctly(
     for resource_name, _ in discovery_document.get("resources").items():
         resource = getattr(api, resource_name)
         for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
+            method = resource._get_method(method_name)
             for parameter_name in method.query_parameters:
                 parameter = method.parameters[parameter_name]
                 assert parameter.get("location") == "query"
@@ -104,7 +104,7 @@ def test__len__returns_int(open_discovery_document, name, version):
     for resource_name, _ in discovery_document.get("resources").items():
         resource = getattr(api, resource_name)
         for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
+            method = resource._get_method(method_name)
             assert isinstance(len(method), int)
 
 
@@ -115,7 +115,7 @@ def test_stack_parameters_are_passed_correctly(open_discovery_document, name, ve
     for resource_name, _ in discovery_document.get("resources").items():
         resource = getattr(api, resource_name)
         for method_name in resource.methods_available:
-            method = getattr(resource, method_name)
+            method = resource._get_method(method_name)
             for stack_param_name in STACK_QUERY_PARAMETERS:
                 assert stack_param_name in method.optional_parameters
                 assert stack_param_name in method.parameters

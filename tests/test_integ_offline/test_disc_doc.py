@@ -142,19 +142,6 @@ def test_parameters_are_not_objects(
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_resources_and_methods_dont_share_name(
-    open_discovery_document, name, version, resources_generator
-):
-    """ Asserts no resources and methods that are on the same level share the same name.
-    If a name was being shared, Aiogoogle will give precedence to the resource, rendering the method
-    inaccessible """
-
-    for resource in resources_generator(name, version):
-        for resource_name in resource.resources_available:
-            assert resource_name not in resource.methods_available
-
-
-@pytest.mark.parametrize("name,version", ALL_APIS)
 def test_schemas_consistency(open_discovery_document, name, version, methods_generator):
     """
     Tests the following:
