@@ -73,7 +73,6 @@ async def refresh_disc_docs_json():
     print("Done")
     if file_errors:
         print(f"Errors found: {str(file_errors)}")
-        sys.exit(1)
 
 
 if __name__ == "__main__":
