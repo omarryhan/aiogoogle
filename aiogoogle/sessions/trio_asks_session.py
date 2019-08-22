@@ -119,6 +119,8 @@ class TrioAsksSession(Session, AbstractSession):
                         map(lambda req: nursery.start_soon(get_content, req), requests)
                     )
 
+        session_factory = self.__class__ if session_factory is None else session_factory
+
         if timeout is not None:
             with trio.move_on_after(timeout):
                 await execute_tasks()

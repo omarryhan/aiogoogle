@@ -114,8 +114,7 @@ class CurioAsksSession(Session, AbstractSession):
                     ]
             return await curio.gather(tasks)
 
-        if session_factory is None:
-            session_factory = self.__class__
+        session_factory = self.__class__ if session_factory is None else session_factory
 
         if timeout is not None:
             async with curio.timeout_after(timeout):
