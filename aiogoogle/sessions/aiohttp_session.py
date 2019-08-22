@@ -159,7 +159,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                 ]
             return await asyncio.gather(*tasks, return_exceptions=False)
 
-        session_factory = self.__class__ if session_factory is None else None
+        session_factory = self.__class__ if session_factory is None else session_factory
 
         if timeout is not None:
             async with async_timeout.timeout(timeout):
