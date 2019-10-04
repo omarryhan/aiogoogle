@@ -111,15 +111,12 @@ def test_timeout_fails_on_not_int(create_api):
     calendar = create_api("calendar", "v3")
     with pytest.raises(TypeError) as e:
         calendar.calendarList.get(calendarId=123, timeout=True, validate=False)
-    assert "int" in str(e)
 
     with pytest.raises(TypeError) as e:
         calendar.calendarList.get(calendarId=123, timeout=False, validate=False)
-    assert "int" in str(e)
 
     with pytest.raises(TypeError) as e:
         calendar.calendarList.get(calendarId=123, timeout="asas", validate=False)
-    assert "int" in str(e)
 
 
 def test_json(create_api):
