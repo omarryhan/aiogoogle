@@ -1,8 +1,9 @@
 #!/usr/bin/python3.7
 
-import trio, pprint
+import trio
+import pprint
 
-from helpers import Aiogoogle, user_creds, client_creds, api_key, email
+from helpers import Aiogoogle, user_creds, client_creds
 
 from aiogoogle.sessions.trio_asks_session import TrioAsksSession
 

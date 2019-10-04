@@ -1,6 +1,14 @@
 #!/usr/bin/python3.7
 
-import sys, os, webbrowser, json, pprint
+import sys
+import webbrowser
+import pprint
+
+from sanic import Sanic, response
+from sanic.exceptions import ServerError
+
+from aiogoogle import Aiogoogle
+from aiogoogle.auth.utils import create_secret
 
 try:
     import yaml
@@ -8,13 +16,6 @@ except:  # noqa: E722  bare-except
     print('couldn\'t import yaml. Install "pyyaml" first')
 
 sys.path.append("../..")
-
-from sanic import Sanic, response
-from sanic.exceptions import ServerError
-
-from aiogoogle import Aiogoogle
-from aiogoogle.excs import HTTPError
-from aiogoogle.auth.utils import create_secret
 
 try:
     with open("../keys.yaml", "r") as stream:

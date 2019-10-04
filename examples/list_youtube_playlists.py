@@ -3,7 +3,7 @@
 import asyncio
 import pprint
 
-from helpers import Aiogoogle, user_creds, client_creds, api_key, email
+from helpers import Aiogoogle, user_creds, client_creds
 
 
 async def list_playlists():

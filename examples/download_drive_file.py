@@ -1,8 +1,10 @@
 #!/usr/bin/python3.7
 
-import asyncio, pprint, sys, os
+import asyncio
+import sys
+import os
 
-from helpers import Aiogoogle, user_creds, client_creds, api_key, email
+from helpers import Aiogoogle, user_creds, client_creds
 
 usage = """
 Usage:

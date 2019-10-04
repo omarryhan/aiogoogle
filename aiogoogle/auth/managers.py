@@ -24,9 +24,9 @@ from .abc import (
     AbstractAPIKeyManager,
     AbstractOpenIdConnectManager,
 )
-from .creds import UserCreds, ClientCreds
+from .creds import UserCreds
 from .data import OAUTH2_V2_DISCVOCERY_DOC, WELLKNOWN_OPENID_CONFIGS
-from ..excs import HTTPError, AuthError
+from ..excs import AuthError
 from ..models import Request
 from ..resource import GoogleAPI
 from ..sessions.aiohttp_session import AiohttpSession
@@ -88,8 +88,7 @@ class ApiKeyManager(AbstractAPIKeyManager):
     def __init__(self, api_key=None):
         self.key = api_key
 
-    @staticmethod
-    def authorize(request, key=None) -> Request:
+    def authorize(self, request, key=None) -> Request:
         key = key or self.key
         if "key=" in request.url:
             return request
@@ -168,8 +167,7 @@ class Oauth2Manager(AbstractOAuth2Manager):
         request.headers["Authorization"] = f'Bearer {user_creds["access_token"]}'
         return request
 
-    @staticmethod
-    def is_ready(client_creds=None):
+    def is_ready(self, client_creds=None):
         """
         Checks passed ``client_creds`` whether or not the client has enough information to perform OAuth2 Authorization code flow
 

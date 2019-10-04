@@ -1,8 +1,9 @@
 #!/usr/bin/python3.7
 
-import asyncio, pprint
+import asyncio
+import datetime
 
-from helpers import Aiogoogle, user_creds, client_creds, api_key, email
+from helpers import Aiogoogle, user_creds, client_creds, email
 
 
 async def create_signup_document():
@@ -19,7 +20,7 @@ async def create_signup_document():
                             "timestampValue": datetime.datetime.utcnow().isoformat()
                             + "Z"
                         },
-                        "anotherString": {"stringValue": anotherString},
+                        "anotherString": {"stringValue": 'anotherString'},
                     }
                 ),
                 validate=False,  # "parent" validation has an invalid pattern. Our input is actually valid.

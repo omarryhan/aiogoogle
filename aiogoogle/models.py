@@ -1,4 +1,4 @@
-from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode, parse_qs
+from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
 import pprint
 
 from .excs import HTTPError, AuthError

@@ -124,7 +124,7 @@ class IdToken(_dict):
         
         exp (str):
         
-        	* PROVIDED: always
+            * PROVIDED: always
             
             * The time the ID token expires, represented in Unix time (integer seconds).
         

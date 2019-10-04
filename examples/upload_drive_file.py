@@ -1,8 +1,9 @@
 #!/usr/bin/python3.7
 
-import asyncio, pprint, sys
+import asyncio
+import sys
 
-from helpers import Aiogoogle, user_creds, client_creds, api_key, email
+from helpers import Aiogoogle, user_creds, client_creds
 
 
 async def upload_file(full_path, new_name):

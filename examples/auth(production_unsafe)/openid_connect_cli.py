@@ -1,6 +1,13 @@
 #!/usr/bin/python3.7
 
-import sys, os, webbrowser, asyncio, pprint
+import sys
+import webbrowser
+import asyncio
+import pprint
+
+from aiogoogle import Aiogoogle
+from aiogoogle.auth.utils import create_secret
+from aiogoogle.auth.managers import OOB_REDIRECT_URI
 
 try:
     import yaml
@@ -8,11 +15,6 @@ except:  # noqa: E722  bare-except
     print('couldn\'t import yaml. Install "pyyaml" first')
 
 sys.path.append("../..")
-
-from aiogoogle import Aiogoogle
-from aiogoogle.excs import HTTPError
-from aiogoogle.auth.utils import create_secret
-from aiogoogle.auth.managers import OOB_REDIRECT_URI
 
 try:
     with open("../keys.yaml", "r") as stream:

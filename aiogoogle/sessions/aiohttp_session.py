@@ -3,15 +3,15 @@ __all__ = ["AiohttpSession"]
 import asyncio
 from json import JSONDecodeError
 
-from aiohttp import ClientSession, ClientTimeout
-from aiohttp.client_exceptions import ClientResponseError, ContentTypeError
+from aiohttp import ClientSession
+from aiohttp.client_exceptions import ContentTypeError
 import aiofiles
 from aiofiles import os as async_os
 import async_timeout
 
 from ..models import Response
 from .abc import AbstractSession
-from ..excs import HTTPError, ValidationError
+from ..excs import ValidationError
 from .common import _call_callback
 
 

@@ -46,13 +46,13 @@ release = "0.1.16"
 # ones.
 extensions = [
     "sphinx.ext.viewcode",
-    #'sphinx.ext.autosectionlabel',
+    # 'sphinx.ext.autosectionlabel',
     "sphinx.ext.autodoc",
     "sphinxcontrib.asyncio",
     "sphinx.ext.napoleon",
-    #'sphinx.ext.todo',
-    #'sphinxcontrib.github',
-    #'sphinx.ext.intersphinx',
+    # 'sphinx.ext.todo',
+    # 'sphinxcontrib.github',
+    # 'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

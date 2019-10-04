@@ -1,9 +1,9 @@
 #!/usr/bin/python3.7
 
-import asyncio, pprint
+import asyncio
+import pprint
 
-from helpers import Aiogoogle, user_creds, client_creds, api_key, email
-from aiogoogle.sessions.aiohttp_session import AiohttpSession
+from helpers import Aiogoogle, user_creds, client_creds
 
 
 async def list_contacts():

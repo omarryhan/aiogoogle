@@ -1,11 +1,6 @@
 __all__ = ["Aiogoogle"]
 
 
-import json
-from urllib.parse import urlencode
-
-from .utils import _dict
-from .models import Request
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager
 from .sessions.aiohttp_session import AiohttpSession

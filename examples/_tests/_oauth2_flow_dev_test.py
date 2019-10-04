@@ -1,6 +1,14 @@
 #!/usr/bin/python3.7
 
-import sys, os, webbrowser, json
+import sys
+import webbrowser
+
+from sanic import Sanic, response
+from sanic.exceptions import ServerError
+
+from aiogoogle import Aiogoogle
+from aiogoogle.auth.utils import create_secret
+
 
 try:
     import yaml
@@ -9,12 +17,6 @@ except:  # noqa: E722  bare-except
 
 sys.path.append("../..")
 
-
-from sanic import Sanic, response
-from sanic.exceptions import ServerError
-
-from aiogoogle import Aiogoogle, GoogleAPI, AuthError
-from aiogoogle.auth.utils import create_secret
 
 try:
     with open("../keys.yaml", "r") as stream:
