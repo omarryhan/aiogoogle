@@ -111,42 +111,54 @@ def any_validator(value, schema_name=None):
 def array_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING["array"]
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error_msg(value, str(req_types), schema_name))
+        raise ValidationError(
+            make_validation_error_msg(value, str(req_types), schema_name)
+        )
 
 
 @handle_type_and_value_errors
 def boolean_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING["boolean"]
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error_msg(value, str(req_types), schema_name))
+        raise ValidationError(
+            make_validation_error_msg(value, str(req_types), schema_name)
+        )
 
 
 @handle_type_and_value_errors
 def integer_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING["integer"]
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error_msg(value, str(req_types), schema_name))
+        raise ValidationError(
+            make_validation_error_msg(value, str(req_types), schema_name)
+        )
 
 
 @handle_type_and_value_errors
 def number_valdator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING["number"]
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error_msg(value, str(req_types), schema_name))
+        raise ValidationError(
+            make_validation_error_msg(value, str(req_types), schema_name)
+        )
 
 
 @handle_type_and_value_errors
 def object_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING["object"]
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error_msg(value, str(req_types), schema_name))
+        raise ValidationError(
+            make_validation_error_msg(value, str(req_types), schema_name)
+        )
 
 
 @handle_type_and_value_errors
 def string_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING["string"]
     if not isinstance(value, req_types):
-        raise ValidationError(make_validation_error_msg(value, str(req_types), schema_name))
+        raise ValidationError(
+            make_validation_error_msg(value, str(req_types), schema_name)
+        )
 
 
 # Format validators (Discovery Specific)  https://developers.google.com/discovery/v1/type-format
@@ -199,13 +211,17 @@ def uint64_validator(value, schema_name=None):
 @handle_type_and_value_errors
 def double_validator(value, schema_name=None):
     if not isinstance(value, float):
-        raise ValidationError(make_validation_error_msg(value, "Double type", schema_name))
+        raise ValidationError(
+            make_validation_error_msg(value, "Double type", schema_name)
+        )
 
 
 @handle_type_and_value_errors
 def float_validator(value, schema_name=None):
     if not isinstance(value, float):
-        raise ValidationError(make_validation_error_msg(value, "Float type", schema_name))
+        raise ValidationError(
+            make_validation_error_msg(value, "Float type", schema_name)
+        )
 
 
 @handle_type_and_value_errors

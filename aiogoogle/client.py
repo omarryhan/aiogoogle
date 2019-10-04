@@ -213,7 +213,10 @@ class Aiogoogle:
             raise TypeError("No user credentials were found")
 
         # Refresh credentials
-        if self.oauth2.is_expired(user_creds) is True:
+        if (
+            user_creds.get("expires_at") is not None
+            and self.oauth2.is_expired(user_creds) is True
+        ):
             user_creds = await self.oauth2.refresh(
                 user_creds, client_creds=self.client_creds
             )
