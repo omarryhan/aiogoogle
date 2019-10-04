@@ -19,7 +19,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="aiogoogle",
-    version="0.1.15",
+    version="0.1.16",
     author="Omar Ryhan",
     author_email="omarryhan@gmail.com",
     license="GNU",
