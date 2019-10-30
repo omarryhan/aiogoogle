@@ -512,7 +512,7 @@ Most of Google's APIs that are supported by the discovery service support these 
 
     `See here <https://cloud.google.com/iam/docs/overview>`_
     
-    Useful if you run an application on any of Google Cloud Products.
+    A service account is a special kind of account that belongs to an application or a virtual machine (VM) instance, not a person.
     
     .. note::
         
@@ -553,7 +553,6 @@ There are three main parties are involved in this flow:
     - represented as ``aiogoogle.user_creds``
 2. **Client**:
     - represented as ``aiogoogle.client_creds``
-    - 3rd party
 3. **Resource Server**:
     - The service that aiogoogle acts as a client to. e.g. Google Analytics, Youtube, etc. 
 
