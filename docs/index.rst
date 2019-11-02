@@ -155,346 +155,16 @@ Google Account Setup
 
     .. note:: After choosing an API, get the API's *name* and *version* from the URL as they will be needed later.
 
-Usage
-========
-
-Now that *Aiogoogle* and your Google account are set up, let's start!
-
-Assuming you chose the Urlshortener-v1 API:
-
-Create a Google API instance
--------------------------------
-
-.. code-block:: python3
-
-    import asyncio
-    from aiogoogle import Aiogoogle
-
-    async def create_api(name, version):
-        async with Aiogoogle() as google:
-            return await google.discover(name, version)
-
-    url_shortener = asyncio.run(
-        create_api('urlshortener', 'v1')
-    )
-
-    >>> url_shortener['resources']
-
-
-.. code-block:: python3
-
-    {
-        'url': {
-
-            'methods':
-
-                'get': ...
-                'insert': ...
-                'list': ...
-    }
-
-Browse an API
------------------
-
-**Now, let's browse a resource**
-
-.. code-block:: python3
-
-    >>> url_resource = url_shortener.url
-
-    >>> url_resource.methods_available
-
-    ['get', 'insert', 'list']
-
-**Sometimes resources have nested resources**
-
-.. code-block:: python3
-
-    >>> url_resource.resources_available
-
-    []
-
-**Let's inspect a method of a resource**
-
-.. code-block:: python3
-
-    >>> list_url = url_resource.list
-
-    >>> list_url['description']
-
-    "Retrieves a list of URLs shortened by a user."
-    
-    >>> list_url.optional_parameters
-
-    ['projection', 'start_token', 'alt', 'fields', 'key', 'oauth_token', 'prettyPrint', 'quotaUser']
-
-    >>> list_url.required_parameters
-
-    []
-
-**Let's check out what the ``start_token`` parameter is and how it should look like**
-
-.. code-block:: python3
-
-    >>> list_url.parameters['start_token']
-
-    {
-        "type": "string",
-        "description": "Token for requesting successive pages of results.",
-        "location": "query"
-    }
-
-
-**Finally let's create a request, that we'll then send with Aiogoogle**
-
-.. code-block:: python3
-
-    >>> request = list_url(start_token='a_string', key='a_secret_key')
-
-    # Equivalent to:
-
-    >>> request = url_shortener.url.list(start_token='a_start_token', key='a_secret_key')
-
-    >>> request.url
-     
-    'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
-
-
-Send a Request
-------------------
-
-**Let's create a coroutine that shortens URLs**
-
-.. code-block:: python3
-
-    import asyncio
-    from aiogoogle import Aiogoogle
-    from pprint import pprint
-
-    api_key = 'you_api_key'
-
-    async def shorten_urls(long_url):
-        async with Aiogoogle(api_key=api_key) as google:
-            url_shortener = await google.discover('urlshortener', 'v1')
-            short_url = await google.api_key(
-                url_shortener.url.insert(
-                    json=dict(
-                        longUrl=long_url
-                    )
-            )
-
-        return short_url
-
-    short_url = asyncio.run(shorten_urls('https://www.google.com'))
-    pprint(short_url)
-
-.. code-block:: python
-
-    {
-        "kind": "urlshortener#url",
-        "id": "https://goo.gl/Dk2j",
-        "longUrl": "https://www.google.com/"
-    }
-
-Send Requests Concurrently:
--------------------------------
-
-**Now let's shorten two URLs at the same time**
-
-.. code-block:: python
-
-    import asyncio
-    from aiogoogle import Aiogoogle
-    from pprint import pprint
-
-    async def shorten_url(long_urls):
-        async with Aiogoogle(api_key=api_key) as google:
-            url_shortener = await google.discover('urlshortener', 'v1')
-            short_urls = await google.as_api_key(
-
-                url_shortener.url.insert(
-                    json=dict(
-                        longUrl=long_url[0]
-                    ),
-                
-                url_shortener.url.insert(
-                    json=dict(
-                        longUrl=long_url[1]
-                    )
-            )
-        return short_urls
-
-    short_urls = asyncio.run(
-        shorten_url(
-            ['https://www.google.com', 'https://www.google.org']
-        )
-    )
-    pprint(short_urls)
-
-.. code-block:: python
-
-    [
-        {
-            "kind": "urlshortener#url",
-            "id": "https://goo.gl/Dk2j",
-            "longUrl": "https://www.google.com/"
-        },
-        {
-            "kind": "urlshortener#url",
-            "id": "https://goo.gl/Dk23",
-            "longUrl": "https://www.google.org/"
-        }
-    ]
-
-
-Send As Client
-------------------
-
-.. code-block:: python
-
-    #!/usr/bin/python3.7
-
-    import asyncio, pprint
-    from aiogoogle import Aiogoogle
-
-    api_key = 'abc123'
-
-    async def translate_to_latin(words):
-        async with Aiogoogle(api_key=api_key) as aiogoogle:
-            language = await aiogoogle.discover('translate', 'v2')
-            words = dict(q=[words], target='la')
-            result = await aiogoogle.as_api_key(
-                language.translations.translate(json=words)
-            )
-        pprint.pprint(result)
-
-    if __name__ == '__main__':
-        asyncio.run(translate_to_latin('Aiogoogle is awesome'))
-
-.. code-block:: bash
-
-    {
-        "data": {
-            "translations": [
-                {
-                    "translatedText": "Aiogoogle est terribilis!",  
-                    # Google probably meant "awesomelis", but whatever..
-                    "detectedSourceLanguage": "en"
-                }
-            ]
-        }
-    }
-
-Send As User (`Authorization Code Flow`_)
---------------------------------------------------------
-
-.. code-block:: python
-
-    import asyncio
-    from aiogoogle import Aiogoole
-    from pprint import pprint
-
-    USER_CREDS = {'access_token': '...'}
-
-    async def get_calendar_events():
-        async with Aiogoogle(user_creds=USER_CREDS) as aiogoogle:
-            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
-            result = await aiogoogle.as_user(
-                calendar_v3.events.list(
-                    calendarId="primary",
-                    maxResults=1
-                )
-            )
-        pprint.pprint(result)
-
-    asyncio.run(get_calendar_events())
-
-.. code-block:: bash
-
-    {
-        "kind": "calendar#events",
-        "etag": "\"p33c910kumb6ts0g\"",
-        "summary": "user@gmail.com",
-        "updated": "2018-11-11T22:31:03.463Z",
-        "timeZone": "Africa/Cairo",
-        "accessRole": "owner",
-        "defaultReminders": [
-            {
-                "method": "popup",
-                "minutes": 30
-            },
-            {
-                "method": "email",
-                "minutes": 30
-            }
-        ],
-        "nextPageToken": "CigKGjVkcXIxa20wdHJrOW0xMXN0YABIAGNiQgp6yzd4C",
-        "items": [
-            {
-                "kind": "calendar#event",
-                "etag": "\"2784256013588000\"",
-                "id": "asdasdasdasdasd",
-                "status": "confirmed",
-                "htmlLink": "https://www.google.com/calendar/event?eid=asdasdasdasdQG0",
-                "created": "2014-02-11T14:13:26.000Z",
-                "updated": "2014-02-11T14:13:26.794Z",
-                "summary": "Do Something",
-                "creator": {
-                    "email": "omarryhan@gmail.com",
-                    "displayName": "Omar Ryhan",
-                    "self": true
-                },
-                "organizer": {
-                    "email": "omarryhan@gmail.com",
-                    "displayName": "Omar Ryhan",
-                    "self": true
-                },
-                "start": {
-                    "date": "2014-03-07"
-                },
-                "end": {
-                    "date": "2014-03-08"
-                },
-                "iCalUID": "asdasdasd@google.com",
-                "sequence": 0,
-                "attendees": [
-                    {
-                        "email": "omarryhan@gmail.com",
-                        "displayName": "Omar Ryhan",
-                        "organizer": true,
-                        "self": true,
-                        "responseStatus": "accepted"
-                    }
-                ],
-                "reminders": {
-                    "useDefault": false,
-                    "overrides": [
-                        {
-                            "method": "email",
-                            "minutes": 450
-                        },
-                        {
-                            "method": "popup",
-                            "minutes": 30
-                        }
-                    ]
-                }
-            }
-        ]
-    }
-
 Authorization and Authentication
 ================================
 
-Most of Google's APIs that are supported by the discovery service support these 3 authentication/authorization schemes:
+Most of Google APIs that are supported by the discovery service support these 3 authentication/authorization schemes:
 
 1. **OAuth2**
 
-    Should be used whenever you want to access personal information.
+    Should be used whenever you want to access personal information from user accounts.
 
-    Also, Aiogoogle supports Google OpenID connect.
-    
-    OpenID connect is a tiny layer built on top of OAuth2 to make it natively support Authentication, and not just Authorization. (The magic behind Signin with Google)
+    Also, Aiogoogle supports Google OpenID connect which is a superset of OAuth2. (Google Social Signin)
 
 2. **API key**
 
@@ -832,6 +502,371 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
         )
         app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 
+Making API calls
+=================
+
+Now that you have figured out which authentication scheme you are going to use, let's make some API calls.
+
+Assuming that you chose the Urlshortener-v1 API:
+
+.. note::
+
+    As of March 30, 2019, the Google URL shortening service was shut down.
+
+Structure of an API
+----------------------
+
+    ::
+
+        Root
+        |__ name
+        |__ version
+        |__ baseUrl
+        |__ Global Parameters
+        |__ Schemas
+        |__ Resources
+            |__ Resources
+                |_ Resources
+                    |_...
+                |_ Methods
+            |__ Methods
+        |__ Methods
+            |_ Path
+            |_ Parameters
+            |_ Request Body
+            |_ Response Body
+
+    `Full reference: <https://developers.google.com/discovery/v1/reference/apis>`_.
+
+Create a Google API instance
+-------------------------------
+
+.. code-block:: python3
+
+    import asyncio
+    from aiogoogle import Aiogoogle
+
+    async def create_api(name, version):
+        async with Aiogoogle() as google:
+            return await google.discover(name, version)
+
+    url_shortener = asyncio.run(
+        create_api('urlshortener', 'v1')
+    )
+
+    >>> url_shortener['resources']
+
+
+.. code-block:: python3
+
+    {
+        'url': {
+
+            'methods':
+
+                'get': ...
+                'insert': ...
+                'list': ...
+    }
+
+Browse an API
+-----------------
+
+**Now, let's browse a resource**
+
+.. note::
+
+    You can also use Google's API explorer to explore an API in a more visually appealing way.
+
+    Visit: https://developers.google.com/apis-explorer
+
+.. code-block:: python3
+
+    >>> url_resource = url_shortener.url
+
+    >>> url_resource.methods_available
+
+    ['get', 'insert', 'list']
+
+**Sometimes resources have nested resources**
+
+.. code-block:: python3
+
+    >>> url_resource.resources_available
+
+    []
+
+This one doesn't.
+
+**Let's inspect a method of a resource**
+
+.. code-block:: python3
+
+    >>> list_url = url_resource.list
+
+    >>> list_url['description']
+
+    "Retrieves a list of URLs shortened by a user."
+    
+    >>> list_url.optional_parameters
+
+    ['projection', 'start_token', 'alt', 'fields', 'key', 'oauth_token', 'prettyPrint', 'quotaUser']
+
+    >>> list_url.required_parameters
+
+    []
+
+**Let's check out what the ``start_token`` parameter is and how it should look like**
+
+.. code-block:: python3
+
+    >>> list_url.parameters['start_token']
+
+    {
+        "type": "string",
+        "description": "Token for requesting successive pages of results.",
+        "location": "query"
+    }
+
+
+**Finally let's create a request, that we'll then send with Aiogoogle**
+
+.. code-block:: python3
+
+    >>> request = list_url(start_token='a_string', key='a_secret_key')
+
+    # Equivalent to:
+
+    >>> request = url_shortener.url.list(start_token='a_start_token', key='a_secret_key')
+
+    >>> request.url
+     
+    'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
+
+
+Send a Request
+------------------
+
+**Let's create a coroutine that shortens URLs**
+
+.. code-block:: python3
+
+    import asyncio
+    from aiogoogle import Aiogoogle
+    from pprint import pprint
+
+    api_key = 'you_api_key'
+
+    async def shorten_urls(long_url):
+        async with Aiogoogle(api_key=api_key) as google:
+            url_shortener = await google.discover('urlshortener', 'v1')
+            short_url = await google.as_api_key(
+                url_shortener.url.insert(
+                    json=dict(
+                        longUrl=long_url
+                    )
+            )
+
+        return short_url
+
+    short_url = asyncio.run(shorten_urls('https://www.google.com'))
+    pprint(short_url)
+
+.. code-block:: python
+
+    {
+        "kind": "urlshortener#url",
+        "id": "https://goo.gl/Dk2j",
+        "longUrl": "https://www.google.com/"
+    }
+
+Send Requests Concurrently:
+-------------------------------
+
+**Now let's shorten two URLs at the same time**
+
+.. code-block:: python
+
+    import asyncio
+    from aiogoogle import Aiogoogle
+    from pprint import pprint
+
+    async def shorten_url(long_urls):
+        async with Aiogoogle(api_key=api_key) as google:
+            url_shortener = await google.discover('urlshortener', 'v1')
+            short_urls = await google.as_api_key(
+
+                url_shortener.url.insert(
+                    json=dict(
+                        longUrl=long_url[0]
+                    ),
+                
+                url_shortener.url.insert(
+                    json=dict(
+                        longUrl=long_url[1]
+                    )
+            )
+        return short_urls
+
+    short_urls = asyncio.run(
+        shorten_url(
+            ['https://www.google.com', 'https://www.google.org']
+        )
+    )
+    pprint(short_urls)
+
+.. code-block:: python
+
+    [
+        {
+            "kind": "urlshortener#url",
+            "id": "https://goo.gl/Dk2j",
+            "longUrl": "https://www.google.com/"
+        },
+        {
+            "kind": "urlshortener#url",
+            "id": "https://goo.gl/Dk23",
+            "longUrl": "https://www.google.org/"
+        }
+    ]
+
+
+Send As Client
+------------------
+
+.. code-block:: python
+
+    #!/usr/bin/python3.7
+
+    import asyncio, pprint
+    from aiogoogle import Aiogoogle
+
+    api_key = 'abc123'
+
+    async def translate_to_latin(words):
+        async with Aiogoogle(api_key=api_key) as aiogoogle:
+            language = await aiogoogle.discover('translate', 'v2')
+            words = dict(q=[words], target='la')
+            result = await aiogoogle.as_api_key(
+                language.translations.translate(json=words)
+            )
+        pprint.pprint(result)
+
+    if __name__ == '__main__':
+        asyncio.run(translate_to_latin('Aiogoogle is awesome'))
+
+.. code-block:: bash
+
+    {
+        "data": {
+            "translations": [
+                {
+                    "translatedText": "Aiogoogle est terribilis!",  
+                    # Google probably meant "awesomelis", but whatever..
+                    "detectedSourceLanguage": "en"
+                }
+            ]
+        }
+    }
+
+Send As User (`Authorization Code Flow`_)
+--------------------------------------------------------
+
+.. code-block:: python
+
+    import asyncio
+    from aiogoogle import Aiogoole
+    from pprint import pprint
+
+    USER_CREDS = {'access_token': '...'}
+
+    async def get_calendar_events():
+        async with Aiogoogle(user_creds=USER_CREDS) as aiogoogle:
+            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
+            result = await aiogoogle.as_user(
+                calendar_v3.events.list(
+                    calendarId="primary",
+                    maxResults=1
+                )
+            )
+        pprint.pprint(result)
+
+    asyncio.run(get_calendar_events())
+
+.. code-block:: bash
+
+    {
+        "kind": "calendar#events",
+        "etag": "\"p33c910kumb6ts0g\"",
+        "summary": "user@gmail.com",
+        "updated": "2018-11-11T22:31:03.463Z",
+        "timeZone": "Africa/Cairo",
+        "accessRole": "owner",
+        "defaultReminders": [
+            {
+                "method": "popup",
+                "minutes": 30
+            },
+            {
+                "method": "email",
+                "minutes": 30
+            }
+        ],
+        "nextPageToken": "CigKGjVkcXIxa20wdHJrOW0xMXN0YABIAGNiQgp6yzd4C",
+        "items": [
+            {
+                "kind": "calendar#event",
+                "etag": "\"2784256013588000\"",
+                "id": "asdasdasdasdasd",
+                "status": "confirmed",
+                "htmlLink": "https://www.google.com/calendar/event?eid=asdasdasdasdQG0",
+                "created": "2014-02-11T14:13:26.000Z",
+                "updated": "2014-02-11T14:13:26.794Z",
+                "summary": "Do Something",
+                "creator": {
+                    "email": "omarryhan@gmail.com",
+                    "displayName": "Omar Ryhan",
+                    "self": true
+                },
+                "organizer": {
+                    "email": "omarryhan@gmail.com",
+                    "displayName": "Omar Ryhan",
+                    "self": true
+                },
+                "start": {
+                    "date": "2014-03-07"
+                },
+                "end": {
+                    "date": "2014-03-08"
+                },
+                "iCalUID": "asdasdasd@google.com",
+                "sequence": 0,
+                "attendees": [
+                    {
+                        "email": "omarryhan@gmail.com",
+                        "displayName": "Omar Ryhan",
+                        "organizer": true,
+                        "self": true,
+                        "responseStatus": "accepted"
+                    }
+                ],
+                "reminders": {
+                    "useDefault": false,
+                    "overrides": [
+                        {
+                            "method": "email",
+                            "minutes": 450
+                        },
+                        {
+                            "method": "popup",
+                            "minutes": 30
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+
 Design
 =======
 
@@ -1040,34 +1075,6 @@ More
 =====
 
 1. For a more efficient use of your quota use `partial responses <https://developers.google.com/discovery/v1/performance#partial-response>`_.
-2. Discovery Document:
-    
-    One of the main objectives of this library is to act as a layer of abstraction over discovery documents.
-
-    If you find any leaks in this abstraction (which you likely will) and find yourself wanting to know more about the discovery document and how it's structured,
-
-    then take a look at a basic overview of a discovery document:
-
-    ::
-
-        Root
-        |__ name
-        |__ version
-        |__ baseUrl
-        |__ Global Parameters
-        |__ Schemas
-        |__ Resources
-            |__ Resources
-                |_ Resources
-                |_ Methods
-            |__ Methods
-        |__ Methods
-            |_ Path
-            |_ Parameters
-            |_ Request Body
-            |_ Response Body
-
-    `Full reference: <https://developers.google.com/discovery/v1/reference/apis>`_.
 
 Contribute
 ===========
