@@ -9,6 +9,7 @@ args = [
     "-s",
     "--cov",
     "aiogoogle/",
+    "-vv",
     # '--tb=long',
     # '--fulltrace',
     # '--maxfail=5',

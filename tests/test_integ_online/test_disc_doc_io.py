@@ -22,4 +22,14 @@ async def test_latest_openid_configs():
     async with ClientSession() as sess:
         new_configs_res = await sess.get(openid_url)
         new_configs = await new_configs_res.json()
-        assert new_configs == currunt_openid_configs
+
+        new_config_keys = list(new_configs.keys())
+        currunt_openid_configs_keys = list(currunt_openid_configs.keys())
+
+        new_config_keys.sort()
+        currunt_openid_configs_keys.sort()
+        
+        assert new_config_keys == currunt_openid_configs_keys
+        assert len(new_config_keys) == len(currunt_openid_configs_keys)
+        for k in new_config_keys:
+            assert new_configs[k] == currunt_openid_configs[k]

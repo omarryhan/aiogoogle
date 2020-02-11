@@ -263,6 +263,13 @@ WELLKNOWN_OPENID_CONFIGS = {
         "sub",
     ],
     "code_challenge_methods_supported": ["plain", "S256"],
+    "device_authorization_endpoint": "https://oauth2.googleapis.com/device/code",
+    "grant_types_supported": [
+        "authorization_code",
+        "refresh_token",
+        "urn:ietf:params:oauth:grant-type:device_code",
+        "urn:ietf:params:oauth:grant-type:jwt-bearer"
+    ],
     "id_token_signing_alg_values_supported": ["RS256"],
     "issuer": "https://accounts.google.com",
     "jwks_uri": "https://www.googleapis.com/oauth2/v3/certs",
