@@ -66,7 +66,7 @@ async def list_events():
 trio.run(list_events)
 ```
 
-**List your Youtube videos using [curio](https://github.com/dabeaz/curio)**
+**List your Youtube videos using [Curio](https://github.com/dabeaz/curio)**
 
 ```bash
 $ pip install aiogoogle[curio_asks]
