@@ -31,7 +31,7 @@ def _pop_buggy_apis(all_apis: list):
         {'name': 'toolresults', 'version': 'v1'}
     ]
     def check_if_api_exists(api):
-        for unstable_api in unstable_apis
+        for unstable_api in unstable_apis:
             if api[0] == unstable_api[0] and api[1] == unstable_api[1]:
                 return true
         return False
