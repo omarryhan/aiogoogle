@@ -29,7 +29,7 @@ def _pop_unstable_apis(all_apis: list):
 # Removing them because they break the build on Travis
 def _pop_buggy_apis(all_apis: list):
     unstable_apis = [
-        ['toolresults', 'version']
+        ['toolresults', 'v1']
     ]
 
     def _is_api_unstable(api):
