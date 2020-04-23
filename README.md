@@ -19,7 +19,7 @@ $ pip install aiogoogle
 
 ## Quick Start
 
-## Google Account Setup
+### Google Account Setup
 
 1. Create a project: [Google’s APIs and Services dashboard](https://console.cloud.google.com/projectselector/apis/dashboard)
 2. Enable an API: [API Library](https://console.cloud.google.com/apis/library)
