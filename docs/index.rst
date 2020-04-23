@@ -143,7 +143,7 @@ Library Setup
 
 .. code-block:: bash
 
-    $ python3.7 -m pip install --upgrade aiogoogle
+    $ pip install aiogoogle
 
 Google Account Setup
 ====================
@@ -1076,17 +1076,21 @@ More
 
 1. For a more efficient use of your quota use `partial responses <https://developers.google.com/discovery/v1/performance#partial-response>`_.
 
-Contribute
+Contribute 🙋
 ===========
 
-All contributions are welcome :).
+There's a bunch you can do to help regardless of your experience level:
 
-Check: https://github.com/omarryhan/aiogoogle/blob/master/CONTRIBUTING.md for some ideas.
+1. Features, chores and bug reports:
+    Please refer to the Github issue tracker where they are posted. 
 
-Contributors
-============
+2. Examples:
+    You can add examples to the examples folder
 
--
+3. Testing
+    Add more tests, the library is currently a bit undertested
+
+Take your pick :)
 
 :ref:`genindex`
 :ref:`modindex`

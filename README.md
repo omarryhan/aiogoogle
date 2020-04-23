@@ -19,6 +19,13 @@ $ pip install aiogoogle
 
 ## Quick Start
 
+## Google Account Setup
+
+1. Create a project: [Google’s APIs and Services dashboard](https://console.cloud.google.com/projectselector/apis/dashboard)
+2. Enable an API: [API Library](https://console.cloud.google.com/apis/library)
+3. Create credentials: [Credentials wizard](https://console.cloud.google.com/apis/credentials/wizard?)
+4. Pick an API: [Google's API explorer](https://developers.google.com/apis-explorer/)
+
 ### Auth
 
 **Get user credentials using OAuth2** [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py)
@@ -94,8 +101,6 @@ if __name__ == "__main__":
 **Social signin** [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/openid_connect.py)
 
 ```python 3.7
-#!/usr/bin/python3.7
-
 import webbrowser
 import pprint
 
@@ -202,6 +207,53 @@ async def list_files():
 asyncio.run(list_files())
 ```
 
+**Shorten a URL using an API key as the authentication scheme of choice**
+
+```python 3
+import asyncio
+from aiogoogle import Aiogoogle
+from pprint import pprint
+
+async def shorten_url(long_urls):
+    async with Aiogoogle(api_key=api_key) as google:
+        url_shortener = await google.discover('urlshortener', 'v1')
+        short_urls = await google.as_api_key(
+
+            url_shortener.url.insert(
+                json=dict(
+                    longUrl=long_url[0]
+                ),
+
+            url_shortener.url.insert(
+                json=dict(
+                    longUrl=long_url[1]
+                )
+        )
+    return short_urls
+
+short_urls = asyncio.run(
+    shorten_url(
+        ['https://www.google.com', 'https://www.google.org']
+    )
+)
+pprint(short_urls)
+```
+
+```json
+[
+    {
+        "kind": "urlshortener#url",
+        "id": "https://goo.gl/Dk2j",
+        "longUrl": "https://www.google.com/"
+    },
+    {
+        "kind": "urlshortener#url",
+        "id": "https://goo.gl/Dk23",
+        "longUrl": "https://www.google.org/"
+    }
+]
+```
+
 **List your Google Calendar events using [Trio](https://github.com/python-trio/trio)** | [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/list_calendar_events_trio.py)
 
 ```bash
@@ -258,9 +310,42 @@ async def list_playlists():
 curio.run(list_playlists())
 ```
 
+**Pagination**
+
+```python 3
+async def list_files():
+    async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+        drive_v3 = await aiogoogle.discover('drive', 'v3')
+        full_res = await aiogoogle.as_user(
+            drive_v3.files.list(),
+            full_res=True
+        )
+    async for page in full_res:
+        for file in page['files']:
+            print(file['name'])
+
+asyncio.run(list_files())
+```
+
 ## Documentation 📑
 
 readthedocs: https://aiogoogle.readthedocs.io/en/latest/
+
+## Contribute 🙋
+
+There's a bunch you can do to help regardless of your experience level:
+
+1. **Features, chores and bug reports:**
+
+    Please refer to the Github issue tracker where they are posted. 
+
+2. **Examples:**
+
+    You can add examples to the examples folder
+
+3. **Testing:**
+
+    Add more tests. The library is currently a bit undertested
 
 
 ## Contact 📧
