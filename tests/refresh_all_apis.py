@@ -28,9 +28,7 @@ def _pop_unstable_apis(all_apis: list):
 # Google sometimes releases buggy stable APIs that are past beta v
 # Removing them because they break the build on Travis
 def _pop_buggy_apis(all_apis: list):
-    unstable_apis = [
-        ['toolresults', 'v1']
-    ]
+    unstable_apis = [["toolresults", "v1"]]
 
     def _is_api_unstable(api):
         for unstable_api in unstable_apis:

@@ -268,7 +268,7 @@ WELLKNOWN_OPENID_CONFIGS = {
         "authorization_code",
         "refresh_token",
         "urn:ietf:params:oauth:grant-type:device_code",
-        "urn:ietf:params:oauth:grant-type:jwt-bearer"
+        "urn:ietf:params:oauth:grant-type:jwt-bearer",
     ],
     "id_token_signing_alg_values_supported": ["RS256"],
     "issuer": "https://accounts.google.com",

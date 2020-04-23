@@ -109,13 +109,13 @@ def test_timeout(create_api):
 
 def test_timeout_fails_on_not_int(create_api):
     calendar = create_api("calendar", "v3")
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         calendar.calendarList.get(calendarId=123, timeout=True, validate=False)
 
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         calendar.calendarList.get(calendarId=123, timeout=False, validate=False)
 
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(TypeError):
         calendar.calendarList.get(calendarId=123, timeout="asas", validate=False)
 
 

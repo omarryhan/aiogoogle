@@ -20,7 +20,7 @@ async def create_signup_document():
                             "timestampValue": datetime.datetime.utcnow().isoformat()
                             + "Z"
                         },
-                        "anotherString": {"stringValue": 'anotherString'},
+                        "anotherString": {"stringValue": "anotherString"},
                     }
                 ),
                 validate=False,  # "parent" validation has an invalid pattern. Our input is actually valid.

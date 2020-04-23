@@ -28,7 +28,7 @@ async def test_latest_openid_configs():
 
         new_config_keys.sort()
         currunt_openid_configs_keys.sort()
-        
+
         assert new_config_keys == currunt_openid_configs_keys
         assert len(new_config_keys) == len(currunt_openid_configs_keys)
         for k in new_config_keys:

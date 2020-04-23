@@ -51,9 +51,7 @@ HYBRID_RESPONSE_TYPE = "code id_token"
 # Grant types
 AUTH_CODE_GRANT_TYPE = "authorization_code"
 REFRESH_GRANT_TYPE = "refresh_token"
-JWT_GRANT_TYPE = (
-    "urn:ietf:params:oauth:grant-type:jwt-bearer"
-)  # https://tools.ietf.org/html/rfc7523#section-4  OAuth JWT Assertion Profiles
+JWT_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer"  # https://tools.ietf.org/html/rfc7523#section-4  OAuth JWT Assertion Profiles
 
 # Other types
 URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded"

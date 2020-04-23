@@ -14,4 +14,9 @@ from .__version__ import (  # noqa: F401  imported but unused
 )
 from .client import Aiogoogle  # noqa: F401  imported but unused
 from .resource import GoogleAPI  # noqa: F401  imported but unused
-from .excs import AiogoogleError, AuthError, HTTPError, ValidationError  # noqa: F401  imported but unused
+from .excs import (
+    AiogoogleError,
+    AuthError,
+    HTTPError,
+    ValidationError,
+)  # noqa: F401  imported but unused
