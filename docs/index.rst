@@ -18,7 +18,7 @@ Async **Google OAuth2** Client +
 
 Async **Google OpenID Connect (Social Sign-in)** Client
 
-Aiogoogle makes it possible to access most of Google's public APIs including:
+Aiogoogle makes it possible to access most of Google's public APIs which include:
 
 - Google Calendar API
 - Google Drive API
@@ -155,7 +155,7 @@ Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figur
     +---------+       (w/ Optional Refresh Token)
 
 
-OAuth2 Example
+OAuth2 Example (Authorization code flow)
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py
@@ -272,8 +272,8 @@ Install sanic
         )
         app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 
-OpenID Connect Example
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+OpenID Connect (Social Signin) Example
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/openid_connect.py
 

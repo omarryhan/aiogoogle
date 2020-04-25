@@ -17,7 +17,7 @@ Async **Google OAuth2** Client +
 
 Async **Google OpenID Connect (Social Sign-in)** Client
 
-Aiogoogle makes it possible to access most of Google's public APIs including:
+Aiogoogle makes it possible to access most of Google's public APIs which include:
 
 - Google Calendar API
 - Google Drive API
@@ -50,7 +50,7 @@ $ pip install aiogoogle
 
 ## Authentication
 
-There are 3 main authentication schemes you can use with Google's discovery service:
+There are **3** main authentication schemes you can use with Google's discovery service:
 
 1. **OAuth2**
 
@@ -64,7 +64,7 @@ There are 3 main authentication schemes you can use with Google's discovery serv
     
     A simple secret string, that you can get from Google's Cloud Console
 
-    .. note::
+    **Note:**
         
         For most personal information, an API key won't be enough.
 
@@ -74,7 +74,7 @@ There are 3 main authentication schemes you can use with Google's discovery serv
 
     A service account is a special kind of account that belongs to an application or a virtual machine (VM) instance, not a person.
     
-    .. note::
+    **Note:**
         
         Not yet supported by Aiogoogle
 
@@ -97,7 +97,7 @@ Oauth2 serves as an authorization framework. It supports **4** main flows:
     - Not supported.
     - [RFC6749 section 4.3](https://tools.ietf.org/html/rfc6749#section-4.2)
 
-Since Aiogoogle only supports **Authorization Code Flow** which fits most use cases, let's dig a little in to it:
+Since Aiogoogle only supports **Authorization Code Flow** which happens to fit most use cases, let's dig a little in to it:
 
 ## Authorization Code Flow
 
@@ -141,9 +141,9 @@ Here's a nice ASCII chart showing how this flow works [RFC6749 section 4.1 Figur
     +---------+       (w/ Optional Refresh Token)
 
 
-## OAuth2 example (requires Sanic HTTP Server)
+## Authorization examples (the examples require Sanic HTTP Server)
 
-**Get user credentials using OAuth2** [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py)
+**Get user credentials using OAuth2 (Authorization code flow)** [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py)
 
 ```python 3.7
 import webbrowser
@@ -213,7 +213,7 @@ if __name__ == "__main__":
     app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 ```
 
-**Social signin** [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/openid_connect.py)
+**OpenID Connect (Social signin)** [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/openid_connect.py)
 
 ```python 3.7
 import webbrowser
@@ -296,7 +296,7 @@ if __name__ == "__main__":
     app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 ```
 
-**API key**
+**API key example**
 
 No need for an example because it's very simple. Just get an API key from you Google management console. and pass it to your Aiogoogle instance. like this.
 
@@ -310,11 +310,13 @@ Most of Google’s public APIs are documented/discoverable by a single API calle
 
 Google’s Discovery Serivce provides machine readable specifications known as discovery documents (similar to [Swagger/OpenAPI](https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml)). e.g. [Google Books](https://www.googleapis.com/discovery/v1/apis/books/v1/rest).
 
-In essence, Aiogoogle is a feature-rich, yet easy to use Pythonic wrapper for discovery documents.
+Aiogoogle is a Pythonic wrapper for discovery documents.
 
 For a list of supported APIs, visit: [Google’s APIs Explorer](https://developers.google.com/apis-explorer/).
 
-To understand how to navigate a discovery document and access the API endpoints that you desire with the [Aiogoogle object](https://aiogoogle.readthedocs.io/en/latest/#id2), please read [this](https://aiogoogle.readthedocs.io/en/latest/#making-api-calls) section in the docs.
+## Understanding the Aiogoogle Object (Highly recommended that you read)
+
+To understand how to navigate a discovery service/document and access the API endpoints that you desire with the [Aiogoogle object](https://aiogoogle.readthedocs.io/en/latest/#id2), please read [this](https://aiogoogle.readthedocs.io/en/latest/#making-api-calls) section in the docs.
 
 
 ## Accessing APIs examples
