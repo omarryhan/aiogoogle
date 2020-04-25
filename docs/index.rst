@@ -36,18 +36,6 @@ Aiogoogle makes it possible to access most of Google's public APIs which include
 - Kubernetes Engine API
 - And `more <https://developers.google.com/apis-explorer>`_.
 
-Discovery Service?
-===================
-
-Most of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
-
-Google's Discovery Serivce provides machine readable specifications known as discovery documents 
-(similar to `Swagger/OpenAPI <https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml>`_). `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
-
-In essence, Aiogoogle is a feature-rich, yet easy to use Pythonic wrapper for discovery documents.
-
-For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
-
 Library Setup
 =============
 
@@ -120,9 +108,9 @@ Authorization Code Flow
 There are 3 main parties are involved in this flow:
 
 1. **User**: 
-    - represented as ``aiogoogle.user_creds``
+    - represented as ``aiogoogle.auth.models.UserCreds``
 2. **Client**:
-    - represented as ``aiogoogle.client_creds``
+    - represented as ``aiogoogle.auth.models.ClientCreds``
 3. **Resource Server**:
     - The service that aiogoogle acts as a client to. e.g. Google Analytics, Youtube, etc. 
 
@@ -402,19 +390,35 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
         )
         app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 
-Browsing a Google Discovery Service and making API calls
+Discovery Service
+===================
+
+Most of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
+
+Google's Discovery Serivce provides machine readable specifications known as discovery documents 
+(similar to `Swagger/OpenAPI <https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml>`_). `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
+
+``Aiogoogle`` is a wrapper for discovery documents.
+
+For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
+
+Discovery docs and the ``Aiogoogle`` object explained
 =========================================================
+
+Intro
+----------
 
 Now that you have figured out which authentication scheme you are going to use, let's make some API calls.
 
-Assuming that you chose the: *Urlshortener-v1* API:
+Assuming that you chose the: *urlshortener v1* API:
 
 .. note::
 
-    As of March 30, 2019, the Google URL shortening service was shut down.
+    As of March 30, 2019, the Google URL shortening service was shut down. So this only serves as an example.
 
-Create a URL-shortener Google API instance
---------------------------------------------
+**Create a URL-shortener Google API instance**
+
+Let's discover the `urlshortener` discovery document and create an Aiogoogle representation of it and call it ``url_shortener``
 
 .. code-block:: python3
 
@@ -422,17 +426,18 @@ Create a URL-shortener Google API instance
     from aiogoogle import Aiogoogle
 
     async def create_api(name, version):
-        async with Aiogoogle() as google:
-            return await google.discover(name, version)  # Downloads the API specs and creates an API object
+        async with Aiogoogle() as aiogoogle:
+            # Downloads the API specs and creates an API object
+            return await aiogoogle.discover(name, version)
 
     url_shortener = asyncio.run(
         create_api('urlshortener', 'v1')
     )
 
 Structure of an API
-----------------------
+---------------------------
 
-This is what a JSON representation of the discovery documen we downloaded looks like.
+This is what the JSON representation of the discovery document we downloaded looks like.
 
     ::
 
@@ -456,24 +461,32 @@ This is what a JSON representation of the discovery documen we downloaded looks 
 
     `Full reference: <https://developers.google.com/discovery/v1/reference/apis>`_.
 
-You don't have to worry about most of this. What's important to understand is how the discovery service is just a way to list *resources* and *methods*.
+You don't have to worry about most of this. 
+What's important to understand right now is that a discovery service is just a way to specify the **resources** and **methods** of an API.
 
-In the case of Youtube of the Youtube API for example, a resource can be: `videos` and a method would be list `list`.
+**What are resources and methods?**
 
-The way you would access this is by executing: `aiogoogle.videos.list()`
+It's easier to explain this with an example.
+In the youtube-v3 API, a **resource** can be: ``videos`` and a **method** would be: ``list``.
 
-A resource can also have a nested resource. e.g. `aiogoogle.videos.comments.list()`
+The way you would access the ``list`` method is by typing: ``youtube_v3.videos.list()``
 
-There can also be top level methods that are not associated with any method. Though that's not common.
+**Some rules:**
 
-Finally, the only way you can get a data from the Google API is by calling a method. You can't call a resource and expect data.
+A resource can also have nested resources. e.g. ``aiogoogle.videos.comments.list()``
+
+There can be top level methods that are not associated with any resource. However, that's not common.
+
+Finally, the only way you can get data from a Google API is by calling a method. You can't call a resource and expect data.
+
+Next, we will programatically browse an API
 
 Browse an API
 -----------------
 
 Back to the URL shortener API.
 
-**Let's list the resources of the URL shortener API**:
+Let's list the resources of the URL shortener API
 
 .. code-block:: python3
 
@@ -490,7 +503,7 @@ Back to the URL shortener API.
     }
 
 
-**Now, let's browse the resource called `url`**
+Now, let's browse the resource called ``url``
 
 .. code-block:: python3
 
@@ -498,13 +511,13 @@ Back to the URL shortener API.
 
     >>> url_resource.methods_available
 
-**It has the following methods available to call**:
+It has the following methods available to call:
 
 .. code-block:: python3
 
     ['get', 'insert', 'list']
 
-**Sometimes resources have nested resources**
+Sometimes resources have nested resources
 
 .. code-block:: python3
 
@@ -514,13 +527,13 @@ Back to the URL shortener API.
 
 This one doesn't.
 
-**Let's inspect the method called `list` of the `url` resource**
+Let's inspect the method called ``list`` of the ``url`` resource
 
 .. code-block:: python3
 
     >>> list_url = url_resource.list
 
-**Let's see what this method does**
+Let's see what this method does
 
 .. code-block:: python3
 
@@ -528,7 +541,7 @@ This one doesn't.
 
     "Retrieves a list of URLs shortened by a user."
     
-**Cool, now let's see what are the optional parameters that this method takes**
+Cool, now let's see the optional parameters that this method accepts
 
 .. code-block:: python3
 
@@ -536,7 +549,7 @@ This one doesn't.
 
     ['projection', 'start_token', 'alt', 'fields', 'key', 'oauth_token', 'prettyPrint', 'quotaUser']
 
-**And the required parameters**
+And the required parameters
 
 .. code-block:: python3
 
@@ -544,7 +557,7 @@ This one doesn't.
 
     []
 
-**Let's check out what the ``start_token`` optional parameter is and how it should look like**
+Let's check out what the ``start_token`` optional parameter is and how it should look like
 
 .. code-block:: python3
 
@@ -557,7 +570,7 @@ This one doesn't.
     }
 
 
-**Finally let's create a request, that we'll then send with Aiogoogle**
+Finally let's create a request, that we'll then send with Aiogoogle
 
 .. code-block:: python3
 
@@ -567,9 +580,9 @@ This one doesn't.
 
     >>> request = url_shortener.url.list(start_token='a_start_token', key='a_secret_key')
 
-Here we passed the `url.list` method the parameters we want and an unsent request has been created
+Here we passed the ``url.list`` method the parameters we want and an unsent request has been created
 
-**We can inspect the URL of the request by typing:**
+We can inspect the URL of the request by typing:
 
 .. code-block:: python3
 
@@ -591,9 +604,9 @@ Send a Request
     api_key = 'you_api_key'
 
     async def shorten_urls(long_url):
-        async with Aiogoogle(api_key=api_key) as google:
-            url_shortener = await google.discover('urlshortener', 'v1')
-            short_url = await google.as_api_key(
+        async with Aiogoogle(api_key=api_key) as aiogoogle:
+            url_shortener = await aiogoogle.discover('urlshortener', 'v1')
+            short_url = await aiogoogle.as_api_key(
                 url_shortener.url.insert(
                     json=dict(
                         longUrl=long_url
@@ -625,9 +638,9 @@ Send Requests Concurrently:
     from pprint import pprint
 
     async def shorten_url(long_urls):
-        async with Aiogoogle(api_key=api_key) as google:
-            url_shortener = await google.discover('urlshortener', 'v1')
-            short_urls = await google.as_api_key(
+        async with Aiogoogle(api_key=api_key) as aiogoogle:
+            url_shortener = await aiogoogle.discover('urlshortener', 'v1')
+            short_urls = await aiogoogle.as_api_key(
 
                 url_shortener.url.insert(
                     json=dict(
@@ -932,8 +945,8 @@ e.g.
     from aiogoogle.sessions.curio_asks_session import CurioAsksSession
 
     async def main():
-        async with Aiogoogle(session_factory=CurioAsksSession) as google:
-            youtube = await google.discover('youtube', 'v3')
+        async with Aiogoogle(session_factory=CurioAsksSession) as aiogoogle:
+            youtube = await aiogoogle.discover('youtube', 'v3')
 
     curio.run(main)
 
