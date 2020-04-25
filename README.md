@@ -11,22 +11,137 @@
 
 # Aiogoogle
 
+Async **Discovery Service** Client +
+
+Async **Google OAuth2** Client +
+
+Async **Google OpenID Connect (Social Sign-in)** Client
+
+Aiogoogle makes it possible to access most of Google's public APIs including:
+
+- Google Calendar API
+- Google Drive API
+- Google Contacts API
+- Gmail API
+- Google Maps API
+- Youtube API
+- Translate API
+- Google Sheets API
+- Google Docs API
+- Gogle Analytics API
+- Google Books API
+- Google Fitness API
+- Google Genomics API
+- Kubernetes Engine API
+- And [more](https://developers.google.com/apis-explorer)
+
 ## Setup ⚙️
 
 ```bash
 $ pip install aiogoogle
 ```
 
-## Quick Start
-
-### Google Account Setup
+## Google Account Setup
 
 1. Create a project: [Google’s APIs and Services dashboard](https://console.cloud.google.com/projectselector/apis/dashboard)
 2. Enable an API: [API Library](https://console.cloud.google.com/apis/library)
 3. Create credentials: [Credentials wizard](https://console.cloud.google.com/apis/credentials/wizard?)
 4. Pick an API: [Google's API explorer](https://developers.google.com/apis-explorer/)
 
-### Auth
+## Authentication
+
+There are 3 main authentication schemes you can use with Google's discovery service:
+
+1. **OAuth2**
+
+    Should be used whenever you want to access personal information from user accounts.
+
+    Also, Aiogoogle supports Google OpenID connect which is a superset of OAuth2. (Google Social Signin)
+
+2. **API key**
+
+    Suitable when accessing Public information.
+    
+    A simple secret string, that you can get from Google's Cloud Console
+
+    .. note::
+        
+        For most personal information, an API key won't be enough.
+
+        You should use OAuth2 instead.
+
+3. **Service Accounts**
+
+    A service account is a special kind of account that belongs to an application or a virtual machine (VM) instance, not a person.
+    
+    .. note::
+        
+        Not yet supported by Aiogoogle
+
+## OAuth2 Primer
+
+Oauth2 serves as an authorization framework. It supports **4** main flows:
+
+1. **Authorization code flow** **Only flow suppoerted*:
+    - [RFC6749 section 4.1](https://tools.ietf.org/html/rfc6749#section-4.1)
+
+2. **Client Credentials Flow**:
+    - Similar to the **API key** authentication scheme provided by Aiogoogle, so use it instead.
+    - [RFC6749 section 4.4](https://tools.ietf.org/html/rfc6749#section-4.4)
+
+3. **Implicit Grant Flow**:
+    - Not supported.
+    - [RFC6749 section 4.2](https://tools.ietf.org/html/rfc6749#section-4.2)
+
+4. **Resource Owner Password Credentials Flow**:
+    - Not supported.
+    - [RFC6749 section 4.3](https://tools.ietf.org/html/rfc6749#section-4.2)
+
+Since Aiogoogle only supports **Authorization Code Flow** which fits most use cases, let's dig a little in to it:
+
+## Authorization Code Flow
+
+There are **3** main parties are involved in this flow:
+
+1. **User**: 
+    - The application consumer.
+    - represented as [``aiogoogle.UserCreds``](https://aiogoogle.readthedocs.io/en/latest/#aiogoogle.auth.creds.UserCreds)
+2. **Client**:
+    - The Application owner.
+    - represented as [``aiogoogle.ClientCreds``](https://aiogoogle.readthedocs.io/en/latest/#aiogoogle.auth.creds.ClientCreds)
+3. **Resource Server**:
+    - The service that aiogoogle acts as a client to. e.g. Google Analytics, Youtube, etc. 
+
+Here's a nice ASCII chart showing how this flow works [RFC6749 section 4.1 Figure 3](https://tools.ietf.org/html/rfc6749#section-4.1.1>)
+
+    +----------+
+    | Resource |
+    |   Owner  |
+    |          |
+    +----------+
+        ^
+        |
+        (B)
+    +----|-----+          Client Identifier      +---------------+
+    |         -+----(A)-- & Redirection URI ---->|               |
+    |  User-   |                                 | Authorization |
+    |  Agent  -+----(B)-- User authenticates --->|     Server    |
+    |          |                                 |               |
+    |         -+----(C)-- Authorization Code ---<|               |
+    +-|----|---+                                 +---------------+
+    |    |                                           ^      v
+    (A)  (C)                                         |      |
+    |    |                                           |      |
+    ^    v                                           |      |
+    +---------+                                      |      |
+    |         |>---(D)-- Authorization Code ---------'      |
+    |  Client |          & Redirection URI                  |
+    |         |                                             |
+    |         |<---(E)----- Access Token -------------------'
+    +---------+       (w/ Optional Refresh Token)
+
+
+## OAuth2 example (requires Sanic HTTP Server)
 
 **Get user credentials using OAuth2** [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py)
 
@@ -114,7 +229,7 @@ EMAIL = "..."
 CLIENT_CREDS = {
     "client_id": "...",
     "client_secret": "...",
-    "scopes": ["..."],
+    "scopes": ["openid", "email"],
     "redirect_uri": "http://localhost:5000/callback/aiogoogle",
 }
 state = (
@@ -181,7 +296,28 @@ if __name__ == "__main__":
     app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 ```
 
-### Accessing APIs
+**API key**
+
+No need for an example because it's very simple. Just get an API key from you Google management console. and pass it to your Aiogoogle instance. like this.
+
+```python
+aiogoogle = Aiogoogle(api_key='...')
+```
+
+## Understanding Google's Discovery Service
+
+Most of Google’s public APIs are documented/discoverable by a single API called the Discovery Service.
+
+Google’s Discovery Serivce provides machine readable specifications known as discovery documents (similar to [Swagger/OpenAPI](https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml)). e.g. [Google Books](https://www.googleapis.com/discovery/v1/apis/books/v1/rest).
+
+In essence, Aiogoogle is a feature-rich, yet easy to use Pythonic wrapper for discovery documents.
+
+For a list of supported APIs, visit: [Google’s APIs Explorer](https://developers.google.com/apis-explorer/).
+
+To understand how to navigate a discovery document and access the API endpoints that you desire with the [Aiogoogle object](https://aiogoogle.readthedocs.io/en/latest/#id2), please read [this](https://aiogoogle.readthedocs.io/en/latest/#making-api-calls) section in the docs.
+
+
+## Accessing APIs examples
 
 **List your Google Drive Files** [full example](https://github.com/omarryhan/aiogoogle/blob/master/examples/list_drive_files.py)
 
@@ -190,7 +326,7 @@ import asyncio
 from aiogoogle import Aiogoogle
 
 
-user_creds = {'access_token': 'an_access_token'}
+user_creds = {'access_token': '....', 'refresh_token', '....'}
 
 async def list_files():
     async with Aiogoogle(user_creds=user_creds) as aiogoogle:
@@ -266,7 +402,7 @@ from aiogoogle import Aiogoogle
 from aiogoogle.sessions.trio_asks_session import TrioAsksSession
 
 
-user_creds = {'access_token': 'an_access_token'}
+user_creds = {'access_token': '....', 'refresh_token', '....'}
 
 async def list_events():
     async with Aiogoogle(
@@ -295,7 +431,7 @@ from aiogoogle import Aiogoogle
 from aiogoogle.sessions.curio_asks_session import CurioAsksSession
 
 
-user_creds = {'access_token': 'an_access_token'}
+user_creds = {'access_token': '....', 'refresh_token', '....'}
 
 async def list_playlists():
     async with Aiogoogle(

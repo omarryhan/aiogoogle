@@ -48,7 +48,7 @@ extensions = [
     "sphinx.ext.viewcode",
     # 'sphinx.ext.autosectionlabel',
     "sphinx.ext.autodoc",
-    "sphinxcontrib.asyncio",
+    #"sphinxcontrib.asyncio",  # unmaintained and broken as of 25th of April 2020
     "sphinx.ext.napoleon",
     # 'sphinx.ext.todo',
     # 'sphinxcontrib.github',

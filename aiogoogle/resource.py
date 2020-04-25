@@ -397,8 +397,7 @@ class Method:
 
             * When passing ``datetime.datetime or datetime.date`` pass them in json format.
             
-            * Aiogoogle won't do that as it would be a big hassle to iterate over every item in ``*uri_params``, ``json`` and ``data``
-            to check if there's any datetime objects.
+            * Aiogoogle won't do that as it would be a big hassle to iterate over every item in ``*uri_params``, ``json`` and ``data`` to check if there's any datetime objects.
 
             * Fortunately Python makes it really easy to achieve that. 
             

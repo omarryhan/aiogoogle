@@ -12,16 +12,34 @@ Aiogoogle
    :target: https://github.com/omarryhan/aiogoogle
 
 
-**Async** Discovery Service Client + 
+Async **Discovery Service** Client` +
 
-**Async** Google OAuth2 Client + 
+Async **Google OAuth2** Client +
 
-**Async** Google OpenID Connect (Social Sign-in) Client
+Async **Google OpenID Connect (Social Sign-in)** Client
+
+Aiogoogle makes it possible to access most of Google's public APIs including:
+
+- Google Calendar API
+- Google Drive API
+- Google Contacts API
+- Gmail API
+- Google Maps API
+- Youtube API
+- Translate API
+- Google Sheets API
+- Google Docs API
+- Gogle Analytics API
+- Google Books API
+- Google Fitness API
+- Google Genomics API
+- Kubernetes Engine API
+- And `more <https://developers.google.com/apis-explorer>`_.
 
 Discovery Service?
 ===================
 
-Many of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
+Most of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
 
 Google's Discovery Serivce provides machine readable specifications known as discovery documents 
 (similar to `Swagger/OpenAPI <https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml>`_). `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
@@ -29,114 +47,6 @@ Google's Discovery Serivce provides machine readable specifications known as dis
 In essence, Aiogoogle is a feature-rich, yet easy to use Pythonic wrapper for discovery documents.
 
 For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
-
-Quickstart
-============
-
-List Files on Google Drive
----------------------------
-
-.. code-block:: python3
-
-    import asyncio
-    from aiogoogle import Aiogoogle
-
-    user_creds = {'access_token': 'an_access_token'}
-
-    async def list_files():
-        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
-            drive_v3 = await aiogoogle.discover('drive', 'v3')
-            json_res = await aiogoogle.as_user(
-                drive_v3.files.list(),
-            )
-            for file in json_res['files']:
-                print(file['name'])
-
-    asyncio.run(list_files())
-
-Pagination
-------------
-
-.. code-block:: python3
-
-    async def list_files():
-        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
-            drive_v3 = await aiogoogle.discover('drive', 'v3')
-            full_res = await aiogoogle.as_user(
-                drive_v3.files.list(),
-                full_res=True
-            )
-        async for page in full_res:
-            for file in page['files']:
-                print(file['name'])
-
-    asyncio.run(list_files())
-
-Download a File from Google Drive
-----------------------------------
-
-.. code-block:: python3
-
-    async def download_file(file_id, path):
-        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
-            drive_v3 = await aiogoogle.discover('drive', 'v3')
-            await aiogoogle.as_user(
-                drive_v3.files.get(fileId=file_id, download_file=path, alt='media'),
-            )
-    asyncio.run(download_file('abc123', '/home/user/Desktop/my_file.zip'))
-
-Upload a File to Google Drive
---------------------------------
-
-.. code-block:: python3
-
-    async def upload_file(path):
-        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
-            drive_v3 = await aiogoogle.discover('drive', 'v3')
-            await aiogoogle.as_user(
-                drive_v3.files.create(upload_file=path)
-            )
-    asyncio.run(upload_file('/home/aiogoogle/Documents/my_cool_gif.gif/'))
-
-List Your Contacts
---------------------
-
-.. code-block:: python3
-
-    import asyncio
-
-    async def list_contacts():
-        aiogoogle = Aiogoogle(user_creds=user_creds)
-        people_v1 = await aiogoogle.discover('people', 'v1')
-        async with aiogoogle:
-            contacts_book = await aiogoogle.as_user(
-                people_v1.people.connections.list(
-                    resourceName='people/me',
-                    personFields='names,phoneNumbers'
-                ),
-                full_res=True
-            )
-        async for page in contacts_book:
-            for connection in page['connections']:
-                print(connection['names'])
-                print(connection['phoneNumbers'])
-
-    asyncio.run(list_contacts())
-
-List Calendar Events
------------------------
-
-.. code-block:: python3
-
-    async def list_events():
-        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
-            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
-            res = await aiogoogle.as_user(
-                calendar_v3.events.list(calendarId='primary')
-            )
-            pprint.pprint(res)
-
-Check out https://github.com/omarryhan/aiogoogle/tree/master/examples for more.
 
 Library Setup
 =============
@@ -153,22 +63,18 @@ Google Account Setup
 3. **Create credentials:** `Credentials wizard <https://console.cloud.google.com/apis/credentials/wizard?>`_.
 4. **Pick an API:** `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_ 
 
-    .. note:: After choosing an API, get the API's *name* and *version* from the URL as they will be needed later.
+Authentication
+================
 
-Authorization and Authentication
-================================
-
-Most of Google APIs that are supported by the discovery service support these 3 authentication/authorization schemes:
+There are 3 main authentication schemes you can use with Google's discovery service:
 
 1. **OAuth2**
-
     Should be used whenever you want to access personal information from user accounts.
 
     Also, Aiogoogle supports Google OpenID connect which is a superset of OAuth2. (Google Social Signin)
 
 2. **API key**
-
-    Should be used when accessing Public information.
+    Suitable when accessing Public information.
     
     A simple secret string, that you can get from Google's Cloud Console
 
@@ -179,9 +85,6 @@ Most of Google APIs that are supported by the discovery service support these 3 
         You should use OAuth2 instead.
 
 3. **Service Accounts**
-
-    `See here <https://cloud.google.com/iam/docs/overview>`_
-    
     A service account is a special kind of account that belongs to an application or a virtual machine (VM) instance, not a person.
     
     .. note::
@@ -194,12 +97,10 @@ OAuth2 Primer
 Oauth2 serves as an authorization framework. It supports four main flows:
 
 1. **Authorization code flow**:
-    
     - Only one supported by aiogoogle
     - `RFC6749 section 4.1  <https://tools.ietf.org/html/rfc6749#section-4.1>`_.
 
 2. **Client Credentials Flow**:
-
     - Similar to API_KEY authentication so use API key authentication instead
     - `RFC6749 section 4.4  <https://tools.ietf.org/html/rfc6749#section-4.4>`_.
 
@@ -208,7 +109,6 @@ Oauth2 serves as an authorization framework. It supports four main flows:
     - `RFC6749 section 4.2  <https://tools.ietf.org/html/rfc6749#section-4.2>`_.
 
 4. **Resource Owner Password Credentials Flow**:
-    
     - Not supported
     - `RFC6749 section 4.3  <https://tools.ietf.org/html/rfc6749#section-4.2>`_.
 
@@ -217,7 +117,7 @@ Since Aiogoogle only supports Authorization Code Flow, let's get a little in to 
 Authorization Code Flow
 ------------------------
 
-There are three main parties are involved in this flow:
+There are 3 main parties are involved in this flow:
 
 1. **User**: 
     - represented as ``aiogoogle.user_creds``
@@ -502,19 +402,37 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
         )
         app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 
-Making API calls
-=================
+Browsing a Google Discovery Service and making API calls
+=========================================================
 
 Now that you have figured out which authentication scheme you are going to use, let's make some API calls.
 
-Assuming that you chose the Urlshortener-v1 API:
+Assuming that you chose the: *Urlshortener-v1* API:
 
 .. note::
 
     As of March 30, 2019, the Google URL shortening service was shut down.
 
+Create a URL-shortener Google API instance
+--------------------------------------------
+
+.. code-block:: python3
+
+    import asyncio
+    from aiogoogle import Aiogoogle
+
+    async def create_api(name, version):
+        async with Aiogoogle() as google:
+            return await google.discover(name, version)  # Downloads the API specs and creates an API object
+
+    url_shortener = asyncio.run(
+        create_api('urlshortener', 'v1')
+    )
+
 Structure of an API
 ----------------------
+
+This is what a JSON representation of the discovery documen we downloaded looks like.
 
     ::
 
@@ -538,26 +456,28 @@ Structure of an API
 
     `Full reference: <https://developers.google.com/discovery/v1/reference/apis>`_.
 
-Create a Google API instance
--------------------------------
+You don't have to worry about most of this. What's important to understand is how the discovery service is just a way to list *resources* and *methods*.
+
+In the case of Youtube of the Youtube API for example, a resource can be: `videos` and a method would be list `list`.
+
+The way you would access this is by executing: `aiogoogle.videos.list()`
+
+A resource can also have a nested resource. e.g. `aiogoogle.videos.comments.list()`
+
+There can also be top level methods that are not associated with any method. Though that's not common.
+
+Finally, the only way you can get a data from the Google API is by calling a method. You can't call a resource and expect data.
+
+Browse an API
+-----------------
+
+Back to the URL shortener API.
+
+**Let's list the resources of the URL shortener API**:
 
 .. code-block:: python3
-
-    import asyncio
-    from aiogoogle import Aiogoogle
-
-    async def create_api(name, version):
-        async with Aiogoogle() as google:
-            return await google.discover(name, version)
-
-    url_shortener = asyncio.run(
-        create_api('urlshortener', 'v1')
-    )
 
     >>> url_shortener['resources']
-
-
-.. code-block:: python3
 
     {
         'url': {
@@ -569,22 +489,18 @@ Create a Google API instance
                 'list': ...
     }
 
-Browse an API
------------------
 
-**Now, let's browse a resource**
-
-.. note::
-
-    You can also use Google's API explorer to explore an API in a more visually appealing way.
-
-    Visit: https://developers.google.com/apis-explorer
+**Now, let's browse the resource called `url`**
 
 .. code-block:: python3
 
     >>> url_resource = url_shortener.url
 
     >>> url_resource.methods_available
+
+**It has the following methods available to call**:
+
+.. code-block:: python3
 
     ['get', 'insert', 'list']
 
@@ -598,25 +514,37 @@ Browse an API
 
 This one doesn't.
 
-**Let's inspect a method of a resource**
+**Let's inspect the method called `list` of the `url` resource**
 
 .. code-block:: python3
 
     >>> list_url = url_resource.list
 
+**Let's see what this method does**
+
+.. code-block:: python3
+
     >>> list_url['description']
 
     "Retrieves a list of URLs shortened by a user."
     
+**Cool, now let's see what are the optional parameters that this method takes**
+
+.. code-block:: python3
+
     >>> list_url.optional_parameters
 
     ['projection', 'start_token', 'alt', 'fields', 'key', 'oauth_token', 'prettyPrint', 'quotaUser']
+
+**And the required parameters**
+
+.. code-block:: python3
 
     >>> list_url.required_parameters
 
     []
 
-**Let's check out what the ``start_token`` parameter is and how it should look like**
+**Let's check out what the ``start_token`` optional parameter is and how it should look like**
 
 .. code-block:: python3
 
@@ -639,15 +567,20 @@ This one doesn't.
 
     >>> request = url_shortener.url.list(start_token='a_start_token', key='a_secret_key')
 
+Here we passed the `url.list` method the parameters we want and an unsent request has been created
+
+**We can inspect the URL of the request by typing:**
+
+.. code-block:: python3
+
     >>> request.url
      
     'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
 
-
 Send a Request
 ------------------
 
-**Let's create a coroutine that shortens URLs**
+**Let's create a coroutine that shortens URLs using an API key**
 
 .. code-block:: python3
 
@@ -867,8 +800,119 @@ Send As User (`Authorization Code Flow`_)
         ]
     }
 
+Quick Examples
+=================
+
+List Files on Google Drive
+---------------------------
+
+.. code-block:: python3
+
+    import asyncio
+    from aiogoogle import Aiogoogle
+
+    user_creds = {'access_token': 'an_access_token'}
+
+    async def list_files():
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            json_res = await aiogoogle.as_user(
+                drive_v3.files.list(),
+            )
+            for file in json_res['files']:
+                print(file['name'])
+
+    asyncio.run(list_files())
+
+Pagination
+------------
+
+.. code-block:: python3
+
+    async def list_files():
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            full_res = await aiogoogle.as_user(
+                drive_v3.files.list(),
+                full_res=True
+            )
+        async for page in full_res:
+            for file in page['files']:
+                print(file['name'])
+
+    asyncio.run(list_files())
+
+Download a File from Google Drive
+----------------------------------
+
+.. code-block:: python3
+
+    async def download_file(file_id, path):
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            await aiogoogle.as_user(
+                drive_v3.files.get(fileId=file_id, download_file=path, alt='media'),
+            )
+    asyncio.run(download_file('abc123', '/home/user/Desktop/my_file.zip'))
+
+Upload a File to Google Drive
+--------------------------------
+
+.. code-block:: python3
+
+    async def upload_file(path):
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            await aiogoogle.as_user(
+                drive_v3.files.create(upload_file=path)
+            )
+    asyncio.run(upload_file('/home/aiogoogle/Documents/my_cool_gif.gif/'))
+
+List Your Contacts
+--------------------
+
+.. code-block:: python3
+
+    import asyncio
+
+    async def list_contacts():
+        aiogoogle = Aiogoogle(user_creds=user_creds)
+        people_v1 = await aiogoogle.discover('people', 'v1')
+        async with aiogoogle:
+            contacts_book = await aiogoogle.as_user(
+                people_v1.people.connections.list(
+                    resourceName='people/me',
+                    personFields='names,phoneNumbers'
+                ),
+                full_res=True
+            )
+        async for page in contacts_book:
+            for connection in page['connections']:
+                print(connection['names'])
+                print(connection['phoneNumbers'])
+
+    asyncio.run(list_contacts())
+
+List Calendar Events
+-----------------------
+
+.. code-block:: python3
+
+    async def list_events():
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            calendar_v3 = await aiogoogle.discover('calendar', 'v3')
+            res = await aiogoogle.as_user(
+                calendar_v3.events.list(calendarId='primary')
+            )
+            pprint.pprint(res)
+
+Check out https://github.com/omarryhan/aiogoogle/tree/master/examples for more.
+
 Design
 =======
+
+Async framework agnostic
+-------------------------
 
 Aiogoogle does not and will not enforce the use of any async/await framework e.g. Asyncio, Curio or Trio. As a result, modules that handle *io* are made to be easily pluggable.
 
@@ -963,6 +1007,12 @@ And Trio:
 
     if __name__ == '__main__':
         trio.run(list_events)
+
+Lightweight and minimalistic 
+------------------------------
+
+Aiogoogle is built to be as lightweight and extensible as possible so that both client facing applications and API libraries can use it.
+
 
 
 API
@@ -1071,13 +1121,13 @@ Sessions
     :show-inheritance:
 
 
-More
-=====
+Tips and hints
+===============
 
 1. For a more efficient use of your quota use `partial responses <https://developers.google.com/discovery/v1/performance#partial-response>`_.
 
 Contribute 🙋
-===========
+================
 
 There's a bunch you can do to help regardless of your experience level:
 
