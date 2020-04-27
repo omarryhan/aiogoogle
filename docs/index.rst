@@ -473,7 +473,7 @@ The way you would access the ``list`` method is by typing: ``youtube_v3.videos.l
 
 **Some rules:**
 
-A resource can also have nested resources. e.g. ``aiogoogle.videos.comments.list()``
+A resource can also have nested resources. e.g. ``youtube_v3.videos.comments.list()``
 
 There can be top level methods that are not associated with any resource. However, that's not common.
 
@@ -590,10 +590,45 @@ We can inspect the URL of the request by typing:
      
     'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
 
+**Sometimes it's easier to browse a discovery document manually instead of doing it through a Python terminal. Here's how to do it:**
+
+1. Download a JSON viewer on your browser of choice. e.g:
+
+    https://chrome.google.com/webstore/detail/json-viewer/gbmdgpbipfallnflgajpaliibnhdgobh?hl=en-US
+
+2. Put your API name and version in this link:
+
+    https://www.googleapis.com/discovery/v1/apis/{api}/{version}/rest
+
+    e.g.
+    
+    https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest
+
+3. You'll then get a human readable JSON document with a structure similar to the one you've seen `above <https://aiogoogle.readthedocs.io/en/latest/#structure-of-an-api>`_.
+
+Usage example (Get ratings of a youtube video):
+
+1. Expand the ``resources`` property
+2. Expand the ``videos`` property (Which is a resource)
+3. Expand the ``methods`` property to see what methods this resource has
+4. Expand the ``getRating`` property (a method)
+5. Expand the ``parameters`` property to see the arguments that this method accepts
+6. Expand the ``id`` property (a parameter) which happens to be the only parameter being accepted
+7. Read the ``required`` property to see whether or not this property is required
+8. Read the ``type`` property to see the type of this parameter
+9. Now to create an **unsent** request using this method, you can type: ``youtube_v3.videos.getRating(id='an_id')``
+
+I hope you spot the pattern by now :)
+
+Next we'll be sending all the unsent requests that we've been creating.
+
+
 Send a Request
 ------------------
 
 **Let's create a coroutine that shortens URLs using an API key**
+
+When creating an Aiogoogle object, it defaults to using an `Aiohttp <https://github.com/aio-libs/aiohttp/>`_ session to send your requests with. More on changing the default session in `this <https://aiogoogle.readthedocs.io/en/latest/#async-framework-agnostic>`_ section.
 
 .. code-block:: python3
 
@@ -606,7 +641,7 @@ Send a Request
     async def shorten_urls(long_url):
         async with Aiogoogle(api_key=api_key) as aiogoogle:
             url_shortener = await aiogoogle.discover('urlshortener', 'v1')
-            short_url = await aiogoogle.as_api_key(
+            short_url = await aiogoogle.as_api_key(  # the request is being sent here
                 url_shortener.url.insert(
                     json=dict(
                         longUrl=long_url

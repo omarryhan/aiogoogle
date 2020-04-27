@@ -314,9 +314,9 @@ Aiogoogle is a Pythonic wrapper for discovery documents.
 
 For a list of supported APIs, visit: [Google’s APIs Explorer](https://developers.google.com/apis-explorer/).
 
-## Discovery docs and the ``Aiogoogle`` object explained (Highly recommended that you read)
+## Discovery docs and the ``Aiogoogle`` object explained
 
-To understand how to navigate a discovery service/document and access the API endpoints that you desire with the [Aiogoogle object](https://aiogoogle.readthedocs.io/en/latest/#id2), please read [this](https://aiogoogle.readthedocs.io/en/latest/#discovery-docs-and-the-aiogoogle-object-explained) section in the docs.
+To understand how to navigate a discovery service/document and access the API endpoints that you desire using the [Aiogoogle object](https://aiogoogle.readthedocs.io/en/latest/#id2), **it is highly recommended that you read** [this](https://aiogoogle.readthedocs.io/en/latest/#discovery-docs-and-the-aiogoogle-object-explained) section in the docs.
 
 
 ## Quick Examples
