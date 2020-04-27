@@ -481,8 +481,8 @@ Finally, the only way you can get data from a Google API is by calling a method.
 
 Next, we will programatically browse an API
 
-Browse an API
------------------
+Browse an API - Programatically
+-----------------------------------
 
 Back to the URL shortener API.
 
@@ -590,7 +590,10 @@ We can inspect the URL of the request by typing:
      
     'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
 
-**Sometimes it's easier to browse a discovery document manually instead of doing it through a Python terminal. Here's how to do it:**
+Browse an API - Manually
+-----------------------------------
+
+Sometimes it's easier to browse a discovery document manually instead of doing it through a Python terminal. Here's how to do it:
 
 1. Download a JSON viewer on your browser of choice. e.g:
 
