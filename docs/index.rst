@@ -105,7 +105,7 @@ Since Aiogoogle only supports Authorization Code Flow, let's get a little in to 
 Authorization Code Flow
 ------------------------
 
-There are 3 main parties are involved in this flow:
+There are 3 main parties involved in this flow:
 
 1. **User**: 
     - represented as ``aiogoogle.auth.models.UserCreds``
@@ -168,7 +168,7 @@ Install sanic
 
 .. code-block:: python3
 
-    import sys, os, webbrowser, yaml, json
+    import sys, os, webbrowser, json
 
     from sanic import Sanic, response
     from sanic.exceptions import ServerError
@@ -176,25 +176,17 @@ Install sanic
     from aiogoogle import Aiogoogle
     from aiogoogle.auth.utils import create_secret
 
-    try:
-        with open("../keys.yaml", 'r') as stream:
-            config = yaml.load(stream, Loader=yaml.FullLoader)
-    except Exception as e:
-        print('Rename _keys.yaml to keys.yaml')
-        raise e
-
-    EMAIL = config['user_creds']['email']
+    EMAIL = "client email"
     CLIENT_CREDS = {
-        'client_id': config['client_creds']['client_id'],
-        'client_secret': config['client_creds']['client_secret'],
-        'scopes': config['client_creds']['scopes'],
-        'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
+        "client_id": '...',
+        "client_secret": '...',
+        "scopes": ['...'],
+        "redirect_uri": "http://localhost:5000/callback/aiogoogle",
     }
     state = create_secret()  # Shouldn't be a global hardcoded variable.
 
-
-    LOCAL_ADDRESS = 'localhost'
-    LOCAL_PORT = '5000'
+    LOCAL_ADDRESS = "localhost"
+    LOCAL_PORT = "5000"
 
     app = Sanic(__name__)
     aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
@@ -286,28 +278,23 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
     from aiogoogle.excs import HTTPError
     from aiogoogle.auth.utils import create_secret
 
-    try:
-        with open("../keys.yaml", 'r') as stream:
-            config = yaml.load(stream, Loader=yaml.FullLoader)
-    except Exception as e:
-        print('Rename _keys.yaml to keys.yaml')
-        raise e
-
-    EMAIL = config['user_creds']['email']
+    EMAIL = "..."
     CLIENT_CREDS = {
-        'client_id': config['client_creds']['client_id'],
-        'client_secret': config['client_creds']['client_secret'],
-        'scopes': config['client_creds']['scopes'],
-        'redirect_uri': 'http://localhost:5000/callback/aiogoogle',
+        "client_id": "...",
+        "client_secret": "...",
+        "scopes": ["openid", "email"],
+        "redirect_uri": "http://localhost:5000/callback/aiogoogle",
     }
-    # Shouldn't be a global or a hardcoded variable.
-    # Instead, should be tied to a session or a user and shouldn't be used more than once
-    state = create_secret() 
-    nonce = create_secret()
+    state = (
+        create_secret()
+    )  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once
+    nonce = (
+        create_secret()
+    )  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once
 
 
-    LOCAL_ADDRESS = 'localhost'
-    LOCAL_PORT = '5000'
+    LOCAL_ADDRESS = "localhost"
+    LOCAL_PORT = "5000"
 
     app = Sanic(__name__)
     aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
@@ -389,6 +376,15 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
             'http://' + LOCAL_ADDRESS + ':' + LOCAL_PORT + '/authorize'
         )
         app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
+
+API key example
+,,,,,,,,,,,,,,,,,
+
+No need for an example because it's very simple. Just get an API key from your Google management console and pass it on to your Aiogoogle instance. Like this:
+
+.. code-block:: python3
+
+    aiogoogle = Aiogoogle(api_key='...')
 
 Discovery Service
 ===================
@@ -599,7 +595,7 @@ Sometimes it's easier to browse a discovery document manually instead of doing i
 
     https://chrome.google.com/webstore/detail/json-viewer/gbmdgpbipfallnflgajpaliibnhdgobh?hl=en-US
 
-2. Put your API name and version in this link:
+2. Put your API name and version in this link and open the link in your browser:
 
     https://www.googleapis.com/discovery/v1/apis/{api}/{version}/rest
 
@@ -609,7 +605,7 @@ Sometimes it's easier to browse a discovery document manually instead of doing i
 
 3. You'll then get a human readable JSON document with a structure similar to the one you've seen `above <https://aiogoogle.readthedocs.io/en/latest/#structure-of-an-api>`_.
 
-Usage example (Get ratings of a youtube video):
+Let's try to get a Youtube video rating using the "youtube-v3" api:
 
 1. Expand the ``resources`` property
 2. Expand the ``videos`` property (Which is a resource)

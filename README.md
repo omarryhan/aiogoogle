@@ -101,7 +101,7 @@ Since Aiogoogle only supports **Authorization Code Flow** which happens to fit m
 
 ## Authorization Code Flow
 
-There are **3** main parties are involved in this flow:
+There are **3** main parties involved in this flow:
 
 1. **User**: 
     - The application consumer.
@@ -298,7 +298,7 @@ if __name__ == "__main__":
 
 **API key example**
 
-No need for an example because it's very simple. Just get an API key from you Google management console. and pass it to your Aiogoogle instance. like this.
+No need for an example because it's very simple. Just get an API key from your Google management console and pass it on to your Aiogoogle instance. Like this:
 
 ```python
 aiogoogle = Aiogoogle(api_key='...')
@@ -316,7 +316,7 @@ For a list of supported APIs, visit: [Google’s APIs Explorer](https://develope
 
 ## Discovery docs and the ``Aiogoogle`` object explained
 
-To understand how to navigate a discovery service/document and access the API endpoints that you desire using the [Aiogoogle object](https://aiogoogle.readthedocs.io/en/latest/#id2), **it is highly recommended that you read** [this](https://aiogoogle.readthedocs.io/en/latest/#discovery-docs-and-the-aiogoogle-object-explained) section in the docs.
+To understand how to navigate a discovery service/document and access the API endpoints that you desire using the [Aiogoogle object](https://aiogoogle.readthedocs.io/en/latest/#id2), it is **highly recommended** that you read [this](https://aiogoogle.readthedocs.io/en/latest/#discovery-docs-and-the-aiogoogle-object-explained) section in the docs.
 
 
 ## Quick Examples
