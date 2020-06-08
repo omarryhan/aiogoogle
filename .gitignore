@@ -120,3 +120,6 @@ venv.bak/
 dmypy.json
 
 test.py
+
+# JetBrains stuff
+.idea/
