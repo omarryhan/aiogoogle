@@ -328,7 +328,7 @@ import asyncio
 from aiogoogle import Aiogoogle
 
 
-user_creds = {'access_token': '....', 'refresh_token', '....'}
+user_creds = {'access_token': '....', 'refresh_token': '....'}
 
 async def list_files():
     async with Aiogoogle(user_creds=user_creds) as aiogoogle:
@@ -404,7 +404,7 @@ from aiogoogle import Aiogoogle
 from aiogoogle.sessions.trio_asks_session import TrioAsksSession
 
 
-user_creds = {'access_token': '....', 'refresh_token', '....'}
+user_creds = {'access_token': '....', 'refresh_token': '....'}
 
 async def list_events():
     async with Aiogoogle(
@@ -433,7 +433,7 @@ from aiogoogle import Aiogoogle
 from aiogoogle.sessions.curio_asks_session import CurioAsksSession
 
 
-user_creds = {'access_token': '....', 'refresh_token', '....'}
+user_creds = {'access_token': '....', 'refresh_token': '....'}
 
 async def list_playlists():
     async with Aiogoogle(
