@@ -645,6 +645,7 @@ When creating an Aiogoogle object, it defaults to using an `Aiohttp <https://git
                     json=dict(
                         longUrl=long_url
                     )
+                )
             )
 
         return short_url
