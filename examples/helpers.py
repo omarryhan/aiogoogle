@@ -9,6 +9,7 @@ except:  # noqa: E722  bare-except
 
 sys.path.append("..")
 
+# This is being used in other examples. Don't remove
 from aiogoogle import Aiogoogle  # noqa: F401  imported but unused
 from aiogoogle.auth.creds import (
     UserCreds,
@@ -28,7 +29,7 @@ email = config["user_creds"]["email"]
 user_creds = UserCreds(
     access_token=config["user_creds"]["access_token"],
     refresh_token=config["user_creds"]["refresh_token"],
-    expires_at=config["user_creds"]["expires_at"],
+    expires_at=config["user_creds"]["expires_at"] or None,
 )
 
 api_key = ApiKey(config["api_key"])

@@ -1,14 +1,38 @@
 # Examples
 
-Copy `_keys.yaml` and make a new file and name it `keys.yaml` that way its gitignored and readable by the examples below.
+## Instructions
 
-All examples listed in this directory should use the file `keys.yaml` for storing user & client credentials.
+0. Generate a client ID and a client secret from Google Cloud Console. Use http://localhost:5000/callback/aiogoogle as the valid redirect URL
 
-## Perform OAuth2 for personal use
+1. Copy `_keys.yaml` and make a new file and name it `keys.yaml` that way its gitignored and readable by the examples here.
 
-* For just an access token: run `auth\(production_unsafe\)/oauth2.py` or `auth\(production_unsafe\)/oauth2.py`
+```sh
+cd examples && cp _keys.yaml keys.yaml
+```
 
-* for an access token + openid connect tokens: run `auth\(production_unsafe\)/openid_connect.py` or `auth\(production_unsafe\)/openid_connect_cli.py`
+2. Paste your `client_id`, `client_secret` and `scopes` in the keys.yaml file you just created. Don't worry about the user_creds now.
+
+3. Perform OAuth2 for personal use
+
+Run:
+
+```sh
+python auth\(production_unsafe\)/oauth2.py
+```
+
+To get OpenID Connect tokens as well, run this intead:
+
+```sh
+python auth\(production_unsafe\)/openid_connect.py
+```
+
+If you'll only be using the examples here on your desktop, you can use the CLI authentication script. With this script you won't have to specify a redirect URL nor a value javascript origin, but you have to choose "Desktop Application" when creating your credentials:
+
+```sh
+python auth\(production_unsafe\)/openid_connect_cli.py
+```
+
+4. Copy and paste the access token and refresh token you just generated and paste them in your keys.yaml file. You're now ready to run the examples in this folder.
 
 ## GoogleAPI Examples
 

@@ -17,7 +17,7 @@ except:  # noqa: E722  bare-except
 sys.path.append("../..")
 
 try:
-    with open("../keys.yaml", "r") as stream:
+    with open("keys.yaml", "r") as stream:
         config = yaml.load(stream, Loader=yaml.FullLoader)
 except Exception as e:
     print("Rename _keys.yaml to keys.yaml")
@@ -43,7 +43,7 @@ async def main():
         prompt="select_account",
     )
     webbrowser.open_new_tab(uri)
-    grant = input("Paste the code you received here, then press Enter")
+    grant = input("Paste the code you received here, then press Enter \n")
     full_user_creds = await aiogoogle.openid_connect.build_user_creds(
         grant=grant, client_creds=CLIENT_CREDS, nonce=nonce, verify=False
     )

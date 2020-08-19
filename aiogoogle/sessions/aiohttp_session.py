@@ -3,7 +3,7 @@ __all__ = ["AiohttpSession"]
 import asyncio
 from json import JSONDecodeError
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, MultipartWriter
 from aiohttp.client_exceptions import ContentTypeError
 import aiofiles
 from aiofiles import os as async_os
@@ -97,17 +97,21 @@ class AiohttpSession(ClientSession, AbstractSession):
 
                 # If multipart pass a file async generator
                 if request.media_upload.multipart is True:
-                    return await self.request(
-                        method=request.method,
-                        url=request.media_upload.upload_path,
-                        headers=request.headers,
-                        data=_aiter_file(
-                            request.media_upload.file_path,
-                            request.media_upload.chunk_size,
-                        ),
-                        json=request.json,
-                        timeout=request.timeout,
-                    )
+                    with MultipartWriter('mixed') as mpwriter:
+                        mpwriter.append(
+                            _aiter_file(
+                                request.media_upload.file_path,
+                                request.media_upload.chunk_size
+                            )
+                        )
+                        mpwriter.append_json(request.json)
+                        return await self.request(
+                            method=request.method,
+                            url=request.media_upload.upload_path,
+                            headers=request.headers,
+                            data=mpwriter,
+                            timeout=request.timeout,
+                        )
                 # Else load file to memory and send
                 else:
                     async with aiofiles.open(

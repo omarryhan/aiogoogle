@@ -404,9 +404,9 @@ def validate(instance, schema, schemas=None, schema_name=None):
             additional_properties = None
         if not isinstance(additional_properties, dict):
             # Typically, additionalProperties should be either False, dict(schema) or empty.
-            # Empty will defailt to None, and False, as shown above, also defaults to None.
-            # Sometimes, it's a str. Strings shouldn't be schemas. Strings will be ignored. Bad strings..
-            # There's just too many of them to raise an error whenever we find one (around 75). So they'l just be ignored
+            # Empty will default to None. And False, as shown above, also defaults to None.
+            # Sometimes, it's a string, but strings shouldn't be schemas. Strings will be ignored.
+            # There are too many of them to raise an error whenever we find one (around 75). So they'll just be ignored
             # raise ValidationError(f'Invalid type of addiotional properties. Shoudl be either a dict or False')
             additional_properties = None
 

@@ -13,17 +13,19 @@ async def upload_file(full_path, new_name):
 
         # Upload file
         upload_res = await aiogoogle.as_user(
-            drive_v3.files.create(upload_file=full_path, fields="id")
+            drive_v3.files.create(
+                upload_file=full_path,
+                fields="id",
+                json={"name": new_name}
+            )
         )
-        print("Uploaded {} successfully!".format(full_path))
-
-        file_id = upload_res["id"]
-
-        # Rename uploaded file
-        await aiogoogle.as_user(
-            drive_v3.files.update(fileId=file_id, json={"name": new_name})
-        )
-        print("Renamed {} to {} successfully!".format(full_path, new_name))
+        print("Uploaded {} successfully.\nFile ID: {}".format(full_path, upload_res['id']))
+        # file_id = upload_res["id"]
+        # # Rename uploaded file
+        # await aiogoogle.as_user(
+        #     drive_v3.files.update(fileId=file_id, json={"name": new_name})
+        # )
+        # print("Renamed {} to {} successfully!".format(full_path, new_name))
 
 
 if __name__ == "__main__":

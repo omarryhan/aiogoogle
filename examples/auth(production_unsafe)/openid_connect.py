@@ -18,7 +18,7 @@ except:  # noqa: E722  bare-except
 sys.path.append("../..")
 
 try:
-    with open("../keys.yaml", "r") as stream:
+    with open("keys.yaml", "r") as stream:
         config = yaml.load(stream, Loader=yaml.FullLoader)
 except Exception as e:
     print("Rename _keys.yaml to keys.yaml")
