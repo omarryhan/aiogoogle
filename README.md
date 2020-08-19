@@ -484,3 +484,41 @@ There's a bunch you can do to help regardless of your experience level:
 3. **Testing:**
 
     Add more tests. The library is currently a bit undertested
+
+## Development notes
+
+### To upload a new version
+
+**Change the version in:**
+
+1. `setup.py`
+2. root `__init__.py`
+3. `docs/conf.py`
+
+**Build:**
+
+```sh
+python setup.py sdist
+```
+
+**Upload:**
+
+```sh
+twine upload dist/{the_new_version}
+```
+
+### To install the local version of the aiogoogle instead of the latest one on Pip
+
+```sh
+pip uninstall aiogoogle
+```
+
+```sh
+cd {cloned_aiogoogle_repo_with_your_local_changes}
+```
+
+```sh
+pip install -e .
+```
+
+Now you can import aiogoogle from anywhere in your FS and make it use your local version
