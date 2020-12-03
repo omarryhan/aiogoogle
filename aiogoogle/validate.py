@@ -135,7 +135,7 @@ def integer_validator(value, schema_name=None):
 
 
 @handle_type_and_value_errors
-def number_valdator(value, schema_name=None):
+def number_validator(value, schema_name=None):
     req_types = JSON_PYTHON_TYPE_MAPPING["number"]
     if not isinstance(value, req_types):
         raise ValidationError(
