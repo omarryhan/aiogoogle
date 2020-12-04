@@ -7,7 +7,7 @@ from aiogoogle.excs import ValidationError
 def test_NONE_uri_params_removed(create_api):
     youtube = create_api("youtube", "v3")
     req = youtube.videos.list(part="snippet", alt=None)
-    assert req.url == "https://www.googleapis.com/youtube/v3/videos?part=snippet"
+    assert req.url == "https://youtube.googleapis.com/youtube/v3/videos?part=snippet"
 
 
 def test_url_query_extra_warns(create_api):
@@ -16,7 +16,7 @@ def test_url_query_extra_warns(create_api):
         req = youtube.videos.list(part="snippet", i_am_extra=True, validate=False)
     assert (
         req.url
-        == "https://www.googleapis.com/youtube/v3/videos?part=snippet&i_am_extra=True"
+        == "https://youtube.googleapis.com/youtube/v3/videos?part=snippet&i_am_extra=True"
     )
 
 
@@ -27,7 +27,7 @@ def test_url_query_multi_query_arg(create_api):
     )
     assert (
         req.url
-        == "https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=idontknowhatthisisbutitshouldpass"
+        == "https://youtube.googleapis.com/youtube/v3/videos?part=snippet&chart=idontknowhatthisisbutitshouldpass"
     )
 
 
@@ -38,7 +38,7 @@ def test_url_query_multi_query_arg_ordered_by_insertion(create_api):
     )
     assert (
         req.url
-        == "https://www.googleapis.com/youtube/v3/videos?chart=idontknowhatthisisbutitshouldpass&part=snippet"
+        == "https://youtube.googleapis.com/youtube/v3/videos?chart=idontknowhatthisisbutitshouldpass&part=snippet"
     )
 
 
@@ -128,7 +128,7 @@ def test_json(create_api):
     )
     assert (
         req.url
-        == "https://www.googleapis.com/youtube/v3/videos?autoLevels=True&part=snippet"
+        == "https://youtube.googleapis.com/youtube/v3/videos?autoLevels=True&part=snippet"
     )
     assert req.json == JSON
     assert req.data is None
@@ -143,7 +143,7 @@ def test_data(create_api):
     )
     assert (
         req.url
-        == "https://www.googleapis.com/youtube/v3/videos?autoLevels=True&part=snippet"
+        == "https://youtube.googleapis.com/youtube/v3/videos?autoLevels=True&part=snippet"
     )
     assert req.data == DATA
     assert req.json is None
@@ -158,7 +158,7 @@ def test_data_str(create_api):
     )
     assert (
         req.url
-        == "https://www.googleapis.com/youtube/v3/videos?autoLevels=True&part=snippet"
+        == "https://youtube.googleapis.com/youtube/v3/videos?autoLevels=True&part=snippet"
     )
     assert req.data == DATA
     assert req.json is None
@@ -205,7 +205,7 @@ def test_upload_file_name(create_api):
     )
     assert (
         req.url
-        == "https://www.googleapis.com/youtube/v3/videos?autoLevels=True&part=snippet"
+        == "https://youtube.googleapis.com/youtube/v3/videos?autoLevels=True&part=snippet"
     )
     assert req.media_upload.file_path == UPLAOD_FILE_NAME
 
@@ -219,7 +219,7 @@ def test_upload_simple_path(create_api):
     )
     assert (
         req.media_upload.upload_path
-        == "https://www.googleapis.com/upload/youtube/v3/videos?autoLevels=True&part=snippet"
+        == "https://youtube.googleapis.com/upload/youtube/v3/videos?autoLevels=True&part=snippet"
     )
 
 
