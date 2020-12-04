@@ -10,8 +10,8 @@ except:  # noqa: E722  bare-except
 sys.path.append("..")
 
 # This is being used in other examples. Don't remove
-from aiogoogle import Aiogoogle  # noqa: F401  imported but unused
-from aiogoogle.auth.creds import (
+from aiogoogle import Aiogoogle  # noqa: F401, E402  imported but unused & module level import not at top of file
+from aiogoogle.auth.creds import (  # noqa: E402 module level import not at top of file
     UserCreds,
     ClientCreds,
     ApiKey,
