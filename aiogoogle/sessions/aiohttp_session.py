@@ -12,7 +12,6 @@ import async_timeout
 from ..models import Response
 from .abc import AbstractSession
 from ..excs import ValidationError
-from .common import _call_callback
 
 
 async def _get_file_size(full_file_path):
@@ -143,7 +142,6 @@ class AiohttpSession(ClientSession, AbstractSession):
             response = await resolve_response(request, response)
             if raise_for_status is True:
                 response.raise_for_status()
-            response = _call_callback(request, response)
             return response
 
         async def get_content(request):

@@ -33,7 +33,7 @@ STACK_QUERY_PARAMETER_DEFAULT_VALUE = {"type": "string", "location": "query"}
 MEDIA_SIZE_BIT_SHIFTS = {"KB": 10, "MB": 20, "GB": 30, "TB": 40}
 
 # TODO: etagRequired: {
-#    type: "boolean",
+#    type: "boolean",  # noqa: F821 (weird error)
 #    description: "Whether this method requires an ETag to be specified. The ETag is sent as an HTTP If-Match or If-None-Match header."
 #    }
 # NOTE: etagRequired is only mentioned once in all of the discovery documents available from Google. (In discovery_service-v1. So, it isn't actually being used)
@@ -561,7 +561,7 @@ class Method:
             timeout=timeout,
             media_download=media_download,
             media_upload=media_upload,
-            callback=lambda res: self._validate_response(res, validate),
+            callback=lambda res: res,  # TODO: get rid of this sorcery.
         )
 
     def _build_url(self, base_url, uri_params, validate):
@@ -684,21 +684,6 @@ class Method:
             raise ValidationError(
                 "Request body should've been validated, but wasn't because the method doesn't accept a JSON body"
             )
-
-    def _validate_response(self, res, validate):
-        if validate is True and res is not None:
-            schema_name = "Response_body"
-            response_schema = self._method_specs.get("response")
-            if response_schema is not None:
-                if "$ref" in response_schema:
-                    schema_name = response_schema["$ref"]
-                    response_schema = self._schemas[schema_name]
-            else:
-                raise ValidationError(
-                    "Response body should've been validated, but wasn't because a schema body wasn't found"
-                )
-            self._validate(res, response_schema, schema_name)
-        return res
 
     def __contains__(self, item):
         return item in self.parameters

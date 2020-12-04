@@ -6,7 +6,6 @@ from asks import Session
 
 from .abc import AbstractSession
 from ..models import Response
-from .common import _call_callback
 
 asks.init("trio")
 
@@ -95,7 +94,6 @@ class TrioAsksSession(Session, AbstractSession):
             response = await resolve_response(request, response)
             if raise_for_status is True:
                 response.raise_for_status()
-            response = _call_callback(request, response)
             responses.append(response)
 
         async def get_content(request):
@@ -103,7 +101,6 @@ class TrioAsksSession(Session, AbstractSession):
             response = await resolve_response(request, response)
             if raise_for_status is True:
                 response.raise_for_status()
-            response = _call_callback(request, response)
             responses.append(response.content)
 
         # ----------------- /send sequence ------------------#
