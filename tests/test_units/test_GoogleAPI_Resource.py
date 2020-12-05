@@ -180,3 +180,10 @@ def test_stack_parameters_are_passed_correctly(open_discovery_document, name, ve
                 resource._global_parameters[param_name]
                 == STACK_QUERY_PARAMETER_DEFAULT_VALUE
             )
+
+
+# Mehh 
+@pytest.mark.parametrize("name,version", ALL_APIS)
+def test_resources_generator(open_discovery_document, name, version, resources_generator):
+    for resource in resources_generator(name, version):
+        assert isinstance(resource, Resource) or isinstance(resource, GoogleAPI)

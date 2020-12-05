@@ -50,6 +50,7 @@ def resources_generator(create_api):
     def wrapped(name, version):
         gapi = create_api(name, version)
 
+        # Returns a generator that yields either a Resource or a GoogleAPI object
         def generator(resource):
             yield resource
             for resource_name in resource.resources_available:

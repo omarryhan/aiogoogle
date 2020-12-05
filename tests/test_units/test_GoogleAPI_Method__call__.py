@@ -314,14 +314,14 @@ def test_unresumable_upload(create_api):
     assert req.media_upload.resumable is None
 
 
-# TODO: Replace urlshortener_v1 API with one that is not deprecated by Google
-# def test_fix_params(create_api):
-#     urlshortener = create_api("urlshortener", "v1")
-#     # It is 'start-token' in the disc doc. This checks that dashes are converted to underscores so that they can be passed as kwargs
-#     assert "start_token" in urlshortener.url.list.parameters
-#     req = urlshortener.url.list(start_token="mehh")
-#     assert (
-#         req.url
-#         == "https://www.googleapis.com/urlshortener/v1/url/history?start-token=mehh"
-#     )  # Back to 'start-token' instead of 'start_token'
-#     assert "start_token" in urlshortener.url.list.parameters
+@pytest.mark.skip(reason="Replace urlshortener_v1 API with one that is not deprecated by Google")
+def test_fix_params(create_api):
+    urlshortener = create_api("urlshortener", "v1")
+    # It is 'start-token' in the disc doc. This checks that dashes are converted to underscores so that they can be passed as kwargs
+    assert "start_token" in urlshortener.url.list.parameters
+    req = urlshortener.url.list(start_token="mehh")
+    assert (
+        req.url
+        == "https://www.googleapis.com/urlshortener/v1/url/history?start-token=mehh"
+    )  # Back to 'start-token' instead of 'start_token'
+    assert "start_token" in urlshortener.url.list.parameters
