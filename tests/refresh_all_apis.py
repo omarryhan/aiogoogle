@@ -37,7 +37,6 @@ async def refresh_disc_docs_json():
     all_apis = []
     final_all_apis = []
 
-    print("Refreshing all_apis in tests_globals.py")
     async with ClientSession() as sess:
         apis_pref = await sess.get(
             "https://www.googleapis.com/discovery/v1/apis?preferred=true"
@@ -49,47 +48,50 @@ async def refresh_disc_docs_json():
 
     all_apis = _pop_unstable_apis(all_apis)
     final_all_apis = all_apis
-    print(len(final_all_apis))
+
+    async with Aiogoogle() as google:
+        tasks = [google.discover(name, version) for (name, version) in all_apis]
+        print('Requesting all APIs, this might take a while')
+        all_discovery_documents = await asyncio.gather(*tasks, return_exceptions=True)
 
     # Refresh discovery files in tests/data
-    async with Aiogoogle() as aiogoogle:
-        for name, version in all_apis:
-            print(f"Downloading {name}-{version}")
-            try:
-                google_api = await aiogoogle.discover(name, version)
-            except HTTPError as e:
-                if e.res.status_code != 404:
-                    print('Non 404 error')
-                    print('\033[91m\n' + e + '\n\033[0m')
+    for i, google_api in enumerate(all_discovery_documents):
+        name = all_apis[i][0]
+        version = all_apis[i][1]
+        if isinstance(google_api, HTTPError):
+            e = google_api
+            if e.res.status_code != 404:
+                print('Non 404 error')
+                print('\033[91m\n' + e + '\n\033[0m')
 
-                if e.res.status_code == 404:
-                    # only ignore if it's a 404 error. Should raise an error otherwise
-                    final_all_apis = list(filter(lambda api: (api[0] != name), final_all_apis))
+            if e.res.status_code == 404:
+                # only ignore if it's a 404 error. Should raise an error otherwise
+                final_all_apis = list(filter(lambda api: (api[0] != name), final_all_apis))
 
-                file_errors.append({f"{name}-{version}": str(e)})
-                print(f'\033[91mError: Failed to download {name} {version}\033[0m')
-                continue
+            file_errors.append({f"{name}-{version}": str(e)})
+            print(f'\033[91mError: Failed to download {name} {version}\033[0m')
+            continue
 
-            data_dir_name = current_dir + "/tests/data/"
-            try:
-                if not os.path.exists(data_dir_name):
-                    os.makedirs(data_dir_name)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
+        data_dir_name = current_dir + "/tests/data/"
+        try:
+            if not os.path.exists(data_dir_name):
+                os.makedirs(data_dir_name)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
 
-            # Save discovery docuemnt as .json file to the newly created data dir
-            file_name = (
-                current_dir
-                + "/tests/data/"
-                + name
-                + "_"
-                + version
-                + "_discovery_doc.json"
-            )
-            with open(file_name, "w") as discovery_file:
-                json.dump(google_api.discovery_document, discovery_file)
-            print(f"saved {name}-{version} to {file_name}")
+        # Save discovery docuemnt as .json file to the newly created data dir
+        file_name = (
+            current_dir
+            + "/tests/data/"
+            + name
+            + "_"
+            + version
+            + "_discovery_doc.json"
+        )
+        with open(file_name, "w") as discovery_file:
+            json.dump(google_api.discovery_document, discovery_file)
+        print(f"saved {name}-{version} to {file_name}")
 
     print("Done")
     if file_errors:

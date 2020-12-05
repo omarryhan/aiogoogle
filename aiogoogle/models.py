@@ -157,9 +157,6 @@ class Request:
         self.callback = callback
 
     def _add_query_param(self, query: dict):
-        if not self.url:
-            raise TypeError("no url to add query to")
-
         url = self.url
         if "?" not in url:
             if url.endswith("/"):
