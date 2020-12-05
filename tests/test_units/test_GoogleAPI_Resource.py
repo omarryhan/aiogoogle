@@ -7,7 +7,7 @@ from aiogoogle.resource import (
     STACK_QUERY_PARAMETER_DEFAULT_VALUE,
     STACK_QUERY_PARAMETERS,
 )
-from ..test_globals import ALL_APIS
+from ..ALL_APIS import ALL_APIS
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)

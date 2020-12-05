@@ -7,7 +7,7 @@ from aiogoogle.resource import RESERVED_KEYWORDS
 from aiogoogle.validate import KNOWN_FORMATS, JSON_PYTHON_TYPE_MAPPING
 from aiogoogle.auth.managers import OPENID_CONFIGS_DISCOVERY_DOC_URL as openid_url
 from aiogoogle.auth.data import WELLKNOWN_OPENID_CONFIGS as currunt_openid_configs
-from ..test_globals import ALL_APIS
+from ..ALL_APIS import ALL_APIS
 
 from aiohttp import ClientSession
 

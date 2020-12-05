@@ -6,7 +6,6 @@ import pytest
 from aiogoogle.resource import GoogleAPI
 
 
-# @pytest.fixture("function")
 @pytest.fixture
 def open_discovery_document():
     def wrapped(name, version):
@@ -21,7 +20,6 @@ def open_discovery_document():
     return wrapped
 
 
-# @pytest.fixture("function")
 @pytest.fixture
 def create_api(open_discovery_document):
     def wrapped(name, version):
@@ -31,7 +29,6 @@ def create_api(open_discovery_document):
     return wrapped
 
 
-# @pytest.fixture("function")
 @pytest.fixture
 def methods_generator(create_api):
     def wrapped(name, version):
@@ -48,7 +45,6 @@ def methods_generator(create_api):
     return wrapped
 
 
-# @pytest.fixture("function")
 @pytest.fixture
 def resources_generator(create_api):
     def wrapped(name, version):

@@ -1,7 +1,7 @@
 import pytest
 
 from aiogoogle.resource import GoogleAPI, Method, STACK_QUERY_PARAMETERS
-from ..test_globals import ALL_APIS
+from ..ALL_APIS import ALL_APIS
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
