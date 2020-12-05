@@ -1,4 +1,4 @@
-# TODO: Test requesr add query param
+# TODO: Test request add query param
 # TODO: Test request rm query param
 # TODO: Test Request.from response
 # TODO: Test next page generator

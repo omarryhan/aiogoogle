@@ -26,26 +26,6 @@ def _pop_unstable_apis(all_apis: list):
     return stable_apis
 
 
-# Google sometimes releases buggy-stable APIs that are past beta v
-# Removing them because they break the build on Travis
-def _pop_buggy_apis(all_apis: list):
-    unstable_apis = [
-        # ["toolresults", "v1"]
-    ]
-
-    def _is_api_unstable(api):
-        for unstable_api in unstable_apis:
-            if api[0] == unstable_api[0] and api[1] == unstable_api[1]:
-                return True
-        return False
-
-    stable_apis = []
-    for api in all_apis:
-        if not _is_api_unstable(api):
-            stable_apis.append(api)
-    return stable_apis
-
-
 async def refresh_disc_docs_json():
     file_errors = []
     current_dir = os.getcwd()
@@ -67,7 +47,7 @@ async def refresh_disc_docs_json():
     for api in apis_pref["items"]:
         all_apis.append((api["name"], api["version"]))
 
-    all_apis = _pop_buggy_apis(_pop_unstable_apis(all_apis))
+    all_apis = _pop_unstable_apis(all_apis)
     final_all_apis = all_apis
     print(len(final_all_apis))
 
