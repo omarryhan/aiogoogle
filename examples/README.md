@@ -278,6 +278,40 @@ API explorer link:
 
 * https://developers.google.com/apis-explorer/#search/firestore/firestore/v1/firestore.projects.databases.documents.createDocument
 
+### 8. create_document_firestore.py
+
+What it does:
+
+* Lists Google Cloud Storage buckets for a project
+
+API name and API version required:
+
+* storage-v1
+
+Scopes Required:
+
+* https://www.googleapis.com/auth/devstorage.read_only
+* https://www.googleapis.com/auth/devstorage.read_write
+* https://www.googleapis.com/auth/devstorage.full_control
+* https://www.googleapis.com/auth/cloud-platform.read-only
+* https://www.googleapis.com/auth/cloud-platform
+
+Service account required:
+
+* yes
+
+User credentials required:
+
+* no
+
+Note:
+
+When creating the service account. Don't forget to add an owner role in step 2 (after giving the service account a name).
+
+API explorer link:
+
+* https://developers.google.com/apis-explorer/#search/storage/storage/v1/storage.buckets.list
+
 ## OAuth2
 
 ## OpenID Connect

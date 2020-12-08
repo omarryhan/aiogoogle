@@ -1,4 +1,4 @@
-__all__ = ["ApiKey", "UserCreds", "ClientCreds"]
+__all__ = ["ApiKey", "UserCreds", "ClientCreds", "ServiceAccountCreds"]
 
 
 from ..utils import _dict
@@ -201,7 +201,7 @@ class ClientCreds(_dict):
 
         Scopes: ['openid', 'email', 'https://www.googleapis.com/auth/youtube.force-ssl']
 
-    Arguments:
+    Attributes:
 
         client_id (str): OAuth2 client ID
         client_secret (str): OAuth2 client secret
@@ -216,3 +216,79 @@ class ClientCreds(_dict):
         self.client_secret = client_secret
         self.scopes = scopes
         self.redirect_uri = redirect_uri
+
+
+class ServiceAccountCreds(_dict):
+    """
+    Service account key (the one you download from Google Cloud Console) +
+    some additional optional attributes.
+    If you have created the service account using Google's IAM REST API, rather
+    than downloading it using gcloud or Google's cloud console, the downloaded
+    JSON key file will look different. Check here:
+    https://cloud.google.com/iam/docs/creating-managing-service-account-keys#creating_service_account_keys
+    to be able to pass the correct info to this data model.
+
+    Attributes:
+
+        type (string): Should be "service_account"
+
+        project_id (string): Your project ID
+
+        private_key_id (string): Private key ID
+
+        private_key (string): RSA Private key
+
+        client_email (string): service account email
+
+        client_id (string): service account ID
+
+        auth_uri (string): Auth URI
+
+        token_uri (string): Token URI
+
+        auth_provider_x509_cert_url (string): Auth provider cert URL
+
+        client_x509_cert_url (string): Cert URL
+
+        scopes (Sequence[str]): Scopes to request during the authorization grant.
+
+        subject (str): For domain-wide delegation, the email address of the user to for which to request delegated access.
+
+        additional_claims (Mapping[str, str]): Any additional claims for the JWT assertion used in the authorization grant.
+
+    Example:
+
+        ::
+
+            service_account_creds = ServiceAccountCreds(
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                **json.load(open('service-account-key.json'))
+            )
+
+            # or
+
+            service_account_creds = {
+                "scopes": ["..."],
+                **json.load(open('service-account-key.json'))
+            }
+    """
+    def __init__(
+        self, type=None, project_id=None, private_key_id=None, private_key=None,
+        client_email=None, client_id=None, auth_uri=None, token_uri=None, auth_provider_x509_cert_url=None,
+        client_x509_cert_url=None, subject=None, scopes=None, additional_claims=None
+    ):
+        self.type = type
+        self.project_id = project_id
+        self.private_key_id = private_key_id
+        self.private_key = private_key
+        self.client_email = client_email
+        self.client_id = client_id
+        self.auth_uri = auth_uri
+        self.token_uri = token_uri
+        self.auth_provider_x509_cert_url = auth_provider_x509_cert_url
+        self.client_x509_cert_url = client_x509_cert_url
+        # Starting from here, the info is not included in the key file
+        # and is optional. (Some of the info above is also optional).
+        self.subject = subject
+        self.scopes = scopes
+        self.additional_claims = additional_claims or {}

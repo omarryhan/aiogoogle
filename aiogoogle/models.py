@@ -225,10 +225,6 @@ class Response:
         upload_file (str): path of the upload file specified in the request
 
         session_factory (aiogoogle.sessions.abc.AbstractSession): A callable implementation of aiogoogle's session interface
-
-    Attributes:
-
-        content (any): equals either ``self.json`` or ``self.data``
     """
 
     def __init__(
@@ -337,6 +333,9 @@ class Response:
 
     @property
     def content(self):
+        """
+        Equals either ``self.json`` or ``self.data``
+        """
         return self.json or self.data
 
     def next_page(

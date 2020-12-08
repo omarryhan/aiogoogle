@@ -5,4 +5,5 @@ from .managers import (  # noqa: F401  imported but unused
     ApiKeyManager,
     Oauth2Manager,
     OpenIdConnectManager,
+    ServiceAccountManager,
 )

@@ -1,3 +1,5 @@
+**/*Zone.Identifier
+examples/test_service_account.json
 tests/data/
 */keys.yaml
 *.vscode

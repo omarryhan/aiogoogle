@@ -50,7 +50,7 @@ def test_repr(open_discovery_document, name, version):
     api = GoogleAPI(discovery_document=discovery_document)
     name = discovery_document.get("name")
     version = discovery_document.get("version")
-    base_url = discovery_document.get("baseUrl")
+    base_url = discovery_document.get("rootUrl")
     assert name in str(api) and version in str(api) and base_url in str(api)
 
 

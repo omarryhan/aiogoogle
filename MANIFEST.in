@@ -8,3 +8,6 @@ global-exclude *tox_private.ini
 global-exclude personal_notes/
 global-exclude */keys.yaml
 prune tests/
+global-exclude **/*service_account.json
+global-exclude **/test_service_account.json
+global-exclude **/*Zone.Identifier

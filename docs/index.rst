@@ -3,20 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Aiogoogle
-===========
-
 .. image:: _static/github_64.png
    :align: right
    :scale: 100 %
    :target: https://github.com/omarryhan/aiogoogle
 
+Aiogoogle
+=================
 
-Async **Discovery Service** Client` +
-
-Async **Google OAuth2** Client +
-
-Async **Google OpenID Connect (Social Sign-in)** Client
+**Async** Google API Client
 
 Aiogoogle makes it possible to access most of Google's public APIs which include:
 
@@ -33,18 +28,19 @@ Aiogoogle makes it possible to access most of Google's public APIs which include
 - Google Books API
 - Google Fitness API
 - Google Genomics API
+- Google Cloud Storage
 - Kubernetes Engine API
 - And `more <https://developers.google.com/apis-explorer>`_.
 
-Library Setup
-=============
+Library Setup ⚙️
+=====================
 
 .. code-block:: bash
 
     $ pip install aiogoogle
 
 Google Account Setup
-====================
+===========================
 
 1. **Create a project:** `Google's APIs and Services dashboard <https://console.cloud.google.com/projectselector/apis/dashboard>`_.
 2. **Enable an API:** `API Library <https://console.cloud.google.com/apis/library>`_.
@@ -52,67 +48,43 @@ Google Account Setup
 4. **Pick an API:** `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_ 
 
 Authentication
-================
+=====================
 
-There are 3 main authentication schemes you can use with Google's discovery service:
+Google APIs can be called on behalf of 3 main principals:
 
-1. **OAuth2**
-    Should be used whenever you want to access personal information from user accounts.
+1. **User account**
+2. **Service account**
+3. Anonymous principal by using: **API keys** 
 
-    Also, Aiogoogle supports Google OpenID connect which is a superset of OAuth2. (Google Social Signin)
-
-2. **API key**
-    Suitable when accessing Public information.
-    
-    A simple secret string, that you can get from Google's Cloud Console
-
-    .. note::
-        
-        For most personal information, an API key won't be enough.
-
-        You should use OAuth2 instead.
-
-3. **Service Accounts**
-    A service account is a special kind of account that belongs to an application or a virtual machine (VM) instance, not a person.
-    
-    .. note::
-        
-        Not yet supported by Aiogoogle
-
-OAuth2 Primer
+User account
 --------------
 
-Oauth2 serves as an authorization framework. It supports four main flows:
+Should be used whenever the application wants to access information 
+tied to a Google user.
+Google provides two main authorization/authentication strategies that will 
+enable your application act on behalf of a user account:
 
-1. **Authorization code flow**:
-    - Only one supported by aiogoogle
-    - `RFC6749 section 4.1  <https://tools.ietf.org/html/rfc6749#section-4.1>`_.
+1. **OAuth2**
+2. **OpenID Connect**
 
-2. **Client Credentials Flow**:
-    - Similar to API_KEY authentication so use API key authentication instead
-    - `RFC6749 section 4.4  <https://tools.ietf.org/html/rfc6749#section-4.4>`_.
+OAuth2
+^^^^^^^^^^^^^
 
-3. **Implicit Grant Flow**:
-    - Not supported  
-    - `RFC6749 section 4.2  <https://tools.ietf.org/html/rfc6749#section-4.2>`_.
+OAuth2 is an authorization framework used to allow a client (an app) to
+act on behalf of a user. It isn't designed to identify who the user is,
+rather only defines what a client (the app) can access.
 
-4. **Resource Owner Password Credentials Flow**:
-    - Not supported
-    - `RFC6749 section 4.3  <https://tools.ietf.org/html/rfc6749#section-4.2>`_.
+OAuth2 has 4 main flows. The most popular of them and the only one supported by
+Google is **Authorization Code Flow**. 
 
-Since Aiogoogle only supports Authorization Code Flow, let's get a little in to it:
-
-Authorization Code Flow
-------------------------
-
-There are 3 main parties involved in this flow:
+There are **3** main parties involved in this flow:
 
 1. **User**: 
     - represented as ``aiogoogle.auth.models.UserCreds``
 2. **Client**:
     - represented as ``aiogoogle.auth.models.ClientCreds``
 3. **Resource Server**:
-    - The service that aiogoogle acts as a client to. e.g. Google Analytics, Youtube, etc. 
+    - The service that aiogoogle acts as a client to. e.g. Calendar, Youtube, etc. 
 
 Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figure 3 <https://tools.ietf.org/html/rfc6749#section-4.1.1>`_.::
 
@@ -143,8 +115,7 @@ Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figur
     +---------+       (w/ Optional Refresh Token)
 
 
-OAuth2 Example (Authorization code flow)
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+**Example:**
 
 Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py
 
@@ -252,8 +223,24 @@ Install sanic
         )
         app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 
-OpenID Connect (Social Signin) Example
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+OpenID Connect
+^^^^^^^^^^^^^^^^^^^
+
+OpenID Connect is an authentication layer built on top of OAuth2 
+(an authorization framework). This method should be used when the client 
+(the app) wants to identify the user i.e. authenticate them.
+Since OpenID connect is a superset of OAuth2, this method will 
+give the client the authorization needed to edit resources of the user.
+
+In more practical terms, using OAuth2 alone will only return you a token 
+that can be used to access the data with the scope that the app requested. 
+Using OpenIDConnect will return the same access token as with OAuth2 **+**
+an ID token JWT of the user. This ID token JWT will 
+contain "claims" about the user which you'll need to properly know who they are. 
+`example <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`_.
+For example, OpenID Connect should be used if you're implementing "social signin".
+
+**Example:**
 
 Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/openid_connect.py
 
@@ -377,24 +364,167 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
         )
         app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
 
-API key example
-,,,,,,,,,,,,,,,,,
 
-No need for an example because it's very simple. Just get an API key from your Google management console and pass it on to your Aiogoogle instance. Like this:
+Service account
+-----------------------------
+
+A service account is a special kind of account that belongs to an application
+or a virtual machine (VM) instance but not a person. 
+They are intended for scenarios where your application needs to
+access resources or perform actions on its own, 
+such as running App Engine apps or interacting with Compute Engine instances.
+
+There are a couple of authentication/authorization methods you 
+can use with service accounts. We'll only concern ourselves with
+the ones that will grant us access to Google APIs and not for
+any other purpose e.g. communicating with other servers on a different cloud,
+as this is out of scope.
+
+OAuth2
+^^^^^^^^^^^^^
+
+This is the most commonly used method and the only one implemented by Aiogoogle 
+now.
+There are a couple of ways you can access Google APIs using OAuth2 
+tokens for service accounts:
+
+**1. By passing a user managed service account key:**
+
+Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/list_storage_buckets.py>`__.
 
 .. code-block:: python3
 
-    aiogoogle = Aiogoogle(api_key='...')
+    import json
+    import asyncio
+    from aiogoogle import Aiogoogle
+    from aiogoogle.auth.creds import ServiceAccountCreds
+
+
+    service_account_key = json.load(open('test_service_account.json'))
+
+    creds = ServiceAccountCreds(
+        scopes=[
+            "https://www.googleapis.com/auth/devstorage.read_only",
+            "https://www.googleapis.com/auth/devstorage.read_write",
+            "https://www.googleapis.com/auth/devstorage.full_control",
+            "https://www.googleapis.com/auth/cloud-platform.read-only",
+            "https://www.googleapis.com/auth/cloud-platform",
+        ],
+        **service_account_key
+    )
+
+
+    async def list_storage_buckets(project_id=creds["project_id"]):
+        async with Aiogoogle(service_account_creds=creds) as aiogoogle:
+            storage = await aiogoogle.discover("storage", "v1")
+            res = await aiogoogle.as_service_account(
+                storage.buckets.list(project=creds["project_id"])
+            )
+            print(res)
+
+
+    if __name__ == "__main__":
+        asyncio.run(list_storage_buckets())
+
+
+**2. By pointing the** ``GOOGLE_APPLICATION_CREDENTIALS`` **environment variable at the location of JSON key file.**
+
+Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/list_storage_buckets_detect_default.py>`__.
+
+First set the environment variable, if not already set:
+
+.. code-block:: sh
+
+    export GOOGLE_APPLICATION_CREDENTIALS="location_of_key_file.json"
+
+Then:
+
+.. code-block:: python3
+
+    import asyncio
+    import print
+    from aiogoogle import Aiogoogle
+    from aiogoogle.auth.creds import ServiceAccountCreds
+
+    creds = ServiceAccountCreds(
+        scopes=[
+            "https://www.googleapis.com/auth/devstorage.read_only",
+            "https://www.googleapis.com/auth/devstorage.read_write",
+            "https://www.googleapis.com/auth/devstorage.full_control",
+            "https://www.googleapis.com/auth/cloud-platform.read-only",
+            "https://www.googleapis.com/auth/cloud-platform",
+        ],
+    )
+
+
+    async def list_storage_buckets(project_id=creds["project_id"]):
+        aiogoogle = Aiogoogle(service_account_creds=creds)
+
+        # Notice this line. Here, Aiogoogle loads the service account key.
+        await aiogoogle.service_account_manager.detect_default_creds_source()
+
+        async with aiogoogle:
+            storage = await aiogoogle.discover("storage", "v1")
+            res = await aiogoogle.as_service_account(
+                storage.buckets.list(project=creds["project_id"])
+            )
+
+        print(res)
+
+    if __name__ == "__main__":
+        asyncio.run(list_storage_buckets())
+
+
+**3. Automatic detection from Google Cloud SDK (Not supported yet):**
+
+This should call the Google Cloud SDK CLI and ask it for an access
+token without passing ``service_account_creds``.
+
+**4. Automatic detection from Google App Engine environment (Not supported yet):**
+
+This should return an OAuth2 token for the service account and cache
+it for the App Engine application without passing ``service_account_creds``.
+
+**5. Automatic detection from Google Cloud Engine (Not supported yet):**
+
+This should return an OAuth2 token from the Google Compute Engine metadata server. 
+You don't have to pass ``service_account_creds``.
+
+Other than the service account OAuth2 method, there are:
+
+- OpenID connect ID token (OIDC ID token)
+- Self-signed JWT credentials
+- Self-signed On-demand JWT credentials
+- `Short lived tokens <https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials>`_.
+
+But they are not supported and you might want to consider another library if you want to use them.
+
+Anonymous principal (API keys)
+---------------------------------
+
+An API key is a simple string that you can get from Google Cloud Console.
+
+Using an API key is suitable for when you only want to access pubic data.
+
+**Example:**
+
+.. code-block:: python3
+
+    async with Aiogoogle(api_key='...') as aiogoogle:
+        google_api = await aiogoogle.discover('google_api', 'v1')
+        result = await aiogoogle.as_api_key(
+            google_api.foo.bar(baz='foo')
+        )
 
 Discovery Service
-===================
+=======================
 
 Most of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
 
 Google's Discovery Serivce provides machine readable specifications known as discovery documents 
 (similar to `Swagger/OpenAPI <https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml>`_). `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
 
-``Aiogoogle`` is a wrapper for discovery documents.
+``Aiogoogle`` is a Pythonic wrapper for discovery documents.
 
 For a list of supported APIs, visit: `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_.
 
@@ -661,7 +791,7 @@ When creating an Aiogoogle object, it defaults to using an `Aiohttp <https://git
         "longUrl": "https://www.google.com/"
     }
 
-Send Requests Concurrently:
+Send Requests Concurrently
 -------------------------------
 
 **Now let's shorten two URLs at the same time**
@@ -712,7 +842,7 @@ Send Requests Concurrently:
     ]
 
 
-Send As Client
+Send As API key
 ------------------
 
 .. code-block:: python
@@ -750,8 +880,8 @@ Send As Client
         }
     }
 
-Send As User (`Authorization Code Flow`_)
---------------------------------------------------------
+Send As User
+----------------------
 
 .. code-block:: python
 
@@ -848,11 +978,15 @@ Send As User (`Authorization Code Flow`_)
         ]
     }
 
-Quick Examples
+Examples
 =================
+
+You can find all examples in this `directory <https://github.com/omarryhan/aiogoogle/tree/master/examples>`_. Some of them are listed here for convenience.
 
 List Files on Google Drive
 ---------------------------
+
+Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/list_drive_files.py>`_.
 
 .. code-block:: python3
 
@@ -1061,6 +1195,15 @@ Lightweight and minimalistic
 
 Aiogoogle is built to be as lightweight and extensible as possible so that both client facing applications and API libraries can use it.
 
+Backward compatibility notes
+===============================
+
+Version 1.0.0
+-------------------
+
+- Removed all abstract classes for auth managers because they weren't serving any meaningful purpose. This shouldn't impact your code unless you were directly importing the abstract classes.
+- Removed ``aiogoogle.auth.managers.OpenIDConnectManager.build_user_creds_jwt_grant`` because it was being used incorrectly. It should've been used for service accounts and not user accounts.
+- Removed redundant/unused ``verify`` attribute from OAuth2Manager's ``__init__`` method.
 
 
 API
@@ -1179,13 +1322,16 @@ Contribute 🙋
 
 There's a bunch you can do to help regardless of your experience level:
 
-1. Features, chores and bug reports:
+1. **Features, chores and bug reports:**
+
     Please refer to the Github issue tracker where they are posted. 
 
-2. Examples:
+2. **Examples:**
+
     You can add examples to the examples folder
 
-3. Testing
+3. **Testing:**
+
     Add more tests, the library is currently a bit undertested
 
 Take your pick :)
@@ -1198,36 +1344,30 @@ To upload a new version
 
 **Change the version in:**
 
-1. `setup.py`
-2. root `__init__.py`
-3. `docs/conf.py`
+1. ``setup.py``
+2. root ``__init__.py``
+3. ``docs/conf.py``
 
 **Build:**
 
-```sh
-python setup.py sdist
-```
+.. code-block:: sh
+
+    $ python setup.py sdist
 
 **Upload:**
 
-```sh
-twine upload dist/{the_new_version}
-```
+.. code-block:: sh
+
+    $ twine upload dist/{the_new_version}
 
 To install the local version of the aiogoogle instead of the latest one on Pip
 --------------------------------------------------------------------------------
 
-```sh
-pip uninstall aiogoogle
-```
+.. code-block:: sh
 
-```sh
-cd {cloned_aiogoogle_repo_with_your_local_changes}
-```
-
-```sh
-pip install -e .
-```
+    $ pip uninstall aiogoogle
+    $ cd {cloned_aiogoogle_repo_with_your_local_changes}
+    $ pip install -e .
 
 Now you can import aiogoogle from anywhere in your FS and make it use your local version
 

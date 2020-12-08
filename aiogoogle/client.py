@@ -2,7 +2,7 @@ __all__ = ["Aiogoogle"]
 
 
 from .resource import GoogleAPI
-from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager
+from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager, ServiceAccountManager
 from .sessions.aiohttp_session import AiohttpSession
 from .data import DISCOVERY_SERVICE_V1_DISCOVERY_DOC
 
@@ -20,7 +20,8 @@ class Aiogoogle:
         2. Aiogoogle's OAuth2 manager
         3. Aiogoogle's API key manager
         4. Aiogoogle's OpenID Connect manager
-        5. One of Aiogoogle's implementations of a session object
+        5. Aiogoogle's service account manager 
+        6. One of Aiogoogle's implementations of a session object
 
     Arguments:
 
@@ -28,9 +29,11 @@ class Aiogoogle:
 
         api_key (aiogoogle.auth.creds.ApiKey): Google API key
         
-        user_creds (aiogoogle.auth.creds.UserCreds): OAuth2 User Credentials 
+        user_creds (aiogoogle.auth.creds.UserCreds): OAuth2 cser credentials 
 
-        client_creds (aiogoogle.auth.creds.ClientCreds): OAuth2 Client Credentials
+        client_creds (aiogoogle.auth.creds.ClientCreds): OAuth2 client credentials
+
+        service_account_creds (aiogoogle.auth.creds.ServiceAccountCreds): Service account credentials
         
     Note: 
     
@@ -46,6 +49,7 @@ class Aiogoogle:
         api_key=None,
         user_creds=None,
         client_creds=None,
+        service_account_creds=None,
     ):
 
         self.session_factory = session_factory
@@ -55,6 +59,7 @@ class Aiogoogle:
         self.api_key = api_key
         self.user_creds = user_creds
         self.client_creds = client_creds
+        self.service_account_creds = service_account_creds
 
         # Auth managers
         self.api_key_manager = ApiKeyManager(api_key=self.api_key)
@@ -64,11 +69,14 @@ class Aiogoogle:
         self.openid_connect = OpenIdConnectManager(
             self.session_factory, client_creds=self.client_creds
         )
+        self.service_account_manager = ServiceAccountManager(
+            self.session_factory, creds=self.service_account_creds
+        )
 
         # Discovery service
         self.discovery_service = GoogleAPI(DISCOVERY_SERVICE_V1_DISCOVERY_DOC)
 
-    # -------- Discovery Service's only 2 methods ---------#
+    # -------- Only 2 methods of Discover Service V1 ---------#
 
     async def list_api(self, name, preferred=None, fields=None):
         """
@@ -199,6 +207,10 @@ class Aiogoogle:
 
                 If True, returns full HTTP response object instead of returning it's content
 
+            user_creds (aiogoogle.auth.creds.UserCreds):
+
+                If you pass user_creds here, they will only be used for this one request.
+
         Returns:
 
             aiogoogle.models.Response:
@@ -231,6 +243,49 @@ class Aiogoogle:
             session_factory=self.session_factory
         )
 
+    async def as_service_account(self, *requests, timeout=None, full_res=False, service_account_creds=None):
+        """ 
+        Sends requests on behalf of ``self.user_creds`` (OAuth2)
+        
+        Arguments:
+
+            *requests (aiogoogle.models.Request):
+
+                Requests objects typically created by ``aiogoogle.resource.Method.__call__``
+
+            timeout (int):
+
+                Total timeout for all the requests being sent
+
+            full_res (bool):
+
+                If True, returns full HTTP response object instead of returning it's content
+
+            service_account_creds (aiogoogle.auth.creds.ServiceAccountCreds):
+
+                You only have to pass ``service_account_creds`` once, either here or when instantiating an instance of Aiogoogle.
+
+        Returns:
+
+            aiogoogle.models.Response:
+        """
+        service_account_creds = service_account_creds or self.service_account_creds
+        if service_account_creds is None:
+            raise TypeError("Please pass service account creds")
+
+        await self.service_account_manager.refresh()
+
+        authorized_requests = [
+            self.service_account_manager.authorize(request) for request in requests
+        ]
+
+        return await self.send(
+            *authorized_requests,
+            timeout=timeout,
+            full_res=full_res,
+            session_factory=self.session_factory
+        )
+
     async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None):
         """ 
         Sends requests on behalf of ``self.api_key`` (OAuth2)
@@ -249,15 +304,20 @@ class Aiogoogle:
 
                 If True, returns full HTTP response object instead of returning it's content
 
+            api_key (string):
+
+                If you pass an API key here, it will only be used for this one request.
+
         Returns:
 
             aiogoogle.models.Response:
         """
-        if self.api_key is None:
-            raise TypeError("No API key found")
+        api_key = api_key or self.api_key
+        if api_key is None:
+            raise TypeError("Please pass an API key")
 
         authorized_requests = [
-            self.api_key_manager.authorize(request, self.api_key)
+            self.api_key_manager.authorize(request, api_key)
             for request in requests
         ]
 
@@ -312,3 +372,6 @@ class Aiogoogle:
 
     async def __aexit__(self, *args):
         await self.active_session.__aexit__(*args)
+        # Had to add this because there's no use of keeping a closed session
+        # Closed sessions cannot be reopened, so it's better to just get rid of the object
+        self.active_session = None
