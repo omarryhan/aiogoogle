@@ -427,7 +427,7 @@ Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/
         asyncio.run(list_storage_buckets())
 
 
-**2. By pointing the** ``GOOGLE_APPLICATION_CREDENTIALS`` **environment variable at the location of JSON key file.**
+**2. By pointing the** ``GOOGLE_APPLICATION_CREDENTIALS`` **environment variable at the location of the JSON key file.**
 
 Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/list_storage_buckets_detect_default.py>`__.
 
