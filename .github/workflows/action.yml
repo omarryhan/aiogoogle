@@ -16,7 +16,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install flake8
-        if [ -f requirements.txt ]; then pip install -r requirements.txt && pip install -r test_requirements && pip install docs_requirements; fi
+        if [ -f requirements.txt ]; then pip install -r requirements.txt && pip install -r test_requirements.txt && pip install docs_requirements.txt; fi
     - name: Lint with flake8
       run: |
         flake8 .
