@@ -1,5 +1,10 @@
 name: CI
-on: push
+on:
+  push:
+  pull_request:
+  pull_request_review:
+  schedule:
+      - cron: '0 0 * * *' # Once per day at midnight
 jobs:
   test:
     runs-on: ubuntu-latest
