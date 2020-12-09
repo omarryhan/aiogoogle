@@ -75,7 +75,7 @@ act on behalf of a user. It isn't designed to identify who the user is,
 rather only defines what a client (the app) can access.
 
 OAuth2 has 4 main flows. The most popular of them and the only one supported by
-Google is **Authorization Code Flow**. 
+Google is `Authorization Code Flow <https://tools.ietf.org/html/rfc6749#section-1.3.1>`_. 
 
 There are **3** main parties involved in this flow:
 
@@ -83,15 +83,17 @@ There are **3** main parties involved in this flow:
     - represented as ``aiogoogle.auth.models.UserCreds``
 2. **Client**:
     - represented as ``aiogoogle.auth.models.ClientCreds``
-3. **Resource Server**:
+3. **Resource Server/Authorization server**:
     - The service that aiogoogle acts as a client to. e.g. Calendar, Youtube, etc. 
 
-Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figure 3 <https://tools.ietf.org/html/rfc6749#section-4.1.1>`_.::
+Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figure 3 <https://tools.ietf.org/html/rfc6749#section-4.1.1>`_.
+
+::
 
     +----------+
     | Resource |
     |   Owner  |
-    |          |
+    |  (User)  |
     +----------+
         ^
         |
@@ -100,7 +102,7 @@ Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figur
     |         -+----(A)-- & Redirection URI ---->|               |
     |  User-   |                                 | Authorization |
     |  Agent  -+----(B)-- User authenticates --->|     Server    |
-    |          |                                 |               |
+    | (Browser)|                                 |               |
     |         -+----(C)-- Authorization Code ---<|               |
     +-|----|---+                                 +---------------+
     |    |                                           ^      v
@@ -230,15 +232,17 @@ OpenID Connect is an authentication layer built on top of OAuth2
 (an authorization framework). This method should be used when the client 
 (the app) wants to identify the user i.e. authenticate them.
 Since OpenID connect is a superset of OAuth2, this method will 
-give the client the authorization needed to edit resources of the user.
+also give the client the authorization needed to edit resources of the user.
 
 In more practical terms, using OAuth2 alone will only return you a token 
 that can be used to access the data with the scope that the app requested. 
-Using OpenIDConnect will return the same access token as with OAuth2 **+**
+Using OpenIDConnect will return the same access token as with OAuth2 **plus**
 an ID token JWT of the user. This ID token JWT will 
-contain "claims" about the user which you'll need to properly know who they are. 
-`example <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`_.
-For example, OpenID Connect should be used if you're implementing "social signin".
+contain "claims" about the user which your app will need to properly know who they are. Here's
+an `example <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`_ of
+how an ID token JWT should look like.
+
+.. hint:: OpenID Connect should be used if you're implementing "social signin".
 
 **Example:**
 
@@ -383,8 +387,7 @@ as this is out of scope.
 OAuth2
 ^^^^^^^^^^^^^
 
-This is the most commonly used method and the only one implemented by Aiogoogle 
-now.
+OAuth2 is the most commonly used service account authorization method and the only one implemented by Aiogoogle.
 There are a couple of ways you can access Google APIs using OAuth2 
 tokens for service accounts:
 
@@ -431,7 +434,7 @@ Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/
 
 Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/list_storage_buckets_detect_default.py>`__.
 
-First set the environment variable, if not already set:
+First, set the environment variable, if not already set:
 
 .. code-block:: sh
 
@@ -490,7 +493,10 @@ it for the App Engine application without passing ``service_account_creds``.
 This should return an OAuth2 token from the Google Compute Engine metadata server. 
 You don't have to pass ``service_account_creds``.
 
-Other than the service account OAuth2 method, there are:
+Others
+^^^^^^^
+
+Other than the OAuth2 method, there are:
 
 - OpenID connect ID token (OIDC ID token)
 - Self-signed JWT credentials
@@ -1090,8 +1096,8 @@ List Calendar Events
 
 Check out https://github.com/omarryhan/aiogoogle/tree/master/examples for more.
 
-Design
-=======
+Design and goals
+===================
 
 Async framework agnostic
 -------------------------
@@ -1348,17 +1354,10 @@ To upload a new version
 2. root ``__init__.py``
 3. ``docs/conf.py``
 
-**Build:**
+**Make a new release**
 
-.. code-block:: sh
-
-    $ python setup.py sdist
-
-**Upload:**
-
-.. code-block:: sh
-
-    $ twine upload dist/{the_new_version}
+Make a new Git release then push and the ``deploy.yml`` Github action will take it from there.
+It will build and then upload the new repo to Pypi.
 
 To install the local version of the aiogoogle instead of the latest one on Pip
 --------------------------------------------------------------------------------
