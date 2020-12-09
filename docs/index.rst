@@ -1348,16 +1348,19 @@ Development notes
 To upload a new version
 -------------------------
 
-**Change the version in:**
+**Change the version**
 
-1. ``setup.py``
-2. root ``__init__.py``
-3. ``docs/conf.py``
+In: ``aiogoogle/__version__.py``
 
 **Make a new release**
 
 Make a new Git release then push and the ``deploy.yml`` Github action will take it from there.
 It will build and then upload the new repo to Pypi.
+
+.. code-block:: sh
+
+    $ git tag -a 1.0.1 -m "New version :tada:" master
+    $ git push --tags
 
 To install the local version of the aiogoogle instead of the latest one on Pip
 --------------------------------------------------------------------------------

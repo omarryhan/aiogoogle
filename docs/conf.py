@@ -17,6 +17,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../"))
 
+import aiogoogle  # noqa: E402
+
 # -- sphinxcontrib-github workaround
 # from docutils.parsers.rst.directives.admonitions import BaseAdmonition
 # from sphinx.util import compat
@@ -25,14 +27,14 @@ sys.path.insert(0, os.path.abspath("../"))
 
 # -- Project information -----------------------------------------------------
 
-project = "Aiogoogle"
-copyright = "2018, Omar Ryhan"
-author = "Omar Ryhan"
+project = aiogoogle.__name__
+copyright = aiogoogle.__copyright__
+author = aiogoogle.__author__
 
 # The short X.Y version
-version = "1.0.0"
+version = aiogoogle.__version__
 # The full version, including alpha/beta/rc tags
-release = "1.0.0"
+release = aiogoogle.__version__
 
 
 # -- General configuration ---------------------------------------------------
