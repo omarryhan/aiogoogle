@@ -1201,16 +1201,6 @@ Lightweight and minimalistic
 
 Aiogoogle is built to be as lightweight and extensible as possible so that both client facing applications and API libraries can use it.
 
-Backward compatibility notes
-===============================
-
-Version 1.0.0
--------------------
-
-- Removed all abstract classes for auth managers because they weren't serving any meaningful purpose. This shouldn't impact your code unless you were directly importing the abstract classes.
-- Removed ``aiogoogle.auth.managers.OpenIDConnectManager.build_user_creds_jwt_grant`` because it was being used incorrectly. It should've been used for service accounts and not user accounts.
-- Removed redundant/unused ``verify`` attribute from OAuth2Manager's ``__init__`` method.
-
 
 API
 =====
