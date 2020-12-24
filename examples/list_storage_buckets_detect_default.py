@@ -1,7 +1,7 @@
 #!/usr/bin/python3.7
 
 from pprint import pprint
-import os
+# import os
 import asyncio
 from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
