@@ -12,7 +12,7 @@ from aiogoogle.auth.creds import ServiceAccountCreds
 # When creating the service account. Don't forget to add an owner
 # role in step 2 (after giving the service account a name).
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'test_service_account.json'
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'test_service_account.json'
 
 creds = ServiceAccountCreds(
     scopes=[

@@ -86,6 +86,8 @@ class TrioAsksSession(Session, AbstractSession):
                     headers=request.headers,
                     data=request.data,
                     json=request.json,
+                    # TODO: doesn't work with Asks
+                    # verify=request._verify_ssl,
                 )
 
         # ----------------- send sequence ------------------#

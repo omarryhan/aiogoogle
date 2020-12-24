@@ -127,6 +127,8 @@ class Request:
         timeout (int): Individual timeout for this request
 
         callback (callable): Synchronous callback that takes the content of the response as the only argument. Should also return content.
+
+        _verify_ssl (boolean): Defaults to True.
         """
 
     def __init__(
@@ -141,6 +143,7 @@ class Request:
         media_download=None,
         timeout=None,
         callback=None,
+        _verify_ssl=True,
     ):
         self.method = method
         self.url = url
@@ -155,6 +158,7 @@ class Request:
         self.media_download = media_download
         self.timeout = timeout
         self.callback = callback
+        self._verify_ssl = _verify_ssl
 
     def _add_query_param(self, query: dict):
         url = self.url
