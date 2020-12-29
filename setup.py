@@ -36,7 +36,7 @@ setup(
     install_requires=requirements,
     tests_require=test_requirements,
     url=main_ns["__url__"],
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",
