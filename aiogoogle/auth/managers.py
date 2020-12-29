@@ -78,7 +78,7 @@ TOKEN_INFO_URI = "https://www.googleapis.com/oauth2/v4/tokeninfo"
 # GOOGLE_TOKEN_INFO_URI = 'https://oauth2.googleapis.com/tokeninfo'
 
 GCE_METADATA_SERVER_URI = 'http://metadata.google.internal/computeMetadata/v1/instance/'
-GCE_DEFAULT_SERVICE_ACCOUNT_URL = 'service-accounts/defaults/token'
+GCE_DEFAULT_SERVICE_ACCOUNT_URL = 'service-accounts/default/token'
 GCE_METADATA_FLAVOR_HEADER = "metadata-flavor"
 GCE_METADATA_FLAVOR_VALUE = "Google"
 GCE_METADATA_HEADERS = {GCE_METADATA_FLAVOR_HEADER: GCE_METADATA_FLAVOR_VALUE}
