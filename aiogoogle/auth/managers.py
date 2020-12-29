@@ -17,6 +17,7 @@ except:  # noqa: E722  bare-except
     import json
 from google.auth import jwt
 from google.oauth2 import service_account
+from google.auth.environment_vars import GCE_METADATA_IP
 
 from .utils import _get_expires_at, _is_expired
 from .creds import UserCreds
@@ -75,6 +76,21 @@ TOKEN_INFO_URI = "https://www.googleapis.com/oauth2/v4/tokeninfo"
 # GOOGLE_REVOKE_URI = 'https://oauth2.googleapis.com/revoke'
 # GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token'
 # GOOGLE_TOKEN_INFO_URI = 'https://oauth2.googleapis.com/tokeninfo'
+
+GCE_METADATA_SERVER_URI = 'http://metadata.google.internal/computeMetadata/v1/instance/'
+GCE_DEFAULT_SERVICE_ACCOUNT_URL = 'service-accounts/default/token'
+GCE_METADATA_FLAVOR_HEADER = "metadata-flavor"
+GCE_METADATA_FLAVOR_VALUE = "Google"
+GCE_METADATA_HEADERS = {GCE_METADATA_FLAVOR_HEADER: GCE_METADATA_FLAVOR_VALUE}
+GCE_METADATA_IP_ROOT = "http://{}".format(
+    os.getenv(GCE_METADATA_IP, "169.254.169.254")
+)
+# Timeout in seconds to wait for the GCE metadata server when detecting the
+# GCE environment.
+try:
+    GCE_METADATA_DEFAULT_TIMEOUT = int(os.getenv("GCE_METADATA_TIMEOUT", 3))
+except ValueError:  # pragma: NO COVER
+    GCE_METADATA_DEFAULT_TIMEOUT = 3
 
 
 class ApiKeyManager:
@@ -1162,6 +1178,25 @@ class ServiceAccountManager:
                 self.creds.update(info)
                 self._creds_source = 'key_file'
 
+    async def _set_creds_from_gce(self):
+        req = Request(
+            method="GET",
+            url=GCE_METADATA_SERVER_URI + GCE_DEFAULT_SERVICE_ACCOUNT_URL,
+            headers=GCE_METADATA_HEADERS,
+        )
+
+        scopes = self.creds.get('scopes')
+
+        if scopes:
+            if not isinstance(scopes, str):
+                scopes = ",".join(scopes)
+            req._add_query_param({'scopes': scopes})
+
+        async with self.session_factory() as sess:
+            json_res = await sess.send(req)
+            self._access_token = json_res['access_token']
+            self._expires_at = _get_expires_at(json_res['expires_in'])
+
     async def detect_default_creds_source(self):
         '''
         Detects the most suitable method of service account authorization.
@@ -1175,7 +1210,7 @@ class ServiceAccountManager:
         1. Loads service account creds from environment "GOOGLE_APPLICATION_CREDENTIALS"
         2. Google Cloud SDK default credentials (Not yet available)
         3. Google App Engine default credentials (Not yet available)
-        4. Compute Engine default credentials (Not yet available)
+        4. Compute Engine default credentials
 
         Returns:
         
@@ -1189,16 +1224,34 @@ class ServiceAccountManager:
 
         creds_location = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
+        # 1. Check if user provided an env variable for the location of the service account key file
         if creds_location:
             self._set_creds_from_environ(creds_location)
-        
         else:
-            raise RuntimeError(
-                'No GOOGLE_APPLICATION_CREDENTIALS environment variable was detected.'
-                'This method doesn\'t yet support loading credentials from Google Cloud SDK, '
-                'Google App Engine and Google Compute Engine.'
-                'So for now, you\'ll need to provide a JSON key file'
-            )
+            # 2. Ping GCE's metadata server to check if we're in GCE env or not
+            async with self.session_factory() as sess:
+                try:
+                    metadata_server_ping_response = await sess.send(Request(
+                        method="GET",
+                        url=GCE_METADATA_IP_ROOT,
+                        headers=GCE_METADATA_HEADERS,
+                        timeout=GCE_METADATA_DEFAULT_TIMEOUT,
+                        _verify_ssl=False
+                    ), full_res=True)
+                except Exception:
+                    raise RuntimeError(
+                        'No GOOGLE_APPLICATION_CREDENTIALS environment variable was detected.'
+                        'This method doesn\'t yet support loading credentials from both Google Cloud SDK and '
+                        'Google App Engine.'
+                        'So for now, you\'ll need to either provide a JSON key file or run your app in a GCE environment'
+                    )
+                else:
+                    header = metadata_server_ping_response.headers.get(GCE_METADATA_FLAVOR_HEADER)
+                    if header != GCE_METADATA_FLAVOR_VALUE:
+                        raise RuntimeError(f'Invalid GCE_METADATA_FLAVOR_HEADER: {header}')
+
+                    self._creds_source = 'gce'
+                    await self.refresh()
 
     async def _get_oauth2_authorization_grant(self):
         if not self.creds:
@@ -1260,6 +1313,8 @@ class ServiceAccountManager:
 
         if self._creds_source == 'key_file':
             await self._get_oauth2_authorization_grant()
+        elif self._creds_source == 'gce':
+            await self._set_creds_from_gce()
         else:
             raise RuntimeError(
                 'No service account creds found.'

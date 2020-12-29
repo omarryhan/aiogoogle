@@ -488,10 +488,13 @@ token without passing ``service_account_creds``.
 This should return an OAuth2 token for the service account and cache
 it for the App Engine application without passing ``service_account_creds``.
 
-**5. Automatic detection from Google Cloud Engine (Not supported yet):**
+**5. Automatic detection from Google Compute Engine/Google Cloud Run/Google Cloud Functions environment**
 
-This should return an OAuth2 token from the Google Compute Engine metadata server. 
-You don't have to pass ``service_account_creds``.
+This should return an OAuth2 token from the Google Compute Engine metadata server, which means that you don't have to pass ``service_account_creds``, unless you want to specify scopes.
+
+This should work the same as #2, but skip the part were you set the environment variable.
+
+Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/list_storage_buckets_detect_default.py>`__.
 
 Others
 ^^^^^^^
