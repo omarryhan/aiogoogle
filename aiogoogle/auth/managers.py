@@ -1216,14 +1216,6 @@ class ServiceAccountManager:
         
             None
         '''
-        def fail():
-            raise RuntimeError(
-                'No GOOGLE_APPLICATION_CREDENTIALS environment variable was detected.'
-                'This method doesn\'t yet support loading credentials from both Google Cloud SDK and '
-                'Google App Engine.'
-                'So for now, you\'ll need to either provide a JSON key file or run your app in a GCE environment'
-            )
-
         if self.creds.get('private_key'):
             raise RuntimeError(
                 'You already provided Aiogoogle with a service account creds object that has a private key.'
@@ -1247,11 +1239,16 @@ class ServiceAccountManager:
                         _verify_ssl=False
                     ), full_res=True)
                 except Exception:
-                    fail()
+                    raise RuntimeError(
+                        'No GOOGLE_APPLICATION_CREDENTIALS environment variable was detected.'
+                        'This method doesn\'t yet support loading credentials from both Google Cloud SDK and '
+                        'Google App Engine.'
+                        'So for now, you\'ll need to either provide a JSON key file or run your app in a GCE environment'
+                    )
                 else:
                     header = metadata_server_ping_response.headers.get(GCE_METADATA_FLAVOR_HEADER)
                     if header != GCE_METADATA_FLAVOR_VALUE:
-                        raise RuntimeError('Invalid GCE_METADATA_FLAVOR_HEADER: {header}')
+                        raise RuntimeError(f'Invalid GCE_METADATA_FLAVOR_HEADER: {header}')
 
                     self._creds_source = 'gce'
                     await self.refresh()
