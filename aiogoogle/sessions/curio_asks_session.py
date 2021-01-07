@@ -23,7 +23,8 @@ class CurioAsksSession(Session, AbstractSession):
         timeout=None,
         full_res=False,
         raise_for_status=True,
-        session_factory=None
+        session_factory=None,
+        backoff_decorator=lambda x: x
     ):
         async def resolve_response(request, response):
             data = None
@@ -70,6 +71,7 @@ class CurioAsksSession(Session, AbstractSession):
                 session_factory=session_factory,
             )
 
+        @backoff_decorator
         async def fire_request(request):
             request.headers["Accept-Encoding"] = "gzip"
             request.headers["User-Agent"] = "Aiogoogle Asks Curio (gzip)"

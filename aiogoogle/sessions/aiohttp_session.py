@@ -36,6 +36,7 @@ class AiohttpSession(ClientSession, AbstractSession):
         full_res=False,
         raise_for_status=True,
         session_factory=None,
+        backoff_decorator=lambda x: x
     ):
         async def resolve_response(request, response):
             data = None
@@ -78,6 +79,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                 session_factory=session_factory,
             )
 
+        @backoff_decorator
         async def fire_request(request):
             request.headers["Accept-Encoding"] = "gzip"
             request.headers["User-Agent"] = "Aiogoogle Aiohttp (gzip)"

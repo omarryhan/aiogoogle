@@ -1,6 +1,5 @@
 __all__ = ["Aiogoogle"]
 
-
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager, ServiceAccountManager
 from .sessions.aiohttp_session import AiohttpSession
@@ -44,12 +43,13 @@ class Aiogoogle:
     """
 
     def __init__(
-        self,
-        session_factory=AiohttpSession,
-        api_key=None,
-        user_creds=None,
-        client_creds=None,
-        service_account_creds=None,
+            self,
+            session_factory=AiohttpSession,
+            api_key=None,
+            user_creds=None,
+            client_creds=None,
+            service_account_creds=None,
+            backoff_decorator=lambda x: x
     ):
 
         self.session_factory = session_factory
@@ -75,6 +75,8 @@ class Aiogoogle:
 
         # Discovery service
         self.discovery_service = GoogleAPI(DISCOVERY_SERVICE_V1_DISCOVERY_DOC)
+
+        self.backoff_decorator = backoff_decorator
 
     # -------- Only 2 methods of Discover Service V1 ---------#
 
@@ -221,8 +223,8 @@ class Aiogoogle:
 
         # Refresh credentials
         if (
-            user_creds.get("expires_at") is not None
-            and self.oauth2.is_expired(user_creds) is True
+                user_creds.get("expires_at") is not None
+                and self.oauth2.is_expired(user_creds) is True
         ):
             user_creds = await self.oauth2.refresh(
                 user_creds, client_creds=self.client_creds
@@ -240,7 +242,8 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
-            session_factory=self.session_factory
+            session_factory=self.session_factory,
+            backoff_decorator=self.backoff_decorator
         )
 
     async def as_service_account(self, *requests, timeout=None, full_res=False, service_account_creds=None):
@@ -283,7 +286,8 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
-            session_factory=self.session_factory
+            session_factory=self.session_factory,
+            backoff_decorator=self.backoff_decorator
         )
 
     async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None):
@@ -325,7 +329,8 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
-            session_factory=self.session_factory
+            session_factory=self.session_factory,
+            backoff_decorator=self.backoff_decorator
         )
 
     async def as_anon(self, *requests, timeout=None, full_res=False):
@@ -354,7 +359,8 @@ class Aiogoogle:
             *requests,
             timeout=timeout,
             full_res=full_res,
-            session_factory=self.session_factory
+            session_factory=self.session_factory,
+            backoff_decorator=self.backoff_decorator
         )
 
     async def _ensure_session_set(self):

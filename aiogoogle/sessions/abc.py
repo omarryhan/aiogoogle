@@ -31,7 +31,7 @@ class AbstractSession(ABC):
         return super(AbstractSession, cls).__new__(cls)
 
     @abstractmethod
-    async def send(self, *requests, timeout=None, full_res=False, session_factory=None):
+    async def send(self, *requests, timeout=None, full_res=False, session_factory=None, backoff_decorator=lambda x:x):
         """
         Takes requests, sends them, returns contents of responses or full http responses.
 
