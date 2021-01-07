@@ -65,7 +65,11 @@ class AbstractSession(ABC):
 
                 * Session factory that creates a session that will handle pagination, resumable uploads etc.
 
-                * Defaults to ``self.__class__`` 
+                * Defaults to ``self.__class__``
+
+            backoff_decorator (function):
+
+                * a decorator to wrap each asynchronous request call in
 
         Returns:
 
