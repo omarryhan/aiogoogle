@@ -103,7 +103,8 @@ class AiohttpSession(ClientSession, AbstractSession):
                                 request.media_upload.chunk_size
                             )
                         )
-                        mpwriter.append_json(request.json)
+                        if request.json:
+                            mpwriter.append_json(request.json)
                         return await self.request(
                             method=request.method,
                             url=request.media_upload.upload_path,
