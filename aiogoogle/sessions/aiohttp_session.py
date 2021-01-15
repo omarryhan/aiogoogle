@@ -101,10 +101,19 @@ class AiohttpSession(ClientSession, AbstractSession):
                             _aiter_file(
                                 request.media_upload.file_path,
                                 request.media_upload.chunk_size
-                            )
+                            ),
+                            headers={"Content-Type": request.upload_file_content_type} if request.upload_file_content_type else None
                         )
                         if request.json:
                             mpwriter.append_json(request.json)
+
+                        req_content_type = (request.upload_file_content_type or "multipart/related") if not request.json else "multipart/related"
+
+                        request.headers.update({"Content-Type": f"{req_content_type}; boundary={mpwriter.boundary}"})
+
+                        # Aiohttp already handles this for us. Also the line below doesn't work. dk why.
+                        # request.headers.update({"Content-Length": str(size)})
+
                         return await self.request(
                             method=request.method,
                             url=request.media_upload.upload_path,
@@ -119,6 +128,8 @@ class AiohttpSession(ClientSession, AbstractSession):
                         request.media_upload.file_path, "rb"
                     ) as file:
                         read_file = await file.read()
+                        if request.upload_file_content_type:
+                            request.headers.update({"Content-Type": request.upload_file_content_type})
                         return await self.request(
                             method=request.method,
                             url=request.media_upload.upload_path,

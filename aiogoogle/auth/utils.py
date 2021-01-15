@@ -18,6 +18,9 @@ def _get_expires_at(expires_in):
 
 
 def _is_expired(expires_at):
+    # Refresh in case there's no expires_at present
+    if expires_at is None:
+        return True
     if not isinstance(expires_at, datetime.datetime):
         expires_at = datetime.datetime.fromisoformat(expires_at)
     if datetime.datetime.utcnow() >= expires_at:

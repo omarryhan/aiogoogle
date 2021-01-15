@@ -11,14 +11,14 @@ async def upload_file(full_path, new_name):
         # Create API
         drive_v3 = await aiogoogle.discover("drive", "v3")
 
-        # Upload file
-        upload_res = await aiogoogle.as_user(
-            drive_v3.files.create(
-                upload_file=full_path,
-                fields="id",
-                json={"name": new_name}
-            )
+        req = drive_v3.files.create(
+            upload_file=full_path,
+            fields="id",
+            json={"name": new_name}
         )
+
+        # Upload file
+        upload_res = await aiogoogle.as_user(req)
         print("Uploaded {} successfully.\nFile ID: {}".format(full_path, upload_res['id']))
         # file_id = upload_res["id"]
         # # Rename uploaded file

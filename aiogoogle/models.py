@@ -129,6 +129,8 @@ class Request:
         callback (callable): Synchronous callback that takes the content of the response as the only argument. Should also return content.
 
         _verify_ssl (boolean): Defaults to True.
+
+        upload_file_content_type (str): Optional content-type header string. In case you don't want to use the default application/octet-stream (Or whatever is auto-detected by your transport handler)
         """
 
     def __init__(
@@ -144,6 +146,7 @@ class Request:
         timeout=None,
         callback=None,
         _verify_ssl=True,
+        upload_file_content_type=None,
     ):
         self.method = method
         self.url = url
@@ -159,6 +162,7 @@ class Request:
         self.timeout = timeout
         self.callback = callback
         self._verify_ssl = _verify_ssl
+        self.upload_file_content_type = upload_file_content_type
 
     def _add_query_param(self, query: dict):
         url = self.url
