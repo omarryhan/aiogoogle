@@ -221,8 +221,8 @@ class Aiogoogle:
 
         # Refresh credentials
         if (
-            user_creds.get("expires_at") is not None
-            and self.oauth2.is_expired(user_creds) is True
+            user_creds.get("expires_at") is None
+            or (user_creds.get("expires_at") and self.oauth2.is_expired(user_creds) is True)
         ):
             user_creds = await self.oauth2.refresh(
                 user_creds, client_creds=self.client_creds
