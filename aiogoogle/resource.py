@@ -2,7 +2,7 @@ __all__ = ["GoogleAPI", "Resource", "Method"]
 
 import re
 import warnings
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote_plus
 from functools import wraps
 from typing import List, Generic, TypeVar
 
@@ -579,6 +579,9 @@ class Method:
             # Validate path params
             if validate is True:
                 self._validate_url(sorted_required_path_params)
+
+            for k, v in sorted_required_path_params.items():
+                sorted_required_path_params[k] = quote_plus(v)
 
             # Build full path
             # replace named placeholders with empty ones. e.g. {param} --> {}

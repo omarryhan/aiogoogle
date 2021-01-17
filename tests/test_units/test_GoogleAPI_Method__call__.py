@@ -95,6 +95,15 @@ def test_url_path_args_and_query_path_extra_arg(create_api):
     )
 
 
+def test_url_path_args_is_urlencoded(create_api):
+    calendar = create_api("calendar", "v3")
+    req = calendar.events.list(calendarId="en.usa#holiday@group.v.calendar.google.com")
+    assert (
+        req.url
+        == "https://www.googleapis.com/calendar/v3/calendars/en.usa%23holiday%40group.v.calendar.google.com/events"
+    )
+
+
 def test_method(create_api):
     calendar = create_api("calendar", "v3")
     req = calendar.events.get(eventId="dos", calendarId="uno", validate=False)
@@ -103,20 +112,20 @@ def test_method(create_api):
 
 def test_timeout(create_api):
     calendar = create_api("calendar", "v3")
-    req = calendar.calendarList.get(calendarId=123, timeout=4, validate=False)
+    req = calendar.calendarList.get(calendarId='123', timeout=4, validate=False)
     assert req.timeout == 4
 
 
 def test_timeout_fails_on_not_int(create_api):
     calendar = create_api("calendar", "v3")
     with pytest.raises(TypeError):
-        calendar.calendarList.get(calendarId=123, timeout=True, validate=False)
+        calendar.calendarList.get(calendarId='123', timeout=True, validate=False)
 
     with pytest.raises(TypeError):
-        calendar.calendarList.get(calendarId=123, timeout=False, validate=False)
+        calendar.calendarList.get(calendarId='123', timeout=False, validate=False)
 
     with pytest.raises(TypeError):
-        calendar.calendarList.get(calendarId=123, timeout="asas", validate=False)
+        calendar.calendarList.get(calendarId='123', timeout="asas", validate=False)
 
 
 def test_json(create_api):
