@@ -3,6 +3,9 @@ __all__ = ["create_secret"]
 import hashlib
 import os
 import datetime
+import sys
+
+from ..utils import _parse_isoformat
 
 
 def create_secret(bytes_length=1024):  # pragma: no cover
@@ -22,7 +25,11 @@ def _is_expired(expires_at):
     if expires_at is None:
         return True
     if not isinstance(expires_at, datetime.datetime):
-        expires_at = datetime.datetime.fromisoformat(expires_at)
+        # datetime.fromisoformat is 3.7+
+        if sys.version_info[1] <= 6:
+            expires_at = _parse_isoformat(expires_at)
+        else:
+            expires_at = datetime.fromisoformat(expires_at)
     if datetime.datetime.utcnow() >= expires_at:
         return True
     else:
