@@ -66,7 +66,7 @@ def _parse_time_components(tstr):
     components = [int(hh)]
     if mm_ss:
         components.extend(int(t) for t in mm_ss)
-    if ff: #
+    if ff:
         components.append(int(ff.ljust(6, "0")))
     return components + [0] * (4 - len(components))
 
@@ -84,16 +84,18 @@ def _parse_isoformat(dtstr):
         # check for time zone
         tz_pos = (tstr.find("-") + 1 or tstr.find("+") + 1)
         if tz_pos > 0:
-            tzsign = -1 if tstr[tz_pos-1] == "-" else 1
+            tzsign = -1 if tstr[tz_pos - 1] == "-" else 1
             tz_comps = _parse_time_components(tstr[tz_pos:])
-            tz = tzsign * datetime.timedelta(hours=tz_comps[0],
-                minutes=tz_comps[1], seconds=tz_comps[2], microseconds=tz_comps[3])
-            tstr = tstr[:tz_pos-1]
+            tz = tzsign * datetime.timedelta(
+                hours=tz_comps[0], minutes=tz_comps[1],
+                seconds=tz_comps[2], microseconds=tz_comps[3])
+            tstr = tstr[:tz_pos - 1]
         else:
             tz = datetime.timedelta(0)
         time_comps = _parse_time_components(tstr)
         date = date.replace(hour=time_comps[0], minute=time_comps[1],
-            second=time_comps[2], microsecond=time_comps[3]) - tz
+                            second=time_comps[2], microsecond=time_comps[3])
+        date -= tz
     elif len(dtstr) == 11:
         raise ValueError("Invalid Isotime format")
     return date
