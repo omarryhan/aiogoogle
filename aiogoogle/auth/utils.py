@@ -29,7 +29,7 @@ def _is_expired(expires_at):
         if sys.version_info[1] <= 6:
             expires_at = _parse_isoformat(expires_at)
         else:
-            expires_at = datetime.fromisoformat(expires_at)
+            expires_at = datetime.datetime.fromisoformat(expires_at)
     if datetime.datetime.utcnow() >= expires_at:
         return True
     else:
