@@ -581,7 +581,7 @@ class Method:
                 self._validate_url(sorted_required_path_params)
 
             for k, v in sorted_required_path_params.items():
-                sorted_required_path_params[k] = quote_plus(v)
+                sorted_required_path_params[k] = quote_plus(str(v))
 
             # Build full path
             # replace named placeholders with empty ones. e.g. {param} --> {}
