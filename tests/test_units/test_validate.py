@@ -383,3 +383,24 @@ def test_validates_body_json_24(create_api):
                 ],
             }
         )
+
+
+def test_validates_enums(create_api):
+    sheets = create_api("sheets", "v4")
+    sheets.spreadsheets.values.get(
+        spreadsheetId="some_spreadsheet_id",
+        range="some:range",
+        majorDimension="ROWS",
+        validate=True
+    )
+
+
+def test_validates_enums2(create_api):
+    sheets = create_api("sheets", "v4")
+    with pytest.raises(ValidationError):
+        sheets.spreadsheets.values.get(
+            spreadsheetId="some_spreadsheet_id",
+            range="some:range",
+            majorDimension="NOT_A_VALID_OPTION",
+            validate=True
+        )

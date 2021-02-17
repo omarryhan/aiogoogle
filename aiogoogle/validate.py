@@ -347,6 +347,18 @@ def validate_pattern(instance, schema, schema_name=None):
             )
 
 
+def validate_enum(instance, schema, schema_name=None):
+    options = schema.get("enum")
+    if options is not None and instance not in options:
+        option_string = ', '.join(f'"{o}"' for o in options)
+        raise ValidationError(
+            make_validation_error_msg(
+                instance,
+                f'Must be one of the following: {option_string}',
+                schema_name=schema_name
+            )
+        )
+
 # -- Main Validator ---------------
 
 
@@ -355,6 +367,7 @@ def validate_all(instance, schema, schema_name=None):
     validate_format(instance, schema, schema_name)
     validate_range(instance, schema, schema_name)
     validate_pattern(instance, schema, schema_name)
+    validate_enum(instance, schema, schema_name)
 
 
 # -- API --------------------
