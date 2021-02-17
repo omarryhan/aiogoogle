@@ -329,7 +329,7 @@ def validate_format(instance, schema, schema_name=None):
 def validate_range(instance, schema, schema_name=None):
     if schema.get("minimum"):
         minimum_validator(instance, schema["minimum"], schema_name=schema_name)
-    elif schema.get("maximum"):
+    if schema.get("maximum"):
         maximum_validator(instance, schema["maximum"], schema_name=schema_name)
 
 
