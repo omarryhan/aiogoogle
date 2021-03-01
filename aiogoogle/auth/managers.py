@@ -623,7 +623,10 @@ class Oauth2Manager:
         client_creds = client_creds or self.client_creds
         request = self._build_refresh_request(user_creds, client_creds)
         json_res = await self._send_request(request)
-        return self._build_user_creds_from_res(json_res)
+        final_user_creds = self._build_user_creds_from_res(json_res)
+        if not final_user_creds.get('refresh_token'):
+            final_user_creds['refresh_token'] = user_creds.get('refresh_token')
+        return final_user_creds
 
     def _build_refresh_request(self, user_creds, client_creds):
         data = dict(
