@@ -572,7 +572,7 @@ class Method:
             )  # Dict order is guaranteed (by insertion) as of Python 3.6
             for param_name in self["parameterOrder"]:
                 try:
-                    sorted_required_path_params[param_name] = uri_params.pop(param_name)
+                    sorted_required_path_params[param_name] = uri_params[param_name]
                 except KeyError:
                     raise ValidationError(f"Missing URL path parameter: {param_name}")
 
