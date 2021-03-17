@@ -38,6 +38,14 @@ def test_validates_url_query_params(create_api):
         youtube.videos.list(part=["snippet"], validate=True)
 
 
+def test_validates_required_query_params_and_query_params(create_api):
+    '''
+    Fixes this: https://github.com/omarryhan/aiogoogle/pull/57
+    '''
+    drive = create_api("drive", "v3")
+    drive.files.export(fileId="test", mimeType="test", validate=True)
+
+
 def test_validates_body_data(create_api):
     youtube = create_api("youtube", "v3")
     youtube.videos.insert(

@@ -453,7 +453,7 @@ class Method:
 
         # Build full url minus query & fragment
         url = self._build_url(
-            base_url=base_url, uri_params=uri_params, validate=validate
+            base_url=base_url, uri_params=uri_params.copy(), validate=validate
         )
 
         # Filter out query parameters from all uri_params that were passed to this method
@@ -484,9 +484,15 @@ class Method:
         else:
             uri = url
 
-        # Pop uri_params consumed
+        # Pop query uri_params consumed
         for param_name, _ in passed_query_params.items():
             del uri_params[param_name]
+
+        # Pop uri_params consumed
+        # for param_name in self["parameterOrder"]:
+        for param_name in self.path_parameters:
+            if param_name in uri_params:
+                del uri_params[param_name]
 
         # Warn if not all uri_params were consumed/popped
         if uri_params:  # should be empty by now
