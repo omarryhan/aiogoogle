@@ -73,7 +73,6 @@ class SheetApiClient:
         
         self._sheetService = build('sheets', 'v4', http=authed_http)
         self._spreadsheet = self._sheetService.spreadsheets()
-        self._permissions = self._driveService.permissions()
 
     async def loadasyncsheetservice(self, serviceAccountFile):
         with open(serviceAccountFile, "r") as read_file:
@@ -147,7 +146,7 @@ class SheetApiClient:
             'range': range,
             'values': values
         }
-        resp = await self.aiogoogle.as_service_account(self._spreadsheetAsync.values.append(spreadsheetId=id, range=range, valueInputOption='USER_ENTERED', body=valueRange))
+        resp = await self.aiogoogle.as_service_account(self._spreadsheetAsync.values.append(spreadsheetId=id, range=range, valueInputOption='USER_ENTERED', json=valueRange))
 
     def BatchUpdateValues(self, id, ranges, values):
         body = {
@@ -157,12 +156,11 @@ class SheetApiClient:
         resp = self._spreadsheet.values().batchUpdate(spreadsheetId=id, body=body).execute()
 
     async def BatchUpdateValuesAsync(self, id, ranges, values):
-        #Untested
         body = {
-            'valueInputOption': 'USER_ENTERED',
-            'data': [{'range': r, 'values': v} for r, v in zip(ranges, values)]
+            "valueInputOption": "USER_ENTERED",
+            "data": [{"range": r, "values": v} for r, v in zip(ranges, values)]
         }
-        req = self._spreadsheetAsync.values.batchUpdate(spreadsheetId=id, body=body)
+        req = self._spreadsheetAsync.values.batchUpdate(spreadsheetId=id, json=body)
         resp = await self.aiogoogle.as_service_account(req)
     
     def UpdateValues(self, id, Range, InsertValues):
@@ -171,18 +169,8 @@ class SheetApiClient:
 
     async def UpdateValuesAsync(self, id, Range, InsertValues):
         body = {'values': InsertValues}
-        await self.aiogoogle.as_service_account(self._spreadsheetAsync.values.update(spreadsheetId=id, range=Range, valueInputOption='USER_ENTERED',  body=body))
-    
-    def AddPermission(self, id, email, role):
-        print('id={}, email={}'.format(id, email))
-        self._permissions.create(
-            body={
-                'type': 'user',
-                'role': role,
-                'emailAddress': email
-            },
-            fileId = id, fields='id').execute()
-   
+        await self.aiogoogle.as_service_account(self._spreadsheetAsync.values.update(spreadsheetId=id, range=Range, valueInputOption='USER_ENTERED',  json=body))
+       
 defaultClient = None
 def InitializeClient(serviceAccountFile):
     global defaultClient
