@@ -1,13 +1,13 @@
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+##from google_auth_oauthlib.flow import InstalledAppFlow
+##from google.auth.transport.requests import Request
 import google_auth_httplib2
 import httplib2
 
 import json
-import os.path
-import asyncio
+##import os.path
+##import asyncio
 from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
 import urllib
@@ -26,11 +26,16 @@ Add the following lines to your other python files:
 
 import api_client
 
-sheetClient = api_client.GetClient()
 
-values = await sheetClient.GetValuesAsync(SPREADSHEET_ID, range)
+values = await api_client.GetClientAsync().GetValuesAsync(MASTER_SPREADSHEET_ID, ADMINS_RANGE_NAME)
+
+or
+
+req = api_client.GetClientAsync()._spreadsheetAsync.values.batchUpdate(spreadsheetId=spreadsheetid, json=body)
+await api_client.GetClientAsync()._aiogoogle.as_service_account(req)
 
 """
+
 
 class Sheet:
     def __init__(self, sheet):
@@ -41,6 +46,7 @@ class Sheet:
         gridProperties = properties.get('gridProperties')
         self.rows = gridProperties.get('rowCount')
         self.cols = gridProperties.get('columnCount')
+
 
 class Spreadsheet:
     def __init__(self, spreadsheet):
@@ -54,20 +60,22 @@ class Spreadsheet:
                 return sheet
         raise Exception('no sheet found for title {}'.format(title))
 
+
 def ToCellData(cell):
     return {'userEnteredValue': {'stringValue': str(cell)}}
+
 
 def ToRowData(row):
     return {'values': list(map(ToCellData, row))}
 
+
 class SheetApiClient:
     def __init__(self, serviceAccountFile):
-        with open(serviceAccountFile, "r") as read_file:
-            creds = None
-            
-            SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-            creds = service_account.Credentials.from_service_account_file(
-                serviceAccountFile, scopes=SCOPES)
+        creds = None
+        
+        SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+        creds = service_account.Credentials.from_service_account_file(
+            serviceAccountFile, scopes=SCOPES)
         http = httplib2.Http(timeout=200)
         authed_http = google_auth_httplib2.AuthorizedHttp(creds, http=http)
         
@@ -79,7 +87,7 @@ class SheetApiClient:
             SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
             credfile = json.load(read_file)
             asynccreds = None
-            asynccreds = ServiceAccountCreds(scopes=SCOPES,**credfile)
+            asynccreds = ServiceAccountCreds(scopes=SCOPES, **credfile)
             async with Aiogoogle(service_account_creds=asynccreds) as aiogoogle:
                 self._sheetServiceAsync = await aiogoogle.discover("sheets", "v4")
             self._spreadsheetAsync = self._sheetServiceAsync.spreadsheets
@@ -123,7 +131,7 @@ class SheetApiClient:
         rangestring = ''
         req = self._spreadsheetAsync.values.batchGet(spreadsheetId=id, ranges=ranges[0])
 
-        #following is a temporary fix for passing multiple ranges in request
+#        following is a temporary fix for passing multiple ranges in request
         if len(ranges) > 1:
             remainingranges = ranges.copy()
             del remainingranges[0]
@@ -139,21 +147,21 @@ class SheetApiClient:
             'range': range,
             'values': values
         }
-        resp = self._spreadsheet.values().append(spreadsheetId=id, range=range, valueInputOption='USER_ENTERED', body=valueRange).execute()
+        self._spreadsheet.values().append(spreadsheetId=id, range=range, valueInputOption='USER_ENTERED', body=valueRange).execute()
 
     async def AppendValuesAsync(self, id, range, values):
         valueRange = {
             'range': range,
             'values': values
         }
-        resp = await self.aiogoogle.as_service_account(self._spreadsheetAsync.values.append(spreadsheetId=id, range=range, valueInputOption='USER_ENTERED', json=valueRange))
+        await self.aiogoogle.as_service_account(self._spreadsheetAsync.values.append(spreadsheetId=id, range=range, valueInputOption='USER_ENTERED', json=valueRange))
 
     def BatchUpdateValues(self, id, ranges, values):
         body = {
             'valueInputOption': 'USER_ENTERED',
             'data': [{'range': r, 'values': v} for r, v in zip(ranges, values)]
         }
-        resp = self._spreadsheet.values().batchUpdate(spreadsheetId=id, body=body).execute()
+        self._spreadsheet.values().batchUpdate(spreadsheetId=id, body=body).execute()
 
     async def BatchUpdateValuesAsync(self, id, ranges, values):
         body = {
@@ -161,27 +169,49 @@ class SheetApiClient:
             "data": [{"range": r, "values": v} for r, v in zip(ranges, values)]
         }
         req = self._spreadsheetAsync.values.batchUpdate(spreadsheetId=id, json=body)
-        resp = await self.aiogoogle.as_service_account(req)
+        await self.aiogoogle.as_service_account(req)
     
     def UpdateValues(self, id, Range, InsertValues):
         body = {'values': InsertValues}
-        self._spreadsheet.values().update(spreadsheetId=id, range=Range, valueInputOption='USER_ENTERED',  body=body).execute()
+        self._spreadsheet.values().update(spreadsheetId=id, range=Range, valueInputOption='USER_ENTERED', body=body).execute()
 
     async def UpdateValuesAsync(self, id, Range, InsertValues):
         body = {'values': InsertValues}
-        await self.aiogoogle.as_service_account(self._spreadsheetAsync.values.update(spreadsheetId=id, range=Range, valueInputOption='USER_ENTERED',  json=body))
+        await self.aiogoogle.as_service_account(self._spreadsheetAsync.values.update(spreadsheetId=id, range=Range, valueInputOption='USER_ENTERED', json=body))
+
        
 defaultClient = None
+
+
+defaultClientAsync = None
+
+
 def InitializeClient(serviceAccountFile):
     global defaultClient
-    defaultClient = SheetApiClient(serviceAccountFile)
+    if defaultClient == None:
+        defaultClient = SheetApiClient(serviceAccountFile)
+
     
 async def InitializeClientAsync(serviceAccountFile):
     global defaultClient
-    await defaultClient.loadasyncsheetservice(serviceAccountFile)
+    global defaultClientAsync
+    if defaultClient == None:
+        defaultClient = SheetApiClient(serviceAccountFile)
     
+    if defaultClientAsync == None:
+        defaultClientAsync = await defaultClient.loadasyncsheetservice(serviceAccountFile)
+        
+    return defaultClientAsync
+
+
 def GetClient():
     return defaultClient
+
+
+def GetClientAsync():
+    return defaultClientAsync
+
+
 
 async def GetClientAsync():
     return defaultClient
