@@ -1,13 +1,9 @@
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
-##from google_auth_oauthlib.flow import InstalledAppFlow
-##from google.auth.transport.requests import Request
 import google_auth_httplib2
 import httplib2
 
 import json
-##import os.path
-##import asyncio
 from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
 import urllib
