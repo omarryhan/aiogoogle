@@ -206,8 +206,3 @@ def GetClient():
 
 def GetClientAsync():
     return defaultClientAsync
-
-
-
-async def GetClientAsync():
-    return defaultClient
