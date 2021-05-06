@@ -166,19 +166,16 @@ def test_schemas_for_unknown_formats_and_types(open_discovery_document, name, ve
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
-def test_parameters_are_not_objects(
+def test_parameters_are_not_arrays_or_object_or_any(
     open_discovery_document, name, version, methods_generator
 ):
-    """ 
-    I was curious whether global parameters might have identical names
-    with Method.parameters.
-    Fails if similarities found
-    """
+    '''
+    https://developers.google.com/discovery/v1/type-format
+    '''
     for method in methods_generator(name, version):
         if method.parameters:
             for _, v in method.parameters.items():
-                assert v.get("type") != "object"
-                assert not v.get("properties")
+                assert (v.get("type") == "string" or v.get("type") == "boolean" or v.get("type") == "integer" or v.get("type") == "number") and not v.get('properties')
 
 
 @pytest.mark.parametrize("name,version", ALL_APIS)
