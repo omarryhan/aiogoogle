@@ -334,3 +334,12 @@ def test_fix_params(create_api):
         == "https://www.googleapis.com/urlshortener/v1/url/history?start-token=mehh"
     )  # Back to 'start-token' instead of 'start_token'
     assert "start_token" in urlshortener.url.list.parameters
+
+
+def test_arrays_passed_as_uri_params_are_encoded_as_separate_url_args(create_api):
+    sheets = create_api("sheets", "v4")
+    req = sheets.spreadsheets.values.batchGet(spreadsheetId="IRRELEVANT", ranges=['one', 'two'], validate=False)
+    assert req.url == "https://sheets.googleapis.com/v4/spreadsheets/IRRELEVANT/values:batchGet?ranges=one&ranges=two"
+
+    req2 = sheets.spreadsheets.values.batchGet(spreadsheetId="IRRELEVANT", ranges='one', validate=False)
+    assert req2.url == "https://sheets.googleapis.com/v4/spreadsheets/IRRELEVANT/values:batchGet?ranges=one"

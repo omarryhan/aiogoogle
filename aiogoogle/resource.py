@@ -472,15 +472,24 @@ class Method:
         if validate is True:
             if passed_query_params:
                 for param_name, passed_param in passed_query_params.items():
-                    self._validate(
-                        passed_param,
-                        self.parameters[param_name],
-                        schema_name=param_name,
-                    )
+                    schema = self.parameters[param_name]
+                    if schema.get('repeated') and isinstance(passed_param, (list, set, tuple)):
+                        for param in passed_param:
+                            self._validate(
+                                param,
+                                schema,
+                                schema_name=param_name
+                            )
+                    else:
+                        self._validate(
+                            passed_param,
+                            schema,
+                            schema_name=param_name,
+                        )
 
         # Join query params
         if passed_query_params:
-            uri = url + "?" + urlencode(passed_query_params)
+            uri = url + "?" + urlencode(passed_query_params, True)
         else:
             uri = url
 

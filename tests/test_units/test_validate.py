@@ -34,8 +34,6 @@ def test_validates_url_query_params(create_api):
         youtube.videos.list(part=False, validate=True)
     with pytest.raises(ValidationError):
         youtube.videos.list(part=1, validate=True)
-    with pytest.raises(ValidationError):
-        youtube.videos.list(part=["snippet"], validate=True)
 
 
 def test_validates_required_query_params_and_query_params(create_api):
@@ -411,4 +409,39 @@ def test_validates_enums2(create_api):
             range="some:range",
             majorDimension="NOT_A_VALID_OPTION",
             validate=True
+        )
+
+
+def test_validates_repeated(create_api):
+    sheets = create_api("sheets", "v4")
+    sheets.spreadsheets.values.batchGet(
+        spreadsheetId="IRRELEVANT",
+        ranges=['one', 'two']
+    )
+
+    sheets.spreadsheets.values.batchGet(
+        spreadsheetId="IRRELEVANT",
+        ranges=('one', 'two')
+    )
+
+    sheets.spreadsheets.values.batchGet(
+        spreadsheetId="IRRELEVANT",
+        ranges=set(['one', 'two'])
+    )
+
+    sheets.spreadsheets.values.batchGet(
+        spreadsheetId="IRRELEVANT",
+        ranges='one'
+    )
+
+    with pytest.raises(ValidationError):
+        sheets.spreadsheets.values.batchGet(
+            spreadsheetId="IRRELEVANT",
+            ranges=1
+        )
+
+    with pytest.raises(ValidationError):
+        sheets.spreadsheets.values.batchGet(
+            spreadsheetId="IRRELEVANT",
+            ranges=[132, 'valid']  # Only first item is invalid
         )
