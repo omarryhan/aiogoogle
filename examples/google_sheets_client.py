@@ -6,7 +6,6 @@ import httplib2
 import json
 from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
-import urllib
 
 """
 This client includes both Google synchronous and AIOGoogle asyncronous methods.
@@ -124,18 +123,9 @@ class SheetApiClient:
         return [r.get('values', []) for r in resp.get('valueRanges')]
     
     async def BatchGetValuesAsync(self, id, ranges):
-        rangestring = ''
-        req = self._spreadsheetAsync.values.batchGet(spreadsheetId=id, ranges=ranges[0])
-
-#        following is a temporary fix for passing multiple ranges in request
-        if len(ranges) > 1:
-            remainingranges = ranges.copy()
-            del remainingranges[0]
-            for batchrange in remainingranges:
-                rangestring += f'&ranges={urllib.parse.quote_plus(batchrange)}' 
-            req.url = req.url + rangestring
-        
-        resp = await self.aiogoogle.as_service_account(req)
+        resp = await self.aiogoogle.as_service_account(
+            self._spreadsheetAsync.values.batchGet(spreadsheetId=id, ranges=ranges)
+        )
         return [r.get('values', []) for r in resp.get('valueRanges')]
 
     def AppendValues(self, id, range, values):
