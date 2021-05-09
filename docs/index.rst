@@ -15,22 +15,22 @@ Aiogoogle
 
 Aiogoogle makes it possible to access most of Google's public APIs which include:
 
-- Google Calendar API
-- Google Drive API
-- Google Contacts API
-- Gmail API
-- Google Maps API
-- Youtube API
-- Translate API
-- Google Sheets API
-- Google Docs API
-- Gogle Analytics API
-- Google Books API
-- Google Fitness API
-- Google Genomics API
-- Google Cloud Storage
-- Kubernetes Engine API
-- And `more <https://developers.google.com/apis-explorer>`_.
+* Google Calendar API
+* Google Drive API
+* Google Contacts API
+* Gmail API
+* Google Maps API
+* Youtube API
+* Translate API
+* Google Sheets API
+* Google Docs API
+* Gogle Analytics API
+* Google Books API
+* Google Fitness API
+* Google Genomics API
+* Google Cloud Storage
+* Kubernetes Engine API
+* And `more <https://developers.google.com/apis-explorer>`_.
 
 Library Setup ⚙️
 =====================
