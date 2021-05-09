@@ -17,19 +17,19 @@ cd examples && cp _keys.yaml keys.yaml
 Run:
 
 ```sh
-python auth\(production_unsafe\)/oauth2.py
+python auth/oauth2.py
 ```
 
 To get OpenID Connect tokens as well, run this intead:
 
 ```sh
-python auth\(production_unsafe\)/openid_connect.py
+python auth/openid_connect.py
 ```
 
 If you'll only be using the examples here on your desktop, you can use the CLI authentication script. With this script you won't have to specify a redirect URL nor a value javascript origin, but you have to choose "Desktop Application" when creating your credentials:
 
 ```sh
-python auth\(production_unsafe\)/openid_connect_cli.py
+python auth/openid_connect_cli.py
 ```
 
 4. Copy and paste the access token and refresh token you just generated and paste them in your keys.yaml file. You're now ready to run the examples in this folder.

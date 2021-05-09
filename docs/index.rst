@@ -119,7 +119,7 @@ Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figur
 
 **Example:**
 
-Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/oauth2.py
+Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/oauth2.py
 
 Install sanic
 
@@ -246,7 +246,7 @@ how an ID token JWT should look like.
 
 **Example:**
 
-Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth(production_unsafe)/openid_connect.py
+Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/openid_connect.py
 
 .. warning::
 
