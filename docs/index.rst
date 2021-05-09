@@ -86,7 +86,31 @@ There are **3** main parties involved in this flow:
 3. **Resource Server/Authorization server**:
     - The service that aiogoogle acts as a client to. e.g. Calendar, Youtube, etc.
 
-**Steps:**
+Quick auth script
+""""""""""""""""""""
+
+Here's a script that will help you get an access and refresh token for your personal Google account.
+
+**Link**: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/oauth2.py
+
+**Steps to run:**
+
+* Clone the repo
+* ``cd aiogoogle/examples``
+* ``cp _keys.yaml keys.yaml``
+* Fillout the following:
+    - client_id
+    - client_secret
+    - scopes
+* ``cd aiogoogle/examples/auth``
+* run ``python oauth2.py``
+* After the webbrowser opens and you authorize your app, a `UserCreds <index.html#aiogoogle.auth.creds.UserCreds>`__ JSON object will be returned to your browser.
+* Copy the access token and refresh token and either paste them in keys.yaml if you'll be using the examples directory. Or copy and paste them in your own code.
+
+Integrate OAuth2 in an existing web app
+"""""""""""""""""""""""""""""""""""""""""""
+
+If you want to integrate OAuth2 in an existing web app, or use it on many users (not just your personal account), then follow these steps:
 
 1. Generate an authentication URL and send it to the user you wish to access their data on their behalf.
 
@@ -129,6 +153,7 @@ There are **3** main parties involved in this flow:
                 grant = request.args.get('code'),
                 client_creds = CLIENT_CREDS
             )
+            # Here, you should store full_user_creds in a db. Especially the refresh token and access token. 
             return response.json(full_user_creds)
 
         else:
@@ -139,15 +164,9 @@ There are **3** main parties involved in this flow:
 
     You shouldn't hand the user of your app their access and refresh tokens.
 
-    This is only done here for convenience.
+    This is only done here for convenience and for personal use.
 
     Ideally, you'd want to store their tokens in a database on your backend.
-
-**Example:**
-
-Here's a script that can help you get an access and refresh token for your personal Google account.
-
-Link: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/oauth2.py
 
 OpenID Connect
 ^^^^^^^^^^^^^^^^^^^
@@ -168,9 +187,33 @@ how an ID token JWT should look like.
 
 .. hint:: OpenID Connect should be used if you're implementing "social signin".
 
+Quick auth script
+"""""""""""""""""""
+
+Here's a script that can help you get an access & refresh token + OpenID connect claims for your personal Google account.
+
+**Link:** https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/openid_connect.py
+
+**Steps to run:**
+
+* Clone the repo
+* ``cd aiogoogle/examples``
+* ``cp _keys.yaml keys.yaml``
+* Fillout the following:
+    - client_id
+    - client_secret
+    - scopes
+* ``cd aiogoogle/examples/auth``
+* run ``python openid_connect.py``
+* After the webbrowser opens and you authorize your app, a `UserCreds <index.html#aiogoogle.auth.creds.UserCreds>`__ JSON object and a `User Info <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`_ JSON object will be returned to your browser.
+* Copy the access token and refresh token and either paste them in keys.yaml if you'll be using the examples directory. Or copy and paste them in your own code.
+
+Integrate OpenID Connect in an existing web app
+""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 This works just like OAuth2 but with a few differences.
 
-As before, we first redrect the user to the authorization prompt page.
+As before, we first redirect the user to the authorization prompt page.
 
 .. code-block:: python3
 
@@ -237,6 +280,7 @@ If you want to understand what the rest of the claims are used for, please head 
             # Check https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload for more info
             full_user_info = await aiogoogle.openid_connect.get_user_info(full_user_creds)
 
+            # Here you should save both full_user_creds and full_user_info to a db if your app will be serving multiple users.
             return response.text(
                 f"full_user_creds: {pprint.pformat(full_user_creds)}\n\nfull_user_info: {pprint.pformat(full_user_info)}"
             )
@@ -247,17 +291,11 @@ If you want to understand what the rest of the claims are used for, please head 
 
 .. warning::
 
-    You shouldn't hand the user of your app neither their tokens nor their OpenID Connect claims.
+    You should neither hand the user of your app their tokens nor their OpenID Connect claims.
 
-    This is only done here for convenience.
+    This is only done here for convenience and for personal use.
 
     Ideally, you'd want to store their info in a database on your backend.
-
-**Example:**
-
-Here's a script that can help you get an access & refresh token + OpenID connect claims for your personal Google account.
-
-Link: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/openid_connect.py
 
 Service account
 -----------------------------
