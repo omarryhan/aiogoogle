@@ -145,7 +145,7 @@ There are **3** main parties involved in this flow:
 
 **Example:**
 
-Here's a script that can help you quickly get an access and refresh token to try using the lib yourself.
+Here's a script that can help you get an access and refresh token for your personal Google account.
 
 Link: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/oauth2.py
 
@@ -255,7 +255,9 @@ If you want to understand what the rest of the claims do, please head `here <htt
 
 **Example:**
 
-Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/openid_connect.py
+Here's a script that can help you get an access & refresh token + OpenID connect claims for your personal Google account.
+
+Link: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/openid_connect.py
 
 Service account
 -----------------------------
@@ -431,7 +433,7 @@ Discovery docs and the ``Aiogoogle`` object explained
 Intro
 ----------
 
-Now that you have figured out which authentication scheme you are going to use, let's make some API calls.
+Now that you have figured out which authentication scheme you are going to use and got your hands on an access and a refresh token, let's make some API calls.
 
 Assuming that you chose the: *urlshortener v1* API:
 
@@ -449,7 +451,9 @@ Let's discover the `urlshortener` discovery document and create an Aiogoogle rep
     from aiogoogle import Aiogoogle
 
     async def create_api(name, version):
-        async with Aiogoogle() as aiogoogle:
+        async with Aiogoogle(
+            user_creds={'access_token': '...', 'refresh_token': '...'}  # Or use the UserCreds object. Same thing.
+        ) as aiogoogle:
             # Downloads the API specs and creates an API object
             return await aiogoogle.discover(name, version)
 
