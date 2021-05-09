@@ -340,6 +340,8 @@ class Oauth2Manager:
 
             response_type (str):
 
+                * Optional
+
                 * OAuth2 response type
 
                 * Defaults to Authorization Code Flow response type
@@ -440,6 +442,8 @@ class Oauth2Manager:
                 * Dict with client_id and client_secret items
 
             grant_type (str):
+
+                * Optional
 
                 * OAuth2 grant type
 
@@ -781,7 +785,9 @@ class OpenIdConnectManager(Oauth2Manager):
                 * Some OpenID scopes that you can include: ['email', 'profile', 'openid']
 
             display (str):
-            
+
+                * Optional
+
                 * An ASCII string value for specifying how the authorization server displays the authentication and consent user interface pages.
                 
                 * The following values are specified, and accepted by the Google servers, but do not have any effect on its behavior:
@@ -862,6 +868,8 @@ class OpenIdConnectManager(Oauth2Manager):
 
             openid_realm (str):
 
+                * Optional
+
                 * openid.realm is a parameter from the OpenID 2.0 protocol.
                 
                 * It is used in OpenID 2.0 requests to signify the URL-space for which an authentication request is valid.
@@ -871,6 +879,8 @@ class OpenIdConnectManager(Oauth2Manager):
                 * For more details, see Migrating off of OpenID 2.0. https://developers.google.com/identity/protocols/OpenID2Migration
 
             hd (str):
+
+                * Optional
 
                 * The hd (hosted domain) parameter streamlines the login process for G Suite hosted accounts.
                 
@@ -885,6 +895,8 @@ class OpenIdConnectManager(Oauth2Manager):
                 * Unlike the request parameter, the ID token claim is contained within a security token from Google, so the value can be trusted.
 
             response_type (str):
+
+                * Optional
 
                 * OAuth2 response type
 
@@ -1003,6 +1015,8 @@ class OpenIdConnectManager(Oauth2Manager):
 
             grant_type (str):
 
+                * Optional
+
                 * OAuth2 grant type
 
                 * defaults to ``code`` (Authorization code flow)
@@ -1015,11 +1029,15 @@ class OpenIdConnectManager(Oauth2Manager):
 
             hd (str):
 
+                * Optional
+
                 * hosted domain for G-suite
 
                 * used for id_token verification
 
             verify (str):
+
+                * Optional
 
                 * Whether or not to verify the received id_token
 

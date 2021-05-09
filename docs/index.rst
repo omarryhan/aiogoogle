@@ -80,150 +80,74 @@ Google is `Authorization Code Flow <https://tools.ietf.org/html/rfc6749#section-
 There are **3** main parties involved in this flow:
 
 1. **User**: 
-    - represented as ``aiogoogle.auth.models.UserCreds``
+    - represented as `aiogoogle.auth.models.UserCreds <index.html#aiogoogle.auth.creds.UserCreds>`__.
 2. **Client**:
-    - represented as ``aiogoogle.auth.models.ClientCreds``
+    - represented as `aiogoogle.auth.models.ClientCreds <index.html#aiogoogle.auth.creds.ClientCreds>`__.
 3. **Resource Server/Authorization server**:
-    - The service that aiogoogle acts as a client to. e.g. Calendar, Youtube, etc. 
+    - The service that aiogoogle acts as a client to. e.g. Calendar, Youtube, etc.
 
-Here's a nice ASCII chart showing how this flow works `RFC6749 section 4.1 Figure 3 <https://tools.ietf.org/html/rfc6749#section-4.1.1>`_.
+**Steps:**
 
-::
-
-    +----------+
-    | Resource |
-    |   Owner  |
-    |  (User)  |
-    +----------+
-        ^
-        |
-        (B)
-    +----|-----+          Client Identifier      +---------------+
-    |         -+----(A)-- & Redirection URI ---->|               |
-    |  User-   |                                 | Authorization |
-    |  Agent  -+----(B)-- User authenticates --->|     Server    |
-    | (Browser)|                                 |               |
-    |         -+----(C)-- Authorization Code ---<|               |
-    +-|----|---+                                 +---------------+
-    |    |                                           ^      v
-    (A)  (C)                                         |      |
-    |    |                                           |      |
-    ^    v                                           |      |
-    +---------+                                      |      |
-    |         |>---(D)-- Authorization Code ---------'      |
-    |  Client |          & Redirection URI                  |
-    |         |                                             |
-    |         |<---(E)----- Access Token -------------------'
-    +---------+       (w/ Optional Refresh Token)
-
-
-**Example:**
-
-Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/oauth2.py
-
-Install sanic
-
-.. code-block:: bash
-
-    pip install --upgrade sanic
-
-.. warning::
-
-    Do not copy and paste the following snippet as is.
-
-    The error and return messages shown below are very verbose and aren't fit for production.
-
-    If you're performing OAuth2 via Authorization Code Flow, you shouldn't hand the user their tokens.
-
-.. hint:: Code reads from top to bottom
-
-./app.py
+1. Generate an authentication URL and send it to the user you wish to access their data on their behalf.
 
 .. code-block:: python3
-
-    import sys, os, webbrowser, json
-
-    from sanic import Sanic, response
-    from sanic.exceptions import ServerError
-
-    from aiogoogle import Aiogoogle
-    from aiogoogle.auth.utils import create_secret
-
-    EMAIL = "client email"
-    CLIENT_CREDS = {
-        "client_id": '...',
-        "client_secret": '...',
-        "scopes": ['...'],
-        "redirect_uri": "http://localhost:5000/callback/aiogoogle",
-    }
-    state = create_secret()  # Shouldn't be a global hardcoded variable.
-
-    LOCAL_ADDRESS = "localhost"
-    LOCAL_PORT = "5000"
-
-    app = Sanic(__name__)
-    aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
-
-    #----------------------------------------#
-    #                                        #
-    # **Step A (Check OAuth2 figure above)** #
-    #                                        #
-    #----------------------------------------#
 
     @app.route('/authorize')
     def authorize(request):
         uri = aiogoogle.oauth2.authorization_url(
-            client_creds=CLIENT_CREDS, state=state, access_type='offline', include_granted_scopes=True, login_hint=EMAIL, prompt='select_account'
+            client_creds={
+                'client_id': '...',
+                'client_secret': '...',
+                'scopes': [
+                    '...',
+                    '...'
+                ],
+                'redirect_uri': 'http://localhost:5000/callback/aiogoogle'
+            },
         )
-        # Step A
         return response.redirect(uri)
-    #----------------------------------------------#
-    #                                              #
-    # **Step B (Check OAuth2 figure above)**       #
-    #                                              #
-    #----------------------------------------------#
-    # NOTE:                                        #
-    #  you should now be authorizing your app @    #
-    #   https://accounts.google.com/o/oauth2/      #
-    #----------------------------------------------#
 
-    #----------------------------------------------#
-    #                                              #
-    # **Step C, D & E (Check OAuth2 figure above)**#
-    #                                              #
-    #----------------------------------------------#
+2. Now, the user should get redirected to Google's auth webpage, were they will be prompted to give your app the authorization.
 
-    # Step C
-    # Google should redirect current_user to
-    # this endpoint with a grant code
+3. After the user authorizes your app, the user should get redirected back to your domain (to the ``redirect_uri`` you specified in step 1) giving you a grant code (not to be confused with an access token). Using this grant code, your application should then request a `UserCreds <index.html#aiogoogle.auth.creds.UserCreds>`__ dict which will contain an access and a refresh token.
+
+.. code-block:: python3
+
     @app.route('/callback/aiogoogle')
     async def callback(request):
+        # First, check if there's an error
         if request.args.get('error'):
             error = {
                 'error': request.args.get('error'),
                 'error_description': request.args.get('error_description')
             }
             return response.json(error)
+
+        # Here we request the access and refresh token
         elif request.args.get('code'):
-            returned_state = request.args['state'][0]
-            # Check state
-            if returned_state != state:
-                raise ServerError('NO')
-            # Step D & E (D send grant code, E receive token info)
             full_user_creds = await aiogoogle.oauth2.build_user_creds(
                 grant = request.args.get('code'),
                 client_creds = CLIENT_CREDS
             )
             return response.json(full_user_creds)
+
         else:
             # Should either receive a code or an error
             return response.text("Something's probably wrong with your callback")
 
-    if __name__ == '__main__':
-        webbrowser.open(
-            'http://' + LOCAL_ADDRESS + ':' + LOCAL_PORT + '/authorize'
-        )
-        app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
+.. warning::
+
+    You shouldn't hand the user of your app their access and refresh tokens.
+
+    This is only done here for convenience.
+
+    Ideally, you'd want to store their tokens in a database on your backend.
+
+**Example:**
+
+Here's a script that can help you quickly get an access and refresh token to try using the lib yourself.
+
+Link: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/oauth2.py
 
 OpenID Connect
 ^^^^^^^^^^^^^^^^^^^
@@ -239,101 +163,58 @@ that can be used to access the data with the scope that the app requested.
 Using OpenIDConnect will return the same access token as with OAuth2 **plus**
 an ID token JWT of the user. This ID token JWT will 
 contain "claims" about the user which your app will need to properly know who they are. Here's
-an `example <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`_ of
+an `example <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`__ of
 how an ID token JWT should look like.
 
 .. hint:: OpenID Connect should be used if you're implementing "social signin".
 
-**Example:**
+This works just like OAuth2 but with a few differences.
 
-Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/openid_connect.py
-
-.. warning::
-
-    Do not copy and paste the following snippet as is.
-
-    The error and return messages shown below are very verbose and aren't fit for production.
-
-    If you're performing OAuth2 via Authorization Code Flow, you shouldn't hand the user their tokens.
+As before, we first redrect the user to the authorization prompt page.
 
 .. code-block:: python3
 
-    #!/usr/bin/python3.7
-
-    import sys, os, webbrowser, yaml, json, pprint
-
-    from sanic import Sanic, response
-    from sanic.exceptions import ServerError
-
-    from aiogoogle import Aiogoogle
-    from aiogoogle.excs import HTTPError
-    from aiogoogle.auth.utils import create_secret
-
-    EMAIL = "..."
-    CLIENT_CREDS = {
-        "client_id": "...",
-        "client_secret": "...",
-        "scopes": ["openid", "email"],
-        "redirect_uri": "http://localhost:5000/callback/aiogoogle",
-    }
-    state = (
-        create_secret()
-    )  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once
-    nonce = (
-        create_secret()
-    )  # Shouldn't be a global or a hardcoded variable. should be tied to a session or a user and shouldn't be used more than once
-
-
-    LOCAL_ADDRESS = "localhost"
-    LOCAL_PORT = "5000"
-
-    app = Sanic(__name__)
-    aiogoogle = Aiogoogle(client_creds=CLIENT_CREDS)
-
-    #----------------------------------------#
-    #                                        #
-    # **Step A (Check OAuth2 figure above)** #
-    #                                        #
-    #----------------------------------------#
-
     @app.route('/authorize')
     def authorize(request):
-        if aiogoogle.openid_connect.is_ready(CLIENT_CREDS):
-            uri = aiogoogle.openid_connect.authorization_url(
-                client_creds=CLIENT_CREDS,
-                state=state,
-                nonce=nonce,
-                access_type='offline',
-                include_granted_scopes=True,
-                login_hint=EMAIL,
-                prompt='select_account'
-            )
-            # Step A
-            return response.redirect(uri)
-        else:
-            raise ServerError(
-                "Client doesn't have enough info for Oauth2"
-            )
+        uri = aiogoogle.openid_connect.authorization_url(
+            client_creds={
+                'client_id': '...',
+                'client_secret': '...',
+                'redirect_uri': '...',
+                'scopes': [
+                    '...'
+                ]
+            },
+            nonce='...'  # Random value that prevents replay attacks
+        )
+        return response.redirect(uri)
 
-    #----------------------------------------------#
-    #                                              #
-    # **Step B (Check OAuth2 figure above)**       #
-    #                                              #
-    #----------------------------------------------#
-    # NOTE:                                        #
-    #  you should now be authorizing your app @    #
-    #   https://accounts.google.com/o/oauth2/      #
-    #----------------------------------------------#
+Then, when the user gets redirected back to your domain, you should then request the access and refresh token.
 
-    #----------------------------------------------#
-    #                                              #
-    # **Step C, D & E (Check OAuth2 figure above)**#
-    #                                              #
-    #----------------------------------------------#
+The difference here is that aside from the `full_user_creds <index.html#aiogoogle.auth.creds.UserCreds>`__ dict, you also get the `full_user_info <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`_ dict. This dict has claims about the user. Here's an example:
 
-    # Step C
-    # Google should redirect current_user to
-    # this endpoint with a grant code
+.. code-block:: json
+
+    {
+        "iss": "https://accounts.google.com",
+        "azp": "1234987819200.apps.googleusercontent.com",
+        "aud": "1234987819200.apps.googleusercontent.com",
+        "sub": "10769150350006150715113082367",
+        "at_hash": "HK6E_P6Dh8Y93mRNtsDB1Q",
+        "hd": "example.com",
+        "email": "jsmith@example.com",
+        "email_verified": "true",
+        "iat": 1353601026,
+        "exp": 1353604926,
+        "nonce": "0394852-3190485-2490358"
+    }
+
+For example, you should use the ``sub`` claim to uniquely identify your user. Google guarantees that this claim will be unique, unlike the email claim for example.
+
+If you want to understand what the rest of the claims do, please head `here <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`__.
+
+.. code-block:: python3
+
     @app.route('/callback/aiogoogle')
     async def callback(request):
         if request.args.get('error'):
@@ -342,32 +223,39 @@ Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/a
                 'error_description': request.args.get('error_description')
             }
             return response.json(error)
+
         elif request.args.get('code'):
-            returned_state = request.args['state'][0]
-            # Check state
-            if returned_state != state:
-                raise ServerError('NO')
-            # Step D & E (D send grant code, E receive token info)
+            # Returns an access and refresh token
             full_user_creds = await aiogoogle.openid_connect.build_user_creds(
                 grant=request.args.get('code'),
                 client_creds=CLIENT_CREDS,
-                nonce=nonce,
+                nonce=nonce,  # Same nonce as above
                 verify=False
             )
+
+            # A dict having claims of the user e.g. the sub claim and iat claim.
+            # Check https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload for more info
             full_user_info = await aiogoogle.openid_connect.get_user_info(full_user_creds)
+
             return response.text(
                 f"full_user_creds: {pprint.pformat(full_user_creds)}\n\nfull_user_info: {pprint.pformat(full_user_info)}"
             )
+
         else:
             # Should either receive a code or an error
             return response.text("Something's probably wrong with your callback")
 
-    if __name__ == '__main__':
-        webbrowser.open(
-            'http://' + LOCAL_ADDRESS + ':' + LOCAL_PORT + '/authorize'
-        )
-        app.run(host=LOCAL_ADDRESS, port=LOCAL_PORT, debug=True)
+.. warning::
 
+    You shouldn't hand the user of your app neither their tokens nor their OpenID Connect claims.
+
+    This is only done here for convenience.
+
+    Ideally, you'd want to store their info in a database on your backend.
+
+**Example:**
+
+Full example here: https://github.com/omarryhan/aiogoogle/blob/master/examples/auth/openid_connect.py
 
 Service account
 -----------------------------
@@ -898,7 +786,7 @@ Send As User
     from aiogoogle import Aiogoole
     from pprint import pprint
 
-    USER_CREDS = {'access_token': '...'}
+    USER_CREDS = {'access_token': '...', 'refresh_token': '...'}
 
     async def get_calendar_events():
         async with Aiogoogle(user_creds=USER_CREDS) as aiogoogle:
@@ -995,14 +883,14 @@ You can find all examples in this `directory <https://github.com/omarryhan/aiogo
 List Files on Google Drive
 ---------------------------
 
-Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/list_drive_files.py>`_.
+Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/list_drive_files.py>`__.
 
 .. code-block:: python3
 
     import asyncio
     from aiogoogle import Aiogoogle
 
-    user_creds = {'access_token': 'an_access_token'}
+    user_creds = {'access_token': '...', 'refresh_token': '...'}
 
     async def list_files():
         async with Aiogoogle(user_creds=user_creds) as aiogoogle:
