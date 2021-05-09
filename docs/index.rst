@@ -790,10 +790,8 @@ Send As User
     from aiogoogle import Aiogoole
     from pprint import pprint
 
-    USER_CREDS = {'access_token': '...', 'refresh_token': '...'}
-
     async def get_calendar_events():
-        async with Aiogoogle(user_creds=USER_CREDS) as aiogoogle:
+        async with Aiogoogle(user_creds={'access_token': '...', 'refresh_token': '...'}) as aiogoogle:
             calendar_v3 = await aiogoogle.discover('calendar', 'v3')
             result = await aiogoogle.as_user(
                 calendar_v3.events.list(
