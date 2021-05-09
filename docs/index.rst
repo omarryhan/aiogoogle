@@ -107,7 +107,7 @@ There are **3** main parties involved in this flow:
         )
         return response.redirect(uri)
 
-2. Now, the user should get redirected to Google's auth webpage, were they will be prompted to give your app the authorization.
+2. Now, the user should get redirected to Google's auth webpage, were they will be prompted to give your app the authorization it requested.
 
 3. After the user authorizes your app, the user should get redirected back to your domain (to the ``redirect_uri`` you specified in step 1) giving you a grant code (not to be confused with an access token). Using this grant code, your application should then request a `UserCreds <index.html#aiogoogle.auth.creds.UserCreds>`__ dict which will contain an access and a refresh token.
 
@@ -189,9 +189,9 @@ As before, we first redrect the user to the authorization prompt page.
         )
         return response.redirect(uri)
 
-Then, when the user gets redirected back to your domain, you should then request the access and refresh token.
+After the user authorizes your app and gets redirected back to your domain, you should then request the access and refresh token.
 
-The difference here is that aside from the `full_user_creds <index.html#aiogoogle.auth.creds.UserCreds>`__ dict, you also get the `full_user_info <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`_ dict. This dict has claims about the user. Here's an example:
+The difference here is that aside from the `full_user_creds <index.html#aiogoogle.auth.creds.UserCreds>`__ dict, you also get the `full_user_info <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`_ dict. This dict has claims about the user. Here's an example ``full_user_info`` dict:
 
 .. code-block:: json
 
@@ -209,9 +209,9 @@ The difference here is that aside from the `full_user_creds <index.html#aiogoogl
         "nonce": "0394852-3190485-2490358"
     }
 
-For example, you should use the ``sub`` claim to uniquely identify your user. Google guarantees that this claim will be unique, unlike the email claim for example.
+You should use the ``sub`` claim to uniquely identify your user. Google guarantees that this claim will be unique, unlike the email (common mistake).
 
-If you want to understand what the rest of the claims are for, please head `here <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`__.
+If you want to understand what the rest of the claims are used for, please head `here <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`__.
 
 .. code-block:: python3
 
