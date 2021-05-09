@@ -80,9 +80,9 @@ Google is `Authorization Code Flow <https://tools.ietf.org/html/rfc6749#section-
 There are **3** main parties involved in this flow:
 
 1. **User**: 
-    - represented as `aiogoogle.auth.models.UserCreds <index.html#aiogoogle.auth.creds.UserCreds>`__.
+    - represented as `UserCreds <index.html#aiogoogle.auth.creds.UserCreds>`__.
 2. **Client**:
-    - represented as `aiogoogle.auth.models.ClientCreds <index.html#aiogoogle.auth.creds.ClientCreds>`__.
+    - represented as `ClientCreds <index.html#aiogoogle.auth.creds.ClientCreds>`__.
 3. **Resource Server/Authorization server**:
     - The service that aiogoogle acts as a client to. e.g. Calendar, Youtube, etc.
 
@@ -211,7 +211,7 @@ The difference here is that aside from the `full_user_creds <index.html#aiogoogl
 
 For example, you should use the ``sub`` claim to uniquely identify your user. Google guarantees that this claim will be unique, unlike the email claim for example.
 
-If you want to understand what the rest of the claims do, please head `here <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`__.
+If you want to understand what the rest of the claims are for, please head `here <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`__.
 
 .. code-block:: python3
 
