@@ -1301,7 +1301,6 @@ To install the local version of the aiogoogle instead of the latest one on Pip
 Now you can import aiogoogle from anywhere in your FS and make it use your local version
 
 .. toctree::
-    :maxdepth: 2
     :hidden:
 
     index
