@@ -8,4 +8,4 @@ asks
 trio
 curio
 sphinx_rtd_theme>=0.5.2
-sphinx>=4
+sphinx>=4.0.1
