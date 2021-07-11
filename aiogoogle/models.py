@@ -4,6 +4,7 @@ import pprint
 from .excs import HTTPError, AuthError
 
 
+DEFAULT_DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 DEFAULT_UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 
@@ -88,10 +89,15 @@ class MediaDownload:
 
         file_path (str): Full path of the file to be downloaded
 
+        chunksize (int): Size of a chunk of bytes that a session should write at a time when downloading.
+
     """
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, chunk_size=None):
         self.file_path = file_path
+        if chunk_size is None:
+            chunk_size = DEFAULT_DOWNLOAD_CHUNK_SIZE
+        self.chunk_size = chunk_size
 
 
 class Request:
