@@ -4,6 +4,7 @@ client_creds:
   scopes: 
     - https://www.googleapis.com/auth/youtube
     - https://www.googleapis.com/auth/youtube.force-ssl
+    - email # OpenID Connect
   
 user_creds:  
   email: example@gmail.com  # Optional
