@@ -48,10 +48,8 @@ class AiohttpSession(ClientSession, AbstractSession):
                 chunk_size = request.media_download.chunk_size
                 download_file = request.media_download.file_path
                 async with aiofiles.open(download_file, "wb+") as f:
-                    chunk = await response.content.read(chunk_size)
-                    while chunk:
-                        await f.write(chunk)
-                        chunk = await response.content.read(chunk_size)
+                    async for line in response.content.iter_chunked(chunk_size):
+                        await f.write(line)
             else:
                 if response.status != 204:  # If no (no content)
                     try:
