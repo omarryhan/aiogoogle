@@ -6,6 +6,9 @@ import asyncio
 from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
 
+'''
+https://developers.google.com/apis-explorer/#search/storage/storage/v1/storage.buckets.list
+'''
 
 # Note
 # ----

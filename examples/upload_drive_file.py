@@ -1,5 +1,16 @@
 #!/usr/bin/python3.7
 
+'''
+Scopes Required:
+
+* https://www.googleapis.com/auth/drive
+* https://www.googleapis.com/auth/drive.file
+
+API explorer link:
+
+* https://developers.google.com/apis-explorer/#p/drive/v3/drive.files.create
+'''
+
 import asyncio
 import sys
 

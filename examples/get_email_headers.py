@@ -1,5 +1,11 @@
 #!/usr/bin/python3.7
 
+'''
+Scopes Required:
+
+* "https://www.googleapis.com/auth/gmail.readonly"
+'''
+
 import asyncio
 
 from helpers import Aiogoogle, user_creds, client_creds

@@ -1,5 +1,21 @@
 #!/usr/bin/python3.7
 
+'''
+Scopes Required
+
+* https://www.googleapis.com/auth/youtubepartner
+* https://www.googleapis.com/auth/youtube.force-ssl
+* https://www.googleapis.com/auth/youtube
+
+API explorer link
+
+* https://developers.google.com/apis-explorer/#p/youtube/v3/youtube.playlists.list?part=snippet&mine=true&_h=1&
+
+Notes
+
+* You must have a channel on Youtube, not just a normal Google account.
+'''
+
 import asyncio
 import pprint
 

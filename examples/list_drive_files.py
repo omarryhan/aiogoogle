@@ -1,5 +1,16 @@
 #!/usr/bin/python3.7
 
+'''
+API explorer link:
+
+* https://developers.google.com/apis-explorer/#p/drive/v3/drive.files.list
+
+Scopes Required:
+
+* https://www.googleapis.com/auth/drive
+* https://www.googleapis.com/auth/drive.file
+'''
+
 import asyncio
 
 from helpers import Aiogoogle, user_creds, client_creds

@@ -1,5 +1,15 @@
 #!/usr/bin/python3.7
 
+'''
+Scopes Required:
+
+* "https://www.googleapis.com/auth/cloud-platform"
+
+API explorer link:
+
+* https://developers.google.com/apis-explorer/#search/firestore/firestore/v1/firestore.projects.databases.documents.createDocument
+'''
+
 import asyncio
 import datetime
 

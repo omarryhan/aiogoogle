@@ -1,5 +1,18 @@
 #!/usr/bin/python3.7
 
+'''
+API explorer link:
+
+* https://developers.google.com/apis-explorer/#p/calendar/v3/calendar.events.list?calendarId=primary&_h=2&
+
+Scopes Required:
+
+* "https://www.googleapis.com/auth/calendar",
+* "https://www.googleapis.com/auth/calendar.events",
+* "https://www.googleapis.com/auth/calendar.events.readonly",
+* "https://www.googleapis.com/auth/calendar.readonly"
+'''
+
 import asyncio
 import pprint
 
