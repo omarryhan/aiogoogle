@@ -98,6 +98,8 @@ class AiohttpSession(ClientSession, AbstractSession):
                 # If multipart pass a file async generator
                 if request.media_upload.multipart is True:
                     with MultipartWriter('mixed') as mpwriter:
+                        mpwriter.append_json(request.json)
+
                         mpwriter.append(
                             _aiter_file(
                                 request.media_upload.file_path,
@@ -105,15 +107,10 @@ class AiohttpSession(ClientSession, AbstractSession):
                             ),
                             headers={"Content-Type": request.upload_file_content_type} if request.upload_file_content_type else None
                         )
-                        if request.json:
-                            mpwriter.append_json(request.json)
 
-                        req_content_type = (request.upload_file_content_type or "multipart/related") if not request.json else "multipart/related"
+                        req_content_type = 'multipart/related'
 
                         request.headers.update({"Content-Type": f"{req_content_type}; boundary={mpwriter.boundary}"})
-
-                        # Aiohttp already handles this for us. Also the line below doesn't work. dk why.
-                        # request.headers.update({"Content-Length": str(size)})
 
                         return await self.request(
                             method=request.method,

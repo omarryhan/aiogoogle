@@ -26,26 +26,20 @@ creds = ServiceAccountCreds(
 
 async def upload_storage_bucket(
     bucket="test_bucket_clientlib",
-    file_names=["one.csv", "two.csv"],
-    file_paths=["/mnt/c/Users/Omar/Desktop/one.csv", "/mnt/c/Users/Omar/Desktop/two.csv"],
+    file_name="one.csv",
+    file_path="/mnt/c/Users/Omar/Desktop/one.csv",
     content_type="text/csv"
 ):
     async with Aiogoogle(service_account_creds=creds) as aiogoogle:
         storage = await aiogoogle.discover("storage", "v1")
-        req1 = storage.objects.insert(
+        req = storage.objects.insert(
             bucket=bucket,
-            name=file_names[0],
-            upload_file=file_paths[0],
-        )
-        req2 = storage.objects.insert(
-            bucket=bucket,
-            name=file_names[1],
-            upload_file=file_paths[1],
+            name=file_name,
+            upload_file=file_path,
         )
         # You can autodetect mimetypes using python's built in `mimetypes` library
-        req1.upload_file_content_type = content_type
-        req2.upload_file_content_type = content_type
-        res = await aiogoogle.as_service_account(req1, req2)
+        req.upload_file_content_type = content_type
+        res = await aiogoogle.as_service_account(req)
         pprint(res)
 
 if __name__ == "__main__":

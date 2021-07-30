@@ -13,6 +13,7 @@ API explorer link:
 
 import asyncio
 import sys
+import mimetypes
 
 from helpers import Aiogoogle, user_creds, client_creds
 
@@ -27,6 +28,11 @@ async def upload_file(full_path, new_name):
             fields="id",
             json={"name": new_name}
         )
+
+        # Usually autodetected by Drive
+        # mimetypes autodetects the mimetype by file extension, which isn't always accurate. 
+        # You may want to manually enter this for some extra assurance.
+        req.upload_file_content_type = mimetypes.guess_type(full_path)[0] 
 
         # Upload file
         upload_res = await aiogoogle.as_user(req)
