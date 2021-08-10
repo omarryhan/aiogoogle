@@ -96,7 +96,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                         mpwriter.append_json(request.json)
 
                         mpwriter.append(
-                            await request.media_upload.aiter_file(_aiter_file),
+                            request.media_upload.aiter_file(_aiter_file),
                             headers={"Content-Type": request.upload_file_content_type} if request.upload_file_content_type else None
                         )
 

@@ -19,6 +19,20 @@ def async_return(result):
     return f
 
 
+class AsyncIterator:
+    def __init__(self, seq):
+        self.iter = iter(seq)
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        try:
+            return next(self.iter)
+        except StopIteration:
+            raise StopAsyncIteration
+
+
 add_query_params = (
     ("https://example.com", {'foo': 'bar'}, 'https://example.com?foo=bar'),
     ("https://example.com/foo", {'bar': 'baz'}, 'https://example.com/foo?bar=baz'),
@@ -42,7 +56,7 @@ def noop(*args, **kwargs):
 async def test_media_upload_bytes_aiter():
     body = bytes(101)
     mu = MediaUpload(body, chunk_size=10)
-    chunks = [chunk async for chunk in await mu.aiter_file(noop)]
+    chunks = [chunk async for chunk in mu.aiter_file(noop)]
     assert len(chunks) == 11
     joined = b"".join(chunks)
     assert body == joined
@@ -70,9 +84,10 @@ async def test_media_upload_bytes_validation():
 async def test_media_upload_aiter():
     file_path = "test"
     mu = MediaUpload(file_path, chunk_size=10)
-    aiter_func = MagicMock(return_value=async_return(None))
-    await mu.aiter_file(aiter_func)
+    aiter_func = MagicMock(return_value=AsyncIterator(range(5)))
+    chunks = [chunk async for chunk in mu.aiter_file(aiter_func)]
     aiter_func.assert_called_once_with(file_path, 10)
+    assert len(chunks) == 5
 
 
 @pytest.mark.asyncio

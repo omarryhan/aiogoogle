@@ -91,8 +91,11 @@ class MediaUpload:
 
     async def aiter_file(self, aiter_func):
         if self.file_path:
-            return aiter_func(self.file_path, self.chunk_size)
-        return self._aiter_body()
+            async for chunk in aiter_func(self.file_path, self.chunk_size):
+                yield chunk
+        else:
+            async for chunk in self._aiter_body():
+                yield chunk
 
     async def _aiter_body(self):
         for x in range(0, len(self.file_body), self.chunk_size):
