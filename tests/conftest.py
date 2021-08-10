@@ -1,5 +1,5 @@
-import os
 import json
+from pathlib import Path
 
 import pytest
 
@@ -9,13 +9,9 @@ from aiogoogle.resource import GoogleAPI
 @pytest.fixture
 def open_discovery_document():
     def wrapped(name, version):
-        current_dir = os.getcwd()
-        file_name = (
-            current_dir + "/tests/data/" + name + "_" + version + "_discovery_doc.json"
-        )
-        with open(file_name, "r") as discovery_doc:
-            discovery_doc_dict = json.loads(discovery_doc.read())
-        return discovery_doc_dict
+        json_file = Path(__file__).parent / "data" / f"{name}_{version}_discovery_doc.json"
+        with json_file.open("r") as discovery_doc:
+            return json.loads(discovery_doc.read())
 
     return wrapped
 
