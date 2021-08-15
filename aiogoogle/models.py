@@ -1,8 +1,7 @@
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
 import pprint
 
-from .excs import HTTPError, AuthError
-
+from .excs import HTTPError, AuthError, ValidationError
 
 DEFAULT_DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 DEFAULT_UPLOAD_CHUNK_SIZE = 1024 * 1024
@@ -20,17 +19,14 @@ class ResumableUpload:
         
         multipart (bool): True if this endpoint supports upload multipart media.
 
-        chunksize (int): Size of a chunk of bytes that a session should read at a time when uploading in multipart.
+        chunk_size (int): Size of a chunk of bytes that a session should read at a time when uploading in multipart.
 
     """
 
-    def __init__(self, file_path, multipart=None, chunk_size=None, upload_path=None):
-        self.file_path = file_path
+    def __init__(self, multipart=None, chunk_size=None, upload_path=None):
         self.upload_path = upload_path
         self.multipart = multipart
-        if chunk_size is None:
-            chunk_size = DEFAULT_UPLOAD_CHUNK_SIZE
-        self.chunk_size = chunk_size
+        self.chunk_size = chunk_size or DEFAULT_UPLOAD_CHUNK_SIZE
 
 
 class MediaUpload:
@@ -40,8 +36,8 @@ class MediaUpload:
 
     Arguments:
 
-        file_path (str): Full path of the file to be uploaded
-        
+        file_path_or_bytes (str, bytes): Full path or content of the file to be uploaded
+
         upload_path (str): The URI path to be used for upload. Should be used in conjunction with the rootURL property at the API-level.
         
         mime_range (list): list of MIME Media Ranges for acceptable media uploads to this method.
@@ -60,7 +56,7 @@ class MediaUpload:
 
     def __init__(
         self,
-        file_path,
+        file_path_or_bytes,
         upload_path=None,
         mime_range=None,
         max_size=None,
@@ -69,16 +65,47 @@ class MediaUpload:
         resumable=None,
         validate=True,
     ):
-        self.file_path = file_path
+        if isinstance(file_path_or_bytes, bytes):
+            self.file_body = file_path_or_bytes
+            self.file_path = None
+        else:
+            self.file_body = None
+            self.file_path = file_path_or_bytes
         self.upload_path = upload_path
         self.mime_range = mime_range
         self.max_size = max_size
         self.multipart = multipart
-        if chunk_size is None:
-            chunk_size = DEFAULT_UPLOAD_CHUNK_SIZE
-        self.chunk_size = chunk_size
+        self.chunk_size = chunk_size or DEFAULT_UPLOAD_CHUNK_SIZE
         self.resumable = resumable
         self.validate = validate
+
+    async def run_validation(self, size_func):
+        if self.validate and self.max_size:
+            size = await size_func(self.file_path) if self.file_path else len(self.file_body)
+            if size > self.max_size:
+                raise ValidationError(
+                    f'"{self}" has a size of {size / 1000}KB. '
+                    f'Max upload size for this endpoint is: '
+                    f'{self.max_size / 1000}KB.'
+                )
+
+    async def aiter_file(self, aiter_func):
+        if self.file_path:
+            async for chunk in aiter_func(self.file_path, self.chunk_size):
+                yield chunk
+        else:
+            async for chunk in self._aiter_body():
+                yield chunk
+
+    async def _aiter_body(self):
+        for x in range(0, len(self.file_body), self.chunk_size):
+            yield self.file_body[x:x + self.chunk_size]
+
+    async def read_file(self, read_func):
+        return self.file_body or await read_func(self.file_path)
+
+    def __str__(self):
+        return self.file_path or "File object"
 
 
 class MediaDownload:
@@ -95,9 +122,7 @@ class MediaDownload:
 
     def __init__(self, file_path, chunk_size=None):
         self.file_path = file_path
-        if chunk_size is None:
-            chunk_size = DEFAULT_DOWNLOAD_CHUNK_SIZE
-        self.chunk_size = chunk_size
+        self.chunk_size = chunk_size or DEFAULT_DOWNLOAD_CHUNK_SIZE
 
 
 class Request:
@@ -157,10 +182,7 @@ class Request:
         self.method = method
         self.url = url
         self.batch_url = batch_url
-        if headers is None:
-            self.headers = {}
-        else:
-            self.headers = headers
+        self.headers = {} if headers is None else headers
         self.data = data
         self.json = json
         self.media_upload = media_upload

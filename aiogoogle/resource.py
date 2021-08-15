@@ -612,18 +612,17 @@ class Method:
             return base_url + self["path"]
 
     def _build_upload_media(self, upload_file, qualified_url, validate, fallback_url):
-        if self["supportsMediaUpload"] is not True:
-            if validate is True:
+        if not self["supportsMediaUpload"]:
+            if validate:
                 raise ValidationError(
                     "upload_file was provided while method doesn't support media upload"
                 )
-            else:
-                # This will probably not work, but will return a mediaupload object anyway
-                return MediaUpload(upload_file, upload_path=fallback_url)
+            # This will probably not work, but will return a mediaupload object anyway
+            return MediaUpload(upload_file, upload_path=fallback_url)
 
         # If resumable, create resumable object
         resumable = (
-            self._build_resumeable_media(upload_file, qualified_url)
+            self._build_resumeable_media(qualified_url)
             if _safe_getitem(
                 self._method_specs, "mediaUpload", "protocols", "resumable"
             )
@@ -631,8 +630,6 @@ class Method:
         )
 
         # Create MediaUpload object and pass it the resumable object we just created
-        # simple_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'simple', 'path')
-        # media_upload_url_base = self._root_url[:-1] + simple_upload_path
         media_upload_url_base = self._root_url + "upload/" + self._service_path
         media_upload_url = qualified_url.replace(self._base_url, media_upload_url_base)
         max_size = self._convert_str_size_to_int(
@@ -642,7 +639,7 @@ class Method:
         multipart = self["mediaUpload"]["protocols"]["simple"].get("multipart", True)
 
         return MediaUpload(
-            file_path=upload_file,
+            upload_file,
             upload_path=media_upload_url,
             max_size=max_size,
             mime_range=mime_range,
@@ -651,15 +648,11 @@ class Method:
             validate=validate,
         )
 
-    def _build_resumeable_media(self, upload_file, qualified_url):
-        # resumable_upload_path = _safe_getitem(self._method_specs, 'mediaUpload', 'protocols', 'resumable', 'path')
-        # resumable_url_base = self._root_url[:-1] + resumable_upload_path
+    def _build_resumeable_media(self, qualified_url):
         resumable_url_base = self._root_url + "resumable/upload/" + self._service_path
         resumable_url = qualified_url.replace(self._base_url, resumable_url_base)
         multipart = self["mediaUpload"]["protocols"]["resumable"].get("multipart", True)
-        return ResumableUpload(
-            upload_file, multipart=multipart, upload_path=resumable_url
-        )
+        return ResumableUpload(multipart=multipart, upload_path=resumable_url)
 
     @staticmethod
     def _convert_str_size_to_int(size):

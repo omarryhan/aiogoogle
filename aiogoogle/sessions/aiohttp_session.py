@@ -11,7 +11,6 @@ import async_timeout
 
 from ..models import Response
 from .abc import AbstractSession
-from ..excs import ValidationError
 
 
 async def _get_file_size(full_file_path):
@@ -26,6 +25,11 @@ async def _aiter_file(file_name, chunk_size):
         while chunk:
             yield chunk
             chunk = await f.read(chunk_size)
+
+
+async def _read_file(file_name):
+    async with aiofiles.open(file_name, "rb") as file:
+        return await file.read()
 
 
 class AiohttpSession(ClientSession, AbstractSession):
@@ -84,16 +88,7 @@ class AiohttpSession(ClientSession, AbstractSession):
             request.headers["User-Agent"] = "Aiogoogle Aiohttp (gzip)"
             if request.media_upload:
                 # Validate
-                if (
-                    request.media_upload.validate is True
-                    and request.media_upload.max_size is not None
-                ):
-                    size = await _get_file_size(request.media_upload.file_path)
-                    max_size = request.media_upload.max_size
-                    if size > max_size:
-                        raise ValidationError(
-                            f'"{request.media_upload.file_path}" has a size of {size/1000}KB. Max upload size for this endpoint is: {max_size/1000}KB.'
-                        )
+                await request.media_upload.run_validation(_get_file_size)
 
                 # If multipart pass a file async generator
                 if request.media_upload.multipart is True:
@@ -101,10 +96,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                         mpwriter.append_json(request.json)
 
                         mpwriter.append(
-                            _aiter_file(
-                                request.media_upload.file_path,
-                                request.media_upload.chunk_size
-                            ),
+                            request.media_upload.aiter_file(_aiter_file),
                             headers={"Content-Type": request.upload_file_content_type} if request.upload_file_content_type else None
                         )
 
@@ -122,21 +114,18 @@ class AiohttpSession(ClientSession, AbstractSession):
                         )
                 # Else load file to memory and send
                 else:
-                    async with aiofiles.open(
-                        request.media_upload.file_path, "rb"
-                    ) as file:
-                        read_file = await file.read()
-                        if request.upload_file_content_type:
-                            request.headers.update({"Content-Type": request.upload_file_content_type})
-                        return await self.request(
-                            method=request.method,
-                            url=request.media_upload.upload_path,
-                            headers=request.headers,
-                            data=read_file,
-                            json=request.json,
-                            timeout=request.timeout,
-                            verify_ssl=request._verify_ssl,
-                        )
+                    read_file = await request.media_upload.read_file(_read_file)
+                    if request.upload_file_content_type:
+                        request.headers.update({"Content-Type": request.upload_file_content_type})
+                    return await self.request(
+                        method=request.method,
+                        url=request.media_upload.upload_path,
+                        headers=request.headers,
+                        data=read_file,
+                        json=request.json,
+                        timeout=request.timeout,
+                        verify_ssl=request._verify_ssl,
+                    )
             # Else, if no file upload
             else:
                 return await self.request(
