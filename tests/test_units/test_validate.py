@@ -163,7 +163,7 @@ def test_validates_body_json_12(create_api):
         "response"
     ]  # Testing arrays and objects
     with pytest.raises(ValidationError):
-        calendar.calendarList.list(json={"items": {}})
+        calendar.calendarList.list(validate=True, json={"items": {}})
 
 
 def test_validates_body_json_13(create_api):
@@ -174,7 +174,7 @@ def test_validates_body_json_13(create_api):
     ] = calendar.calendarList.list._method_specs[
         "response"
     ]  # Testing arrays and objects
-    calendar.calendarList.list(json={"items": [{"accessRole": "a_valid_access_role"}]})
+    calendar.calendarList.list(validate=True, json={"items": [{"accessRole": "a_valid_access_role"}]})
 
 
 def test_validates_body_json_14(create_api):
@@ -186,7 +186,7 @@ def test_validates_body_json_14(create_api):
         "response"
     ]  # Testing arrays and objects
     with pytest.raises(ValidationError):
-        calendar.calendarList.list(json={"items": [{"accessRole": 1}]})
+        calendar.calendarList.list(validate=True, json={"items": [{"accessRole": 1}]})
 
 
 def test_validates_body_json_15(create_api):
@@ -199,6 +199,7 @@ def test_validates_body_json_15(create_api):
     ]  # Testing arrays and objects
     with pytest.warns(UserWarning, match="this_isnt_supposed_to_be_here"):
         calendar.calendarList.list(
+            validate=True,
             json={
                 "items": [
                     {"accessRole": "a_valid_access_role"},
@@ -218,6 +219,7 @@ def test_validates_body_json_16(create_api):
     ]  # Testing arrays and objects
     with pytest.warns(UserWarning, match="this_isnt_supposed_to_be_here"):
         calendar.calendarList.list(
+            validate=True,
             json={
                 "items": [
                     {"accessRole": "a_valid_access_role"},
@@ -237,6 +239,7 @@ def test_validates_body_json_17(create_api):
     ]  # Testing arrays and objects
     with pytest.warns(UserWarning, match="this_isnt_supposed_to_be_here"):
         calendar.calendarList.list(
+            validate=True,
             json={"items": [{"this_isnt_supposed_to_be_here": True}]}
         )
 
@@ -251,6 +254,7 @@ def test_validates_body_json_18(create_api):
     ]  # Testing arrays and objects
     with pytest.warns(UserWarning, match="this_isnt_supposed_to_be_here"):
         calendar.calendarList.list(
+            validate=True,
             json={"items": [{"this_isnt_supposed_to_be_here": "asdasdasd"}]}
         )
 
@@ -266,6 +270,7 @@ def test_validates_body_json_19(create_api):
     with pytest.warns(UserWarning, match="this_isnt_supposed_to_be_here"):
         with pytest.raises(ValidationError):
             calendar.calendarList.list(
+                validate=True,
                 json={
                     "items": [{"accessRole": 1, "this_isnt_supposed_to_be_here": 123}]
                 }
@@ -283,6 +288,7 @@ def test_validates_body_json_20(create_api):
     with pytest.warns(UserWarning, match="this_isnt_supposed_to_be_here"):
         with pytest.raises(ValidationError):
             calendar.calendarList.list(
+                validate=True,
                 json={
                     "items": [
                         {"accessRole": 1, "this_isnt_supposed_to_be_here": "asdsda"}
@@ -300,6 +306,7 @@ def test_validates_body_json_21(create_api):
         "response"
     ]  # Testing arrays and objects
     calendar.calendarList.list(
+        validate=True,
         json={
             "etag": "asd",
             "items": [
@@ -325,6 +332,7 @@ def test_validates_body_json_22(create_api):
     ]  # Testing arrays and objects
     with pytest.raises(ValidationError):
         calendar.calendarList.list(
+            validate=True,
             json={
                 "etag": "asd",
                 "items": [
@@ -350,6 +358,7 @@ def test_validates_body_json_23(create_api):
     ]  # Testing arrays and objects
     with pytest.raises(ValidationError):
         calendar.calendarList.list(
+            validate=True,
             json={
                 "etag": "asd",
                 "items": [
@@ -376,6 +385,7 @@ def test_validates_body_json_24(create_api):
     ]  # Testing arrays and objects
     with pytest.raises(ValidationError):
         calendar.calendarList.list(
+            validate=True,
             json={
                 "etag": "asd",
                 "items": [
@@ -416,32 +426,38 @@ def test_validates_repeated(create_api):
     sheets = create_api("sheets", "v4")
     sheets.spreadsheets.values.batchGet(
         spreadsheetId="IRRELEVANT",
-        ranges=['one', 'two']
+        ranges=['one', 'two'],
+        validate=True
     )
 
     sheets.spreadsheets.values.batchGet(
         spreadsheetId="IRRELEVANT",
-        ranges=('one', 'two')
+        ranges=('one', 'two'),
+        validate=True
     )
 
     sheets.spreadsheets.values.batchGet(
         spreadsheetId="IRRELEVANT",
-        ranges=set(['one', 'two'])
+        ranges=set(['one', 'two']),
+        validate=True
     )
 
     sheets.spreadsheets.values.batchGet(
         spreadsheetId="IRRELEVANT",
-        ranges='one'
+        ranges='one',
+        validate=True
     )
 
     with pytest.raises(ValidationError):
         sheets.spreadsheets.values.batchGet(
             spreadsheetId="IRRELEVANT",
-            ranges=1
+            ranges=1,
+            validate=True
         )
 
     with pytest.raises(ValidationError):
         sheets.spreadsheets.values.batchGet(
             spreadsheetId="IRRELEVANT",
-            ranges=[132, 'valid']  # Only first item is invalid
+            ranges=[132, 'valid'],  # Only first item is invalid
+            validate=True
         )

@@ -139,7 +139,7 @@ class Aiogoogle:
         )
         return await self.as_anon(request)
 
-    async def discover(self, api_name, api_version=None, validate=True):
+    async def discover(self, api_name, api_version=None, validate=False):
         """ 
         Donwloads a discovery document from Google's Discovery Service V1 and sets it a ``aiogoogle.resource.GoogleAPI``
 
@@ -157,7 +157,7 @@ class Aiogoogle:
             
             api_version (str): API version to discover *e.g.: "v3" not "3" and not 3*
 
-            validate (bool): Set this to False to disallow input validation on calling methods
+            validate (bool): Set this to True to use this lib's built in parameter validation logic. Note that you shouldn't rely on this for critical user input validation.
             
         Returns:
 

@@ -834,10 +834,10 @@ class GoogleAPI:
 
         discovery_document (dict): A discovery document
 
-        validate (bool): Whther or not to validate user input again the schema defined in the discovery document
+        validate (bool): Set this to True to use this lib's built in parameter validation logic. Note that you shouldn't rely on this for critical user input validation.
     """
 
-    def __init__(self, discovery_document, validate=True):
+    def __init__(self, discovery_document, validate=False):
         self.discovery_document = self._add_extra_query_param_definitions(
             discovery_document
         )
