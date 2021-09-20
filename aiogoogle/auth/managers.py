@@ -403,8 +403,7 @@ class Oauth2Manager:
             (str): An Authorization URI
         """
         client_creds = client_creds or self.client_creds
-        scopes = scopes or client_creds["scopes"]
-        scopes = " ".join(client_creds["scopes"])
+        scopes = " ".join(scopes or client_creds["scopes"])
         uri = (
             self["authorization_endpoint"]
             + f'?redirect_uri={client_creds["redirect_uri"]}&scope={scopes}&'
@@ -414,13 +413,12 @@ class Oauth2Manager:
             "response_type": response_type,
             "state": state,
             "access_type": access_type,
-            "include_granted_scopes": json.dumps(include_granted_scopes),
+            "include_granted_scopes": include_granted_scopes,
             "login_hint": login_hint,
             "prompt": prompt,
         }.items():
             if param is not None:
-                uri += "&"
-                uri += parse.urlencode({param_name: param})
+                uri += f"&{parse.urlencode({param_name: json.dumps(param) if isinstance(param, bool) else param})}"
         return uri
 
     async def build_user_creds(
@@ -980,13 +978,12 @@ class OpenIdConnectManager(Oauth2Manager):
             "response_type": response_type,
             "state": state,
             "access_type": access_type,
-            "include_granted_scopes": json.dumps(include_granted_scopes),
+            "include_granted_scopes": include_granted_scopes,
             "login_hint": login_hint,
             "prompt": prompt,
         }.items():
             if param is not None:
-                uri += "&"
-                uri += parse.urlencode({param_name: param})
+                uri += f"&{parse.urlencode({param_name: json.dumps(param) if isinstance(param, bool) else param})}"
         return uri
 
     async def build_user_creds(
