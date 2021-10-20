@@ -189,7 +189,7 @@ class Aiogoogle:
 
     # -------- Send Requests ----------#
 
-    async def as_user(self, *requests, timeout=None, full_res=False, user_creds=None):
+    async def as_user(self, *requests, timeout=None, full_res=False, user_creds=None, raise_for_status=True):
         """ 
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
         
@@ -210,6 +210,10 @@ class Aiogoogle:
             user_creds (aiogoogle.auth.creds.UserCreds):
 
                 If you pass user_creds here, they will only be used for this one request.
+
+            raise_for_status (bool):
+
+                If True, raises an HTTP error on HTTP status codes >= 400
 
         Returns:
 
@@ -240,10 +244,12 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
+            raise_for_status=raise_for_status,
             session_factory=self.session_factory
         )
 
-    async def as_service_account(self, *requests, timeout=None, full_res=False, service_account_creds=None):
+    async def as_service_account(
+            self, *requests, timeout=None, full_res=False, service_account_creds=None, raise_for_status=True):
         """ 
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
         
@@ -265,6 +271,10 @@ class Aiogoogle:
 
                 You only have to pass ``service_account_creds`` once, either here or when instantiating an instance of Aiogoogle.
 
+            raise_for_status (bool):
+
+                If True, raises an HTTP error on HTTP status codes >= 400
+
         Returns:
 
             aiogoogle.models.Response:
@@ -283,10 +293,11 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
+            raise_for_status=raise_for_status,
             session_factory=self.session_factory
         )
 
-    async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None):
+    async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None, raise_for_status=True):
         """ 
         Sends requests on behalf of ``self.api_key`` (OAuth2)
         
@@ -308,6 +319,10 @@ class Aiogoogle:
 
                 If you pass an API key here, it will only be used for this one request.
 
+            raise_for_status (bool):
+
+                If True, raises an HTTP error on HTTP status codes >= 400
+
         Returns:
 
             aiogoogle.models.Response:
@@ -325,10 +340,11 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
+            raise_for_status=raise_for_status,
             session_factory=self.session_factory
         )
 
-    async def as_anon(self, *requests, timeout=None, full_res=False):
+    async def as_anon(self, *requests, timeout=None, full_res=False, raise_for_status=True):
         """ 
         Sends unauthorized requests
         
@@ -346,6 +362,10 @@ class Aiogoogle:
 
                 If True, returns full HTTP response object instead of returning it's content
 
+            raise_for_status (bool):
+
+                If True, raises an HTTP error on HTTP status codes >= 400
+
         Returns:
 
             aiogoogle.models.Response:
@@ -354,6 +374,7 @@ class Aiogoogle:
             *requests,
             timeout=timeout,
             full_res=full_res,
+            raise_for_status=raise_for_status,
             session_factory=self.session_factory
         )
 
