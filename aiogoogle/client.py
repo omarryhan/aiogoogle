@@ -189,7 +189,7 @@ class Aiogoogle:
 
     # -------- Send Requests ----------#
 
-    async def as_user(self, *requests, timeout=None, full_res=False, user_creds=None):
+    async def as_user(self, *requests, timeout=None, full_res=False, raise_for_status=True, user_creds=None):
         """ 
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
         
@@ -206,6 +206,10 @@ class Aiogoogle:
             full_res (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
+
+            raise_for_status (bool):
+
+                If True, raises an HTTP error on HTTP status codes >= 400
 
             user_creds (aiogoogle.auth.creds.UserCreds):
 
@@ -240,10 +244,12 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
+            raise_for_status=raise_for_status,
             session_factory=self.session_factory
         )
 
-    async def as_service_account(self, *requests, timeout=None, full_res=False, service_account_creds=None):
+    async def as_service_account(
+            self, *requests, timeout=None, full_res=False, raise_for_status=True, service_account_creds=None):
         """ 
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
         
@@ -260,6 +266,10 @@ class Aiogoogle:
             full_res (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
+
+            raise_for_status (bool):
+
+                If True, raises an HTTP error on HTTP status codes >= 400
 
             service_account_creds (aiogoogle.auth.creds.ServiceAccountCreds):
 
@@ -283,10 +293,11 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
+            raise_for_status=raise_for_status,
             session_factory=self.session_factory
         )
 
-    async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None):
+    async def as_api_key(self, *requests, timeout=None, full_res=False, raise_for_status=True, api_key=None):
         """ 
         Sends requests on behalf of ``self.api_key`` (OAuth2)
         
@@ -303,6 +314,10 @@ class Aiogoogle:
             full_res (bool):
 
                 If True, returns full HTTP response object instead of returning it's content
+
+            raise_for_status (bool):
+
+                If True, raises an HTTP error on HTTP status codes >= 400
 
             api_key (string):
 
@@ -325,10 +340,11 @@ class Aiogoogle:
             *authorized_requests,
             timeout=timeout,
             full_res=full_res,
+            raise_for_status=raise_for_status,
             session_factory=self.session_factory
         )
 
-    async def as_anon(self, *requests, timeout=None, full_res=False):
+    async def as_anon(self, *requests, timeout=None, full_res=False, raise_for_status=True):
         """ 
         Sends unauthorized requests
         
@@ -346,6 +362,10 @@ class Aiogoogle:
 
                 If True, returns full HTTP response object instead of returning it's content
 
+            raise_for_status (bool):
+
+                If True, raises an HTTP error on HTTP status codes >= 400
+
         Returns:
 
             aiogoogle.models.Response:
@@ -354,6 +374,7 @@ class Aiogoogle:
             *requests,
             timeout=timeout,
             full_res=full_res,
+            raise_for_status=raise_for_status,
             session_factory=self.session_factory
         )
 
