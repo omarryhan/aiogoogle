@@ -5,7 +5,7 @@ from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
 
 '''
-https://developers.google.com/apis-explorer/#search/storage/storage/v1/storage.buckets.list
+https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.products/get
 '''
 
 service_account_key = json.load(open('test_service_account.json'))
@@ -37,4 +37,8 @@ async def verify_purchase(token, package_name, product_id):
     pprint(validation_result.content)
 
 if __name__ == "__main__":
-    asyncio.run(verify_purchase())
+    asyncio.run(verify_purchase(
+        token='replace_this_with_your_token',
+        product_id='replace_this_with_your_product_id',
+        package_name='replace_this_with_your_package_name'
+    ))
