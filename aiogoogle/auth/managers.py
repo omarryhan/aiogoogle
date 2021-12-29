@@ -406,9 +406,10 @@ class Oauth2Manager:
         scopes = " ".join(scopes or client_creds["scopes"])
         uri = (
             self["authorization_endpoint"]
-            + f'?redirect_uri={client_creds["redirect_uri"]}&scope={scopes}&'
+            + f'?redirect_uri={client_creds["redirect_uri"]}&'
         )
         for param_name, param in {
+            "scope": scopes,
             "client_id": client_creds["client_id"],
             "response_type": response_type,
             "state": state,
