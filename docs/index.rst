@@ -1291,6 +1291,14 @@ Take your pick :)
 Development notes
 =====================
 
+To run the test suite
+-------------------------
+
+1. Install `tox <https://tox.wiki/en/latest/>`_
+2. Run ``$ tox`` in the root of the project.
+3. For extra configs, check out the tox.ini file.
+
+
 To upload a new version
 -------------------------
 
