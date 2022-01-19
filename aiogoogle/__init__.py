@@ -20,12 +20,10 @@ from .excs import (  # noqa: F401  imported but unused
     HTTPError,
     ValidationError,
 )
-# import .utils  # noqa: F401  imported but unused
-# import .validate  # noqa: F401  imported but unused
+from . import utils  # noqa: F401  imported but unused
+from . import validate  # noqa: F401  imported but unused
 
 
 __all__.extend(client.__all__)
 __all__.extend(resource.__all__)
 __all__.extend(excs.__all__)
-# __all__.extend(utils.__all__)
-# __all__.extend(validate.__all__) Is validate in __all__ here mean validate.py or function validate?
