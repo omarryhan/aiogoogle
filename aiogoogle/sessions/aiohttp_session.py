@@ -46,14 +46,22 @@ class AiohttpSession(ClientSession, AbstractSession):
             json = None
             download_file = None
             upload_file = None
+            pipe_to = None
 
             # If downloading file:
             if request.media_download:
                 chunk_size = request.media_download.chunk_size
                 download_file = request.media_download.file_path
-                async with aiofiles.open(download_file, "wb+") as f:
+                pipe_to = request.media_download.pipe_to
+
+                if pipe_to:
                     async for line in response.content.iter_chunked(chunk_size):
-                        await f.write(line)
+                            pipe_to.write(line)
+
+                if download_file:
+                    async with aiofiles.open(download_file, "wb+") as f:
+                        async for line in response.content.iter_chunked(chunk_size):
+                            await f.write(line)
             else:
                 if response.status != 204:  # If no (no content)
                     try:
@@ -79,6 +87,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                 reason=response.reason if getattr(response, "reason") else None,
                 req=request,
                 download_file=download_file,
+                pipe_to=pipe_to,
                 upload_file=upload_file,
                 session_factory=session_factory,
             )
