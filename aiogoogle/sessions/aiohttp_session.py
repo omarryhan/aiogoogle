@@ -56,7 +56,7 @@ class AiohttpSession(ClientSession, AbstractSession):
 
                 if pipe_to:
                     async for line in response.content.iter_chunked(chunk_size):
-                            pipe_to.write(line)
+                        await pipe_to.write(line)
 
                 if download_file:
                     async with aiofiles.open(download_file, "wb+") as f:
