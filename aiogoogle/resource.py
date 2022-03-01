@@ -23,6 +23,7 @@ RESERVED_KEYWORDS = [
     "json",
     "upload_file",
     "download_file",
+    "pipe_to",
     "timeout",
 ]
 
@@ -60,6 +61,7 @@ def _temporarily_add_back_dashes_to_param_definitions(f):
         json=None,
         upload_file=None,
         download_file=None,
+        pipe_to=None,
         timeout=None,
         **uri_params,
     ):
@@ -84,6 +86,7 @@ def _temporarily_add_back_dashes_to_param_definitions(f):
             json,
             upload_file,
             download_file,
+            pipe_to,
             timeout,
             **uri_params,
         )
@@ -387,6 +390,7 @@ class Method:
         json=None,
         upload_file=None,
         download_file=None,
+        pipe_to=None,
         timeout=None,
         **uri_params,
     ) -> Request:
@@ -548,6 +552,15 @@ class Method:
             if body is not None:
                 self._validate_body(body)
 
+        # Validate selected options
+        if download_file and pipe_to:
+            raise ValueError(
+                "can't have both (download_file) and (pipe_to) options"
+            )
+
+        if not download_file and not pipe_to:
+            media_download = None
+
         # Process download_file
         if download_file:
             if validate is True:
@@ -555,9 +568,16 @@ class Method:
                     raise ValidationError(
                         "download_file was provided while method doesn't support media download"
                     )
-            media_download = MediaDownload(download_file)
-        else:
-            media_download = None
+            media_download = MediaDownload(file_path=download_file)
+
+        # Process pipe_to
+        if pipe_to:
+            if validate is True:
+                if self.__getitem__("supportsMediaDownload") is not True:
+                    raise ValidationError(
+                        "pipe_to was provided while method doesn't support media download"
+                    )
+            media_download = MediaDownload(pipe_to=pipe_to)
 
         # Process upload_file
         if upload_file:

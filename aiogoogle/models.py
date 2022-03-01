@@ -118,10 +118,13 @@ class MediaDownload:
 
         chunksize (int): Size of a chunk of bytes that a session should write at a time when downloading.
 
+        pipe_to (object): class object to stream file content to
+
     """
 
-    def __init__(self, file_path, chunk_size=None):
+    def __init__(self, file_path=None, chunk_size=None, pipe_to=None):
         self.file_path = file_path
+        self.pipe_to = pipe_to
         self.chunk_size = chunk_size or DEFAULT_DOWNLOAD_CHUNK_SIZE
 
 
@@ -258,6 +261,8 @@ class Response:
 
         download_file (str): path of the download file specified in the request
 
+        pipe_to (object): class object to stream file content to specified in the request.
+
         upload_file (str): path of the upload file specified in the request
 
         session_factory (aiogoogle.sessions.abc.AbstractSession): A callable implementation of aiogoogle's session interface
@@ -273,6 +278,7 @@ class Response:
         reason=None,
         req=None,
         download_file=None,
+        pipe_to=None,
         upload_file=None,
         session_factory=None,
     ):
@@ -287,6 +293,7 @@ class Response:
         self.reason = reason
         self.req = req
         self.download_file = download_file
+        self.pipe_to = pipe_to
         self.upload_file = upload_file
         self.session_factory = session_factory
 
