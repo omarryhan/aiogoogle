@@ -1,5 +1,7 @@
 __all__ = ["Aiogoogle"]
 
+from contextvars import ContextVar
+from uuid import uuid4
 
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager, ServiceAccountManager
@@ -53,7 +55,9 @@ class Aiogoogle:
     ):
 
         self.session_factory = session_factory
-        self.active_session = None
+        # Guarantees that each context manager gets its own active_session.
+        self.sessions = {}
+        self.active_session_id = ContextVar("active_session", default=None)
 
         # Keys
         self.api_key = api_key
@@ -378,21 +382,32 @@ class Aiogoogle:
             session_factory=self.session_factory
         )
 
-    async def _ensure_session_set(self):
-        if self.active_session is None:
-            self.active_session = self.session_factory()
+    def _ensure_session_set(self):
+        active_session_id = self.active_session_id.get()
+        if active_session_id is None:
+            active_session_id = uuid4()
+            self.active_session_id.set(active_session_id)
+
+            active_session = self.session_factory()
+            self.sessions[active_session_id] = active_session
+        else:
+            active_session = self.sessions[active_session_id]
+        return active_session
 
     async def send(self, *args, **kwargs):
-        await self._ensure_session_set()
-        return await self.active_session.send(*args, **kwargs)
+        active_session = self._ensure_session_set()
+        return await active_session.send(*args, **kwargs)
 
     async def __aenter__(self):
-        await self._ensure_session_set()
-        await self.active_session.__aenter__()
+        active_session = self._ensure_session_set()
+        await active_session.__aenter__()
         return self
 
     async def __aexit__(self, *args):
-        await self.active_session.__aexit__(*args)
+        active_session_id = self.active_session_id.get()
+        active_session = self.sessions[active_session_id]
+        await active_session.__aexit__(*args)
         # Had to add this because there's no use of keeping a closed session
         # Closed sessions cannot be reopened, so it's better to just get rid of the object
-        self.active_session = None
+        self.active_session_id.set(None)
+
