@@ -405,7 +405,7 @@ class Aiogoogle:
 
     async def __aexit__(self, *args):
         active_session_id = self.active_session_id.get()
-        active_session = self.sessions[active_session_id]
+        active_session = self.sessions.pop(active_session_id)
         await active_session.__aexit__(*args)
         # Had to add this because there's no use of keeping a closed session
         # Closed sessions cannot be reopened, so it's better to just get rid of the object
