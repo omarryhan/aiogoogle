@@ -1,7 +1,6 @@
 __all__ = ["Aiogoogle"]
 
 from contextvars import ContextVar
-from uuid import uuid4
 
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager, ServiceAccountManager
@@ -56,8 +55,7 @@ class Aiogoogle:
 
         self.session_factory = session_factory
         # Guarantees that each context manager gets its own active_session.
-        self.sessions = {}
-        self.active_session_id = ContextVar("active_session", default=None)
+        self.session_context: ContextVar[session_factory] = ContextVar("active_session", default=None)
 
         # Keys
         self.api_key = api_key
@@ -383,16 +381,11 @@ class Aiogoogle:
         )
 
     def _ensure_session_set(self):
-        active_session_id = self.active_session_id.get()
-        if active_session_id is None:
-            active_session_id = uuid4()
-            self.active_session_id.set(active_session_id)
-
-            active_session = self.session_factory()
-            self.sessions[active_session_id] = active_session
-        else:
-            active_session = self.sessions[active_session_id]
-        return active_session
+        session = self.session_context.get()
+        if session is None:
+            session = self.session_factory()
+            self.session_context.set(session)
+        return session
 
     async def send(self, *args, **kwargs):
         active_session = self._ensure_session_set()
@@ -404,10 +397,8 @@ class Aiogoogle:
         return self
 
     async def __aexit__(self, *args):
-        active_session_id = self.active_session_id.get()
-        active_session = self.sessions.pop(active_session_id)
-        await active_session.__aexit__(*args)
+        session = self.session_context.get()
+        await session.__aexit__(*args)
         # Had to add this because there's no use of keeping a closed session
         # Closed sessions cannot be reopened, so it's better to just get rid of the object
-        self.active_session_id.set(None)
-
+        self.session_context.set(None)
