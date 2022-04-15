@@ -1,5 +1,6 @@
 __all__ = ["Aiogoogle"]
 
+from contextvars import ContextVar
 
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager, ServiceAccountManager
@@ -53,7 +54,8 @@ class Aiogoogle:
     ):
 
         self.session_factory = session_factory
-        self.active_session = None
+        # Guarantees that each context manager gets its own active_session.
+        self.session_context: ContextVar[session_factory] = ContextVar("active_session", default=None)
 
         # Keys
         self.api_key = api_key
@@ -378,21 +380,31 @@ class Aiogoogle:
             session_factory=self.session_factory
         )
 
-    async def _ensure_session_set(self):
-        if self.active_session is None:
-            self.active_session = self.session_factory()
+    def _get_session(self):
+        return self.session_context.get()
+
+    def _set_session(self):
+        session = self.session_factory()
+        self.session_context.set(session)
+        return session
 
     async def send(self, *args, **kwargs):
-        await self._ensure_session_set()
-        return await self.active_session.send(*args, **kwargs)
+        session = self._get_session()
+        if session is None:
+            session = self._set_session()
+        return await session.send(*args, **kwargs)
 
     async def __aenter__(self):
-        await self._ensure_session_set()
-        await self.active_session.__aenter__()
-        return self
+        session = self._get_session()
+        if session is None:
+            session = self._set_session()
+            await session.__aenter__()
+            return self
+        raise RuntimeError("Nesting context managers using the same Aiogoogle object is not allowed.")
 
     async def __aexit__(self, *args):
-        await self.active_session.__aexit__(*args)
+        session = self._get_session()
+        await session.__aexit__(*args)
         # Had to add this because there's no use of keeping a closed session
         # Closed sessions cannot be reopened, so it's better to just get rid of the object
-        self.active_session = None
+        self.session_context.set(None)
