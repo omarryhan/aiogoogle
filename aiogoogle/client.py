@@ -392,8 +392,8 @@ class Aiogoogle:
         return await active_session.send(*args, **kwargs)
 
     async def __aenter__(self):
-        active_session = self._ensure_session_set()
-        await active_session.__aenter__()
+        session = self._ensure_session_set()
+        await session.__aenter__()
         return self
 
     async def __aexit__(self, *args):
