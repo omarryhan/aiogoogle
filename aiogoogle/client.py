@@ -380,24 +380,30 @@ class Aiogoogle:
             session_factory=self.session_factory
         )
 
-    def _ensure_session_set(self):
-        session = self.session_context.get()
-        if session is None:
-            session = self.session_factory()
-            self.session_context.set(session)
+    def _get_session(self):
+        return self.session_context.get()
+
+    def _set_session(self):
+        session = self.session_factory()
+        self.session_context.set(session)
         return session
 
     async def send(self, *args, **kwargs):
-        active_session = self._ensure_session_set()
-        return await active_session.send(*args, **kwargs)
+        session = self._get_session()
+        if session is None:
+            session = self._set_session()
+        return await session.send(*args, **kwargs)
 
     async def __aenter__(self):
-        session = self._ensure_session_set()
-        await session.__aenter__()
-        return self
+        session = self._get_session()
+        if session is None:
+            session = self._set_session()
+            await session.__aenter__()
+            return self
+        raise RuntimeError("Nesting context managers using the same Aiogoogle object is not allowed.")
 
     async def __aexit__(self, *args):
-        session = self.session_context.get()
+        session = self._get_session()
         await session.__aexit__(*args)
         # Had to add this because there's no use of keeping a closed session
         # Closed sessions cannot be reopened, so it's better to just get rid of the object
