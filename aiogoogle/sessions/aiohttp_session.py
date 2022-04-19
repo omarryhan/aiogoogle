@@ -46,7 +46,7 @@ class AiohttpSession(ClientSession, AbstractSession):
             json = None
             download_file = None
             upload_file = None
-            pipe_upload = None
+            pipe_from = None
             pipe_to = None
 
             # If downloading file:
@@ -90,7 +90,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                 download_file=download_file,
                 pipe_to=pipe_to,
                 upload_file=upload_file,
-                pipe_upload=pipe_upload,
+                pipe_from=pipe_from,
                 session_factory=session_factory,
             )
 

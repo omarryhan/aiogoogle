@@ -22,7 +22,7 @@ RESERVED_KEYWORDS = [
     "data",
     "json",
     "upload_file",
-    "pipe_upload",
+    "pipe_from",
     "download_file",
     "pipe_to",
     "timeout",
@@ -61,7 +61,7 @@ def _temporarily_add_back_dashes_to_param_definitions(f):
         data=None,
         json=None,
         upload_file=None,
-        pipe_upload=None,
+        pipe_from=None,
         download_file=None,
         pipe_to=None,
         timeout=None,
@@ -87,7 +87,7 @@ def _temporarily_add_back_dashes_to_param_definitions(f):
             data,
             json,
             upload_file,
-            pipe_upload,
+            pipe_from,
             download_file,
             pipe_to,
             timeout,
@@ -392,7 +392,7 @@ class Method:
         data=None,
         json=None,
         upload_file=None,
-        pipe_upload=None,
+        pipe_from=None,
         download_file=None,
         pipe_to=None,
         timeout=None,
@@ -583,19 +583,19 @@ class Method:
                     )
             media_download = MediaDownload(pipe_to=pipe_to)
 
-        if not upload_file and not pipe_upload:
+        if not upload_file and not pipe_from:
             media_upload = None
 
         # Process upload_file
         if upload_file:
             media_upload = self._build_upload_media(
-                upload_file, uri, validate, fallback_url=url, pipe_upload=None
+                upload_file, uri, validate, fallback_url=url, pipe_from=None
             )
 
-        # Process pipe_upload
-        if pipe_upload:
+        # Process pipe_from
+        if pipe_from:
             media_upload = self._build_upload_media(
-                upload_file, uri, validate, fallback_url=url, pipe_upload=pipe_upload
+                upload_file, uri, validate, fallback_url=url, pipe_from=pipe_from
             )
 
         return Request(
@@ -642,7 +642,7 @@ class Method:
         else:
             return base_url + self["path"]
 
-    def _build_upload_media(self, upload_file, qualified_url, validate, fallback_url, pipe_upload):
+    def _build_upload_media(self, upload_file, qualified_url, validate, fallback_url, pipe_from):
         if not self["supportsMediaUpload"]:
             if validate:
                 raise ValidationError(
@@ -671,7 +671,7 @@ class Method:
 
         return MediaUpload(
             upload_file,
-            pipe_upload=pipe_upload,
+            pipe_from=pipe_from,
             upload_path=media_upload_url,
             max_size=max_size,
             mime_range=mime_range,

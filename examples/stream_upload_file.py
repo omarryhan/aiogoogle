@@ -18,7 +18,7 @@ from helpers import Aiogoogle, user_creds, client_creds
 
 class MyFile:
     @staticmethod
-    async def read(data: bytes):
+    async def read():
         return b'Hello World'
 
 
@@ -28,7 +28,7 @@ async def stream_upload_file():
         drive_v3 = await aiogoogle.discover("drive", "v3")
 
         req = drive_v3.files.create(
-            pipe_upload=MyFile(),
+            pipe_from=MyFile(),
             fields="id"
         )
 
