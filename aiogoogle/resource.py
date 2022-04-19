@@ -61,7 +61,7 @@ def _temporarily_add_back_dashes_to_param_definitions(f):
         data=None,
         json=None,
         upload_file=None,
-        pipe_upload = None,
+        pipe_upload=None,
         download_file=None,
         pipe_to=None,
         timeout=None,
@@ -595,7 +595,7 @@ class Method:
         # Process pipe_upload
         if pipe_upload:
             media_upload = self._build_upload_media(
-                upload_file, uri, validate, fallback_url=url,pipe_upload=pipe_upload
+                upload_file, uri, validate, fallback_url=url, pipe_upload=pipe_upload
             )
 
         return Request(

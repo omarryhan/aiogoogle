@@ -80,7 +80,7 @@ class MediaUpload:
         self.chunk_size = chunk_size or DEFAULT_UPLOAD_CHUNK_SIZE
         self.resumable = resumable
         self.validate = validate
-        self.pipe_upload=pipe_upload
+        self.pipe_upload = pipe_upload
 
     async def run_validation(self, size_func):
         if self.validate and self.max_size:
@@ -97,7 +97,7 @@ class MediaUpload:
             async for chunk in aiter_func(self.file_path, self.chunk_size):
                 yield chunk
         elif self.pipe_upload:
-                yield self.pipe_upload.read()
+            yield self.pipe_upload.read()
         else:
             async for chunk in self._aiter_body():
                 yield chunk

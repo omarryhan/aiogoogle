@@ -90,7 +90,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                 download_file=download_file,
                 pipe_to=pipe_to,
                 upload_file=upload_file,
-                pipe_upload = pipe_upload,
+                pipe_upload=pipe_upload,
                 session_factory=session_factory,
             )
 
