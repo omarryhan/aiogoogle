@@ -52,6 +52,7 @@ class MediaUpload:
 
         validate (bool): Whether or not a session should validate the upload size before sending
 
+        pipe_upload (file object): class object to stream file content from
     """
 
     def __init__(
@@ -64,6 +65,7 @@ class MediaUpload:
         chunk_size=None,
         resumable=None,
         validate=True,
+        pipe_upload=None
     ):
         if isinstance(file_path_or_bytes, bytes):
             self.file_body = file_path_or_bytes
@@ -78,6 +80,7 @@ class MediaUpload:
         self.chunk_size = chunk_size or DEFAULT_UPLOAD_CHUNK_SIZE
         self.resumable = resumable
         self.validate = validate
+        self.pipe_upload=pipe_upload
 
     async def run_validation(self, size_func):
         if self.validate and self.max_size:
@@ -93,6 +96,8 @@ class MediaUpload:
         if self.file_path:
             async for chunk in aiter_func(self.file_path, self.chunk_size):
                 yield chunk
+        elif self.pipe_upload:
+                yield self.pipe_upload.read()
         else:
             async for chunk in self._aiter_body():
                 yield chunk
@@ -265,6 +270,8 @@ class Response:
 
         upload_file (str): path of the upload file specified in the request
 
+        pipe_upload (file object): class object to stream file content from
+
         session_factory (aiogoogle.sessions.abc.AbstractSession): A callable implementation of aiogoogle's session interface
     """
 
@@ -280,6 +287,7 @@ class Response:
         download_file=None,
         pipe_to=None,
         upload_file=None,
+        pipe_upload=None,
         session_factory=None,
     ):
         if json and data:
@@ -295,6 +303,7 @@ class Response:
         self.download_file = download_file
         self.pipe_to = pipe_to
         self.upload_file = upload_file
+        self.pipe_upload = pipe_upload
         self.session_factory = session_factory
 
     @staticmethod
