@@ -30,6 +30,7 @@ class CurioAsksSession(Session, AbstractSession):
             json = None
             download_file = None
             upload_file = None
+            pipe_from = None
 
             # If downloading file:
             if request.media_download:
@@ -67,6 +68,7 @@ class CurioAsksSession(Session, AbstractSession):
                 req=request,
                 download_file=download_file,
                 upload_file=upload_file,
+                pipe_from=pipe_from,
                 session_factory=session_factory,
             )
 
