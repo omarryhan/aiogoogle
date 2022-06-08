@@ -29,7 +29,7 @@ RESERVED_KEYWORDS = [
 ]
 
 # In certain API endpoints url parameters contain full URLs, there are no safe characters that should be left unquoted, so using empty string here.
-QUOTE_SAFE_CHARACTERS=''
+QUOTE_SAFE_CHARACTERS = ''
 
 # From: https://github.com/googleapis/google-api-python-client/blob/master/googleapiclient/discovery.py
 # Parameters accepted by the stack, but not visible via discovery.
