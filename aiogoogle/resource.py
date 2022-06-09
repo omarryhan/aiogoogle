@@ -28,6 +28,9 @@ RESERVED_KEYWORDS = [
     "timeout",
 ]
 
+# In certain API endpoints url parameters contain full URLs, there are no safe characters that should be left unquoted, so using empty string here.
+QUOTE_SAFE_CHARACTERS = ''
+
 # From: https://github.com/googleapis/google-api-python-client/blob/master/googleapiclient/discovery.py
 # Parameters accepted by the stack, but not visible via discovery.
 STACK_QUERY_PARAMETERS = frozenset(["trace", "pp", "strict"])
@@ -627,7 +630,7 @@ class Method:
                 self._validate_url(sorted_required_path_params)
 
             for k, v in sorted_required_path_params.items():
-                sorted_required_path_params[k] = quote(str(v))
+                sorted_required_path_params[k] = quote(str(v), safe=QUOTE_SAFE_CHARACTERS)
 
             # Build full path
             # replace named placeholders with empty ones. e.g. {param} --> {}
