@@ -33,7 +33,7 @@ setup(
     description=main_ns['__description__'],
     long_description=long_description,
     long_description_content_type="text/markdown",
-    install_requires=requirements,
+    install_requires=[requirements, 'contextvars;python_version<"3.7"'],
     tests_require=test_requirements,
     url=main_ns["__url__"],
     packages=find_packages(exclude=['tests*']),
