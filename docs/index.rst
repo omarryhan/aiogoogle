@@ -986,6 +986,25 @@ Upload a File to Google Drive
                 drive_v3.files.create(upload_file=path)
             )
     asyncio.run(upload_file('/home/aiogoogle/Documents/my_cool_gif.gif/'))
+	
+Upload a File to Google Drive using an AsyncIterable
+-----------------------------------------------------
+
+Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/stream_upload_asynciterable.py>`__.
+
+.. code-block:: python3
+	async def yield_file():
+		chunks = ['chunk1', 'chunk2']
+		for chunk in chunks:
+			yield chunk
+			
+    async def upload_iterable(iterable):
+        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
+            drive_v3 = await aiogoogle.discover('drive', 'v3')
+            await aiogoogle.as_user(
+                drive_v3.files.create(pipe_from=iterable)
+            )
+    asyncio.run(upload_file(yield_file()))
 
 List Your Contacts
 --------------------
