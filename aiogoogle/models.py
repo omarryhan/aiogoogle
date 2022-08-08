@@ -1,4 +1,5 @@
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
+from typing import AsyncIterable
 import pprint
 
 from .excs import HTTPError, AuthError, ValidationError
@@ -52,7 +53,7 @@ class MediaUpload:
 
         validate (bool): Whether or not a session should validate the upload size before sending
 
-        pipe_from (file object): class object to stream file content from
+        pipe_from (file object, AsyncIterable): class object to stream file content from
     """
 
     def __init__(
@@ -97,7 +98,11 @@ class MediaUpload:
             async for chunk in aiter_func(self.file_path, self.chunk_size):
                 yield chunk
         elif self.pipe_from:
-            yield self.pipe_from.read()
+            if isinstance(self.pipe_from, AsyncIterable):
+                async for chunk in self.pipe_from:
+                    yield chunk
+            else:
+                yield self.pipe_from.read()
         else:
             async for chunk in self._aiter_body():
                 yield chunk
