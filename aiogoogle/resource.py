@@ -399,6 +399,7 @@ class Method:
         download_file=None,
         pipe_to=None,
         timeout=None,
+        headers=None,
         **uri_params,
     ) -> Request:
         """ 
@@ -431,6 +432,8 @@ class Method:
             download_file (str): full path of file to download to
             
             timeout (str): total timeout for this request
+
+            headers (dict): HTTP headers to send with the HTTP request
             
             **uri_params (dict): path and query, required and optional parameters
 
@@ -608,6 +611,7 @@ class Method:
             data=data,
             json=json,
             timeout=timeout,
+            headers=headers,
             media_download=media_download,
             media_upload=media_upload,
             callback=lambda res: res,  # TODO: get rid of this sorcery.
