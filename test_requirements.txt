@@ -11,3 +11,4 @@ pytest
 pytest-cov
 pytest-asyncio
 tox
+asyncmock #required to get around errors for Python versions lower than v3.8 (before AsyncMock was added to stdlib) - https://github.com/omarryhan/aiogoogle/pull/108#issuecomment-1315513400
