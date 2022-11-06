@@ -1,6 +1,7 @@
 __all__ = ["Aiogoogle"]
 
 from contextvars import ContextVar
+from typing import Optional
 
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager, ServiceAccountManager
@@ -9,6 +10,11 @@ from .data import DISCOVERY_SERVICE_V1_DISCOVERY_DOC
 
 
 # Discovery doc reference https://developers.google.com/discovery/v1/reference/apis
+
+# Format string for a URL used to fetch a Google API discovery document from v2 of the Google Discovery Service
+GOOGLE_DISCOVERY_SERVICE_URL_FMT_V2 = (
+    "https://{api}.googleapis.com/$discovery/rest?version={api_version}"
+)
 
 
 class Aiogoogle:
@@ -141,26 +147,29 @@ class Aiogoogle:
         )
         return await self.as_anon(request)
 
-    async def discover(self, api_name, api_version=None, validate=False):
-        """ 
+    async def discover(self, api_name, api_version=None, validate=False, *, disco_doc_ver: Optional[int]=None):
+        """
         Donwloads a discovery document from Google's Discovery Service V1 and sets it a ``aiogoogle.resource.GoogleAPI``
 
         Note:
 
             It is recommended that you explicitly specify an API version.
-            
+
             When you leave the API version as None, Aiogoogle uses the ``list_api`` method to search for the best fit version of the given API name.
-            
+
             This will result in sending two http requests instead of just one.
-        
+
         Arguments:
 
             api_name (str): API name to discover. *e.g.: "youtube"*
-            
+
             api_version (str): API version to discover *e.g.: "v3" not "3" and not 3*
 
             validate (bool): Set this to True to use this lib's built in parameter validation logic. Note that you shouldn't rely on this for critical user input validation.
-            
+            disco_doc_ver: Specify which Google Discovery Service version to fetch a discovery document with.
+                Useful for fetching discovery docs for Google APIs that aren't supported by
+                the default version of the Google Discovery Service Aiogoogle uses.
+
         Returns:
 
             aiogoogle.resource.GoogleAPI: An object that will then be used to create API requests
@@ -185,9 +194,15 @@ class Aiogoogle:
             api=api_name, version=api_version, validate=False
         )
 
-        discovery_docuemnt = await self.as_anon(request)
+        # Allow clients to fetch Google API discovery docs from v2 of the Google Discovery Service
+        if disco_doc_ver == 2:
+            request.url = GOOGLE_DISCOVERY_SERVICE_URL_FMT_V2.format(
+                api=api_name, api_version=api_version
+            )
 
-        return GoogleAPI(discovery_docuemnt, validate)
+        discovery_document = await self.as_anon(request)
+
+        return GoogleAPI(discovery_document, validate)
 
     # -------- Send Requests ----------#
 
