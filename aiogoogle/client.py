@@ -247,7 +247,8 @@ class Aiogoogle:
             timeout=timeout,
             full_res=full_res,
             raise_for_status=raise_for_status,
-            session_factory=self.session_factory
+            session_factory=self.session_factory,
+            auth_manager=self.oauth2
         )
 
     async def as_service_account(
@@ -296,7 +297,8 @@ class Aiogoogle:
             timeout=timeout,
             full_res=full_res,
             raise_for_status=raise_for_status,
-            session_factory=self.session_factory
+            session_factory=self.session_factory,
+            auth_manager=self.service_account_manager,
         )
 
     async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None, raise_for_status=True):
@@ -343,7 +345,8 @@ class Aiogoogle:
             timeout=timeout,
             full_res=full_res,
             raise_for_status=raise_for_status,
-            session_factory=self.session_factory
+            session_factory=self.session_factory,
+            auth_manager=self.api_key_manager
         )
 
     async def as_anon(self, *requests, timeout=None, full_res=False, raise_for_status=True):
@@ -377,7 +380,8 @@ class Aiogoogle:
             timeout=timeout,
             full_res=full_res,
             raise_for_status=raise_for_status,
-            session_factory=self.session_factory
+            session_factory=self.session_factory,
+            auth_manager=None
         )
 
     def _get_session(self):
