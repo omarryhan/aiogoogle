@@ -313,7 +313,7 @@ class Response:
         self.upload_file = upload_file
         self.pipe_from = pipe_from
         self.session_factory = session_factory
-        self.auth_manager= auth_manager
+        self.auth_manager = auth_manager
 
     @staticmethod
     async def _next_page_generator(
