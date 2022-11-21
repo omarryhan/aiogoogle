@@ -278,6 +278,8 @@ class Response:
         pipe_from (file object): class object to stream file content from
 
         session_factory (aiogoogle.sessions.abc.AbstractSession): A callable implementation of aiogoogle's session interface
+        
+        auth_manager (aiogoogle.auth.managers.ServiceAccountManager): Service account authorization manager.
     """
 
     def __init__(
@@ -294,6 +296,7 @@ class Response:
         upload_file=None,
         pipe_from=None,
         session_factory=None,
+        auth_manager=None
     ):
         if json and data:
             raise TypeError("Pass either json or data, not both.")
@@ -310,6 +313,7 @@ class Response:
         self.upload_file = upload_file
         self.pipe_from = pipe_from
         self.session_factory = session_factory
+        self.auth_manager = auth_manager
 
     @staticmethod
     async def _next_page_generator(
@@ -338,7 +342,9 @@ class Response:
             )
             if next_req is not None:
                 async with session_factory() as sess:
-                    prev_res = await sess.send(next_req, full_res=True)
+                    await prev_res.auth_manager.refresh()
+                    prev_res.auth_manager.authorize(next_req)    
+                    prev_res = await sess.send(next_req, full_res=True, auth_manager=prev_res.auth_manager)
             else:
                 prev_res = None
 
