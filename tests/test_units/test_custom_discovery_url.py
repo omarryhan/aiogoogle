@@ -1,7 +1,7 @@
 try:
-  from unittest.mock import AsyncMock
+    from unittest.mock import AsyncMock
 except ImportError:
-  from asyncmock import AsyncMock
+    from asyncmock import AsyncMock
 from unittest.mock import patch
 from aiogoogle.client import Aiogoogle
 import pytest

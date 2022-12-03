@@ -147,7 +147,7 @@ class Aiogoogle:
         )
         return await self.as_anon(request)
 
-    async def discover(self, api_name, api_version=None, validate=False, *, disco_doc_ver: Optional[int]=None):
+    async def discover(self, api_name, api_version=None, validate=False, *, disco_doc_ver: Optional[int] = None):
         """
         Donwloads a discovery document from Google's Discovery Service V1 and sets it a ``aiogoogle.resource.GoogleAPI``
 
