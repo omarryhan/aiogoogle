@@ -95,22 +95,12 @@ def test_url_path_args_and_query_path_extra_arg(create_api):
     )
 
 
-@pytest.mark.parametrize("unescaped_id,escaped_url", [
-    (
-        "en.usa#holiday@group.v.calendar.google.com",
-        "https://www.googleapis.com/calendar/v3/calendars/en.usa%23holiday%40group.v.calendar.google.com/events"
-    ),
-    (
-        "https://unrelatedwebaddress.com/",
-        "https://www.googleapis.com/calendar/v3/calendars/https%3A%2F%2Funrelatedwebaddress.com%2F/events"
-    )
-])
-def test_url_path_args_is_urlencoded(create_api, unescaped_id, escaped_url):
+def test_url_path_args_is_urlencoded(create_api):
     calendar = create_api("calendar", "v3")
-    req = calendar.events.list(calendarId=unescaped_id)
+    req = calendar.events.list(calendarId="en.usa#holiday@group.v.calendar.google.com")
     assert (
         req.url
-        == escaped_url
+        == "https://www.googleapis.com/calendar/v3/calendars/en.usa%23holiday%40group.v.calendar.google.com/events"
     )
 
 
