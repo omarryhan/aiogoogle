@@ -627,8 +627,12 @@ class Method:
                 self._validate_url(sorted_required_path_params)
 
             for k, v in sorted_required_path_params.items():
-                sorted_required_path_params[k] = quote(str(v))
-
+                # Default quoting fails for buckets with a slash in a blob name for storage API:
+                # https://cloud.google.com/storage/docs/request-endpoints#encoding
+                # The following ad-hoc hack forces quoting of slash in "object" parameter while
+                # keeping it unquoted everywhere else.
+                safe_chars="" if k == "object" else "/"
+                sorted_required_path_params[k] = quote(str(v), safe=safe_chars)
             # Build full path
             # replace named placeholders with empty ones. e.g. {param} --> {}
             # Why? Because some endpoints have different names in their url path placeholders than in their parameter defenitions
