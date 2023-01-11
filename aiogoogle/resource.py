@@ -631,7 +631,6 @@ class Method:
 
             for k, v in sorted_required_path_params.items():
                 if path_params_safe_chars.get(k):
-                    # Safe character for the key `k` will be used if passed else '' will be used.
                     sorted_required_path_params[k] = quote(
                         str(v),
                         safe=path_params_safe_chars[k]
