@@ -630,8 +630,14 @@ class Method:
                 self._validate_url(sorted_required_path_params)
 
             for k, v in sorted_required_path_params.items():
-                # Safe character for the key `k` will be used if passed else '' will be used.
-                sorted_required_path_params[k] = quote(str(v), safe=path_params_safe_chars.get(k, ''))
+                if path_params_safe_chars.get(k):
+                    # Safe character for the key `k` will be used if passed else '' will be used.
+                    sorted_required_path_params[k] = quote(
+                        str(v),
+                        safe=path_params_safe_chars[k]
+                    )
+                else:
+                    sorted_required_path_params[k] = quote(str(v))
 
             # Build full path
             # replace named placeholders with empty ones. e.g. {param} --> {}
