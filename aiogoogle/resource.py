@@ -396,6 +396,7 @@ class Method:
         download_file=None,
         pipe_to=None,
         timeout=None,
+        path_params_safe_chars={},
         **uri_params,
     ) -> Request:
         """ 
@@ -429,6 +430,8 @@ class Method:
             
             timeout (str): total timeout for this request
             
+            path_params_safe_chars (dict): Dictionary of safe characters for each path parameter.
+            
             **uri_params (dict): path and query, required and optional parameters
 
         Returns:
@@ -461,7 +464,7 @@ class Method:
 
         # Build full url minus query & fragment
         url = self._build_url(
-            base_url=base_url, uri_params=uri_params.copy(), validate=validate
+            base_url=base_url, uri_params=uri_params.copy(), validate=validate, path_params_safe_chars=path_params_safe_chars
         )
 
         # Filter out query parameters from all uri_params that were passed to this method
@@ -610,7 +613,7 @@ class Method:
             callback=lambda res: res,  # TODO: get rid of this sorcery.
         )
 
-    def _build_url(self, base_url, uri_params, validate):
+    def _build_url(self, base_url, uri_params, validate, path_params_safe_chars):
         if self.path_parameters:
             # sort path params as sepcified in method_specs.parameterOrder
             sorted_required_path_params = (
@@ -627,7 +630,13 @@ class Method:
                 self._validate_url(sorted_required_path_params)
 
             for k, v in sorted_required_path_params.items():
-                sorted_required_path_params[k] = quote(str(v))
+                if path_params_safe_chars.get(k):
+                    sorted_required_path_params[k] = quote(
+                        str(v),
+                        safe=path_params_safe_chars[k]
+                    )
+                else:
+                    sorted_required_path_params[k] = quote(str(v))
 
             # Build full path
             # replace named placeholders with empty ones. e.g. {param} --> {}
