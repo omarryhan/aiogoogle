@@ -630,7 +630,7 @@ class Method:
                 self._validate_url(sorted_required_path_params)
 
             for k, v in sorted_required_path_params.items():
-                if path_params_safe_chars.get(k):
+                if path_params_safe_chars.get(k) is not None:
                     sorted_required_path_params[k] = quote(
                         str(v),
                         safe=path_params_safe_chars[k]
