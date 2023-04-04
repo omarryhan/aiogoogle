@@ -40,7 +40,8 @@ class AiohttpSession(ClientSession, AbstractSession):
         full_res=False,
         raise_for_status=True,
         session_factory=None,
-        auth_manager=None
+        auth_manager=None,
+        **kwargs
     ):
         async def resolve_response(request, response):
             data = None
@@ -93,7 +94,8 @@ class AiohttpSession(ClientSession, AbstractSession):
                 upload_file=upload_file,
                 pipe_from=pipe_from,
                 session_factory=session_factory,
-                auth_manager=auth_manager
+                auth_manager=auth_manager,
+                user_creds=kwargs.get("user_creds")
             )
 
         async def fire_request(request):
