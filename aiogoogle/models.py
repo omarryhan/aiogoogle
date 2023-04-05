@@ -3,7 +3,6 @@ from typing import AsyncIterable
 import pprint
 
 from .excs import HTTPError, AuthError, ValidationError
-from .auth.managers import ServiceAccountManager, Oauth2Manager
 
 DEFAULT_DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 DEFAULT_UPLOAD_CHUNK_SIZE = 1024 * 1024
@@ -329,6 +328,7 @@ class Response:
         res_token_name=None,
         json_req=False,
     ):
+        from .auth.managers import ServiceAccountManager, Oauth2Manager
         prev_url = None
         while prev_res is not None:
 
