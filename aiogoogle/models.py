@@ -280,6 +280,8 @@ class Response:
         session_factory (aiogoogle.sessions.abc.AbstractSession): A callable implementation of aiogoogle's session interface
         
         auth_manager (aiogoogle.auth.managers.ServiceAccountManager): Service account authorization manager.
+
+        user_creds (aiogoogle.auth.creds.UserCreds): user_creds to make an api call with.
     """
 
     def __init__(
@@ -296,7 +298,8 @@ class Response:
         upload_file=None,
         pipe_from=None,
         session_factory=None,
-        auth_manager=None
+        auth_manager=None,
+        user_creds=None
     ):
         if json and data:
             raise TypeError("Pass either json or data, not both.")
@@ -314,6 +317,8 @@ class Response:
         self.pipe_from = pipe_from
         self.session_factory = session_factory
         self.auth_manager = auth_manager
+        # Used for refreshing tokens for the Oauth2 authentication workflow.
+        self.user_creds = user_creds
 
     @staticmethod
     async def _next_page_generator(
@@ -323,6 +328,7 @@ class Response:
         res_token_name=None,
         json_req=False,
     ):
+        from .auth.managers import ServiceAccountManager, Oauth2Manager
         prev_url = None
         while prev_res is not None:
 
@@ -342,8 +348,16 @@ class Response:
             )
             if next_req is not None:
                 async with session_factory() as sess:
-                    await prev_res.auth_manager.refresh()
-                    prev_res.auth_manager.authorize(next_req)    
+                    if isinstance(prev_res.auth_manager, (ServiceAccountManager, Oauth2Manager)):
+                        authorize_params = [next_req]
+                        if isinstance(prev_res.auth_manager, ServiceAccountManager):
+                            is_refreshed = await prev_res.auth_manager.refresh()
+                        else:
+                            is_refreshed, user_creds = await prev_res.auth_manager.refresh(prev_res.user_creds)
+                            authorize_params.append(user_creds)
+                        
+                        if is_refreshed is True:
+                            prev_res.auth_manager.authorize(*authorize_params)   
                     prev_res = await sess.send(next_req, full_res=True, auth_manager=prev_res.auth_manager)
             else:
                 prev_res = None

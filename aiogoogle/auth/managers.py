@@ -617,6 +617,7 @@ class Oauth2Manager:
 
         Returns:
 
+            bool: If the token is refreshed or not 
             aiogoogle.creds.UserCreds: Refreshed user credentials
 
         Raises:
@@ -624,12 +625,16 @@ class Oauth2Manager:
             aiogoogle.excs.AuthError: Auth Error
         """
         client_creds = client_creds or self.client_creds
+
+        if not self.is_expired(user_creds):
+            return False, user_creds
+
         request = self._build_refresh_request(user_creds, client_creds)
         json_res = await self._send_request(request)
         final_user_creds = self._build_user_creds_from_res(json_res)
         if not final_user_creds.get('refresh_token'):
             final_user_creds['refresh_token'] = user_creds.get('refresh_token')
-        return final_user_creds
+        return True, final_user_creds
 
     def _build_refresh_request(self, user_creds, client_creds):
         data = dict(
@@ -1325,11 +1330,11 @@ class ServiceAccountManager:
         Ensures that there's an unexpired access token.
 
         Returns:
+            bool: If the token is refreshed or not.
 
-            None
         '''
         if self._access_token and not _is_expired(self._expires_at):
-            return
+            return False
 
         if self._creds_source == 'key_file':
             await self._get_oauth2_authorization_grant()
@@ -1340,3 +1345,4 @@ class ServiceAccountManager:
                 'No service account creds found.'
                 'Please provide service account credentials or call self.detect_default_creds first'
             )
+        return True
