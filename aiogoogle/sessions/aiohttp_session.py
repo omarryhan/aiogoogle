@@ -72,7 +72,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                     except (JSONDecodeError, ContentTypeError):
                         try:
                             data = await response.text()
-                        except ContentTypeError:
+                        except (ContentTypeError, UnicodeDecodeError):
                             try:
                                 data = await response.read()
                             except ContentTypeError:
