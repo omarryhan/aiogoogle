@@ -441,7 +441,7 @@ Anonymous principal (API keys)
 
 An API key is a simple string that you can get from Google Cloud Console.
 
-Using an API key is suitable for when you only want to access pubic data.
+Using an API key is suitable for when you only want to access public data.
 
 **Example:**
 
