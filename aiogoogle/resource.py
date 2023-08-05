@@ -453,7 +453,7 @@ class Method:
 
         # Assert timeout is int
         if timeout is not None:
-            if not isinstance(timeout, int) or type(timeout) == bool:
+            if not isinstance(timeout, int) or isinstance(timeout, bool):  # True isinstanceof int
                 raise TypeError("Timeouts can only be ints or None")
 
         # Resolve validation status
