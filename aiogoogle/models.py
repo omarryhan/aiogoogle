@@ -348,17 +348,22 @@ class Response:
             )
             if next_req is not None:
                 async with session_factory() as sess:
+                    user_creds = None
+
                     if isinstance(prev_res.auth_manager, (ServiceAccountManager, Oauth2Manager)):
-                        authorize_params = [next_req]
+                        is_refreshed = False
+                        user_creds = None
+
                         if isinstance(prev_res.auth_manager, ServiceAccountManager):
                             is_refreshed = await prev_res.auth_manager.refresh()
+                            if is_refreshed:
+                                prev_res.auth_manager.authorize(next_req)
                         else:
                             is_refreshed, user_creds = await prev_res.auth_manager.refresh(prev_res.user_creds)
-                            authorize_params.append(user_creds)
-                        
-                        if is_refreshed is True:
-                            prev_res.auth_manager.authorize(*authorize_params)   
-                    prev_res = await sess.send(next_req, full_res=True, auth_manager=prev_res.auth_manager)
+                            if is_refreshed and user_creds:
+                                prev_res.auth_manager.authorize(next_req, user_creds=user_creds)
+ 
+                    prev_res = await sess.send(next_req, full_res=True, auth_manager=prev_res.auth_manager, user_creds=user_creds)
             else:
                 prev_res = None
 
