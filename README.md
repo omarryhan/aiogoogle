@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/omarryhan/aiogoogle/blob/master/logo.png?raw=true" alt="Logo" title="Aiogoogle" width="200"/>
+  <img src="https://github.com/omarryhan/aiogoogle/blob/master/logo.png?raw=true" alt="Logo" title="Aiogoogle" height="233" width="482"/>
   <p align="center">
     <a href="https://github.com/omarryhan/aiogoogle/actions?query=workflow%3ACI"><img alt="Build Status" src="https://github.com/omarryhan/aiogoogle/workflows/CI/badge.svg"></a>
     <a href="https://github.com/omarryhan/aiogoogle"><img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square"></a>
