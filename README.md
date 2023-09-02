@@ -4,8 +4,8 @@
     <a href="https://github.com/omarryhan/aiogoogle/actions?query=workflow%3ACI"><img alt="Build Status" src="https://github.com/omarryhan/aiogoogle/workflows/CI/badge.svg"></a>
     <a href="https://github.com/omarryhan/aiogoogle"><img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square"></a>
     <a href="https://github.com/python/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a>
-    <a href="https://pepy.tech/badge/aiogoogle"><img alt="Downloads" src="https://pepy.tech/badge/aiogoogle"></a>
-    <a href="https://pepy.tech/badge/aiogoogle/month"><img alt="Monthly Downloads" src="https://pepy.tech/badge/aiogoogle/month"></a>
+    <a href="https://static.pepy.tech/badge/aiogoogle"><img alt="Downloads" src="https://static.pepy.tech/badge/aiogoogle"></a>
+    <a href="https://static.pepy.tech/badge/aiogoogle/month"><img alt="Monthly Downloads" src="https://static.pepy.tech/badge/aiogoogle/month"></a>
   </p>
 </p>
 
