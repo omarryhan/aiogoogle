@@ -10,14 +10,14 @@ DEFAULT_UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 class ResumableUpload:
     """
-    Resumable Upload Object. Works in conjuction with media upload 
-    
+    Resumable Upload Object. Works in conjuction with media upload
+
     Arguments:
 
         file_path (str): Full path of the file to be uploaded
-        
+
         upload_path (str): The URI path to be used for upload. Should be used in conjunction with the rootURL property at the API-level.
-        
+
         multipart (bool): True if this endpoint supports upload multipart media.
 
         chunk_size (int): Size of a chunk of bytes that a session should read at a time when uploading in multipart.
@@ -40,15 +40,15 @@ class MediaUpload:
         file_path_or_bytes (str, bytes): Full path or content of the file to be uploaded
 
         upload_path (str): The URI path to be used for upload. Should be used in conjunction with the rootURL property at the API-level.
-        
+
         mime_range (list): list of MIME Media Ranges for acceptable media uploads to this method.
-        
+
         max_size (int): Maximum size of a media upload in bytes
-        
+
         multipart (bool): True if this endpoint supports upload multipart media.
 
         chunksize (int): Size of a chunk of bytes that a session should read at a time when uploading in multipart.
-        
+
         resumable (aiogoogle.models.ResumableUplaod): A ResumableUpload object
 
         validate (bool): Whether or not a session should validate the upload size before sending
@@ -143,31 +143,31 @@ class Request:
     Request class for the whole library. Auth Managers, GoogleAPI and Sessions should all use this.
 
     .. note::
-        
+
         For HTTP body, only pass one of the following params:
-            
+
             - json: json as a dict
-            - data: www-url-form-encoded form as a dict/ bytes/ text/ 
+            - data: www-url-form-encoded form as a dict/ bytes/ text/
 
 
     Parameters:
 
         method (str): HTTP method as a string (upper case) e.g. 'GET'
-        
+
         url (str): full url as a string. e.g. 'https://example.com/api/v1/resource?filter=filter#something
 
         batch_url (str): full url of for sending this request in a batch
-        
+
         json (dict): json as a dict
-        
-        data (any): www-url-form-encoded form as a dict/ bytes/ text/ 
-        
+
+        data (any): www-url-form-encoded form as a dict/ bytes/ text/
+
         headers (dict): headers as a dict
-        
+
         media_download (aiogoogle.models.MediaDownload): MediaDownload object
-        
+
         media_upload (aiogoogle.models.MediaUpload): MediaUpload object
-        
+
         timeout (int): Individual timeout for this request
 
         callback (callable): Synchronous callback that takes the content of the response as the only argument. Should also return content.
@@ -278,7 +278,7 @@ class Response:
         pipe_from (file object): class object to stream file content from
 
         session_factory (aiogoogle.sessions.abc.AbstractSession): A callable implementation of aiogoogle's session interface
-        
+
         auth_manager (aiogoogle.auth.managers.ServiceAccountManager): Service account authorization manager.
 
         user_creds (aiogoogle.auth.creds.UserCreds): user_creds to make an api call with.
@@ -362,7 +362,7 @@ class Response:
                             is_refreshed, user_creds = await prev_res.auth_manager.refresh(prev_res.user_creds)
                             if is_refreshed and user_creds:
                                 prev_res.auth_manager.authorize(next_req, user_creds=user_creds)
- 
+
                     prev_res = await sess.send(next_req, full_res=True, auth_manager=prev_res.auth_manager, user_creds=user_creds)
             else:
                 prev_res = None
@@ -382,13 +382,13 @@ class Response:
             session_factory (aiogoogle.sessions.abc.AbstractSession): A session factory
 
             req_token_name (str):
-            
+
                 * name of the next_page token in the request
 
                 * Default: "pageToken"
-            
-            res_token_name (str): 
-            
+
+            res_token_name (str):
+
                 * name of the next_page token in json response
 
                 * Default: "nextPageToken"
@@ -429,13 +429,13 @@ class Response:
         Arguments:
 
             req_token_name (str):
-            
+
                 * name of the next_page token in the request
 
                 * Default: "pageToken"
-            
-            res_token_name (str): 
-            
+
+            res_token_name (str):
+
                 * name of the next_page token in json response
 
                 * Default: "nextPageToken"

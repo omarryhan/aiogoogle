@@ -297,7 +297,7 @@ def validate_type(instance, schema, schema_name=None):
     if type_validator_name not in JSON_PYTHON_TYPE_MAPPING:
         warnings.warn(
             f"""\n\nUnknown type: {type_validator_name} found.\n\nSkipping type checks for {instance}
-            against this schema:\n\n{schema}\n\nPlease create an 
+            against this schema:\n\n{schema}\n\nPlease create an
             issue @ https://github.com/omarryhan/aiogoogle and report this warning msg."""
         )
         return
@@ -316,7 +316,7 @@ def validate_format(instance, schema, schema_name=None):
         if format_validator_name not in KNOWN_FORMATS:
             warnings.warn(
                 f"""\n\nUnknown format: {format_validator_name} found.\n\nSkipping format checks for {instance}
-            against this schema:\n\n{schema}\n\nPlease create an 
+            against this schema:\n\n{schema}\n\nPlease create an
             issue @ https://github.com/omarryhan/aiogoogle and report this warning msg."""
             )
             return
@@ -428,7 +428,7 @@ def validate(instance, schema, schemas=None, schema_name=None):
             if not additional_properties:
                 raise ValidationError(
                     f"""
-                    Invalid Schema: {str(schema)}. 
+                    Invalid Schema: {str(schema)}.
                     Neither properties nor addiotional properties found in this schema"""
                 )
             props = {}

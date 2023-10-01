@@ -45,7 +45,7 @@ Google Account Setup
 1. **Create a project:** `Google's APIs and Services dashboard <https://console.cloud.google.com/projectselector/apis/dashboard>`_.
 2. **Enable an API:** `API Library <https://console.cloud.google.com/apis/library>`_.
 3. **Create credentials:** `Credentials wizard <https://console.cloud.google.com/apis/credentials/wizard?>`_.
-4. **Pick an API:** `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_ 
+4. **Pick an API:** `Google's APIs Explorer <https://developers.google.com/apis-explorer/>`_
 
 Authentication
 =====================
@@ -54,14 +54,14 @@ Google APIs can be called on behalf of 3 main principals:
 
 1. **User account**
 2. **Service account**
-3. Anonymous principal by using: **API keys** 
+3. Anonymous principal by using: **API keys**
 
 User account
 --------------
 
-Should be used whenever the application wants to access information 
+Should be used whenever the application wants to access information
 tied to a Google user.
-Google provides two main authorization/authentication strategies that will 
+Google provides two main authorization/authentication strategies that will
 enable your application act on behalf of a user account:
 
 1. **OAuth2**
@@ -75,11 +75,11 @@ act on behalf of a user. It isn't designed to identify who the user is,
 rather only defines what a client (the app) can access.
 
 OAuth2 has 4 main flows. The most popular of them and the only one supported by
-Google is `Authorization Code Flow <https://tools.ietf.org/html/rfc6749#section-1.3.1>`_. 
+Google is `Authorization Code Flow <https://tools.ietf.org/html/rfc6749#section-1.3.1>`_.
 
 There are **3** main parties involved in this flow:
 
-1. **User**: 
+1. **User**:
     - represented as `UserCreds <index.html#aiogoogle.auth.creds.UserCreds>`__.
 2. **Client**:
     - represented as `ClientCreds <index.html#aiogoogle.auth.creds.ClientCreds>`__.
@@ -153,7 +153,7 @@ If you want to integrate OAuth2 in an existing web app, or use it on many users 
                 grant = request.args.get('code'),
                 client_creds = CLIENT_CREDS
             )
-            # Here, you should store full_user_creds in a db. Especially the refresh token and access token. 
+            # Here, you should store full_user_creds in a db. Especially the refresh token and access token.
             return response.json(full_user_creds)
 
         else:
@@ -171,16 +171,16 @@ If you want to integrate OAuth2 in an existing web app, or use it on many users 
 OpenID Connect
 ^^^^^^^^^^^^^^^^^^^
 
-OpenID Connect is an authentication layer built on top of OAuth2 
-(an authorization framework). This method should be used when the client 
+OpenID Connect is an authentication layer built on top of OAuth2
+(an authorization framework). This method should be used when the client
 (the app) wants to identify the user i.e. authenticate them.
-Since OpenID connect is a superset of OAuth2, this method will 
+Since OpenID connect is a superset of OAuth2, this method will
 also give the client the authorization needed to edit resources of the user.
 
-In more practical terms, using OAuth2 alone will only return you a token 
-that can be used to access the data with the scope that the app requested. 
+In more practical terms, using OAuth2 alone will only return you a token
+that can be used to access the data with the scope that the app requested.
 Using OpenIDConnect will return the same access token as with OAuth2 **plus**
-an ID token JWT of the user. This ID token JWT will 
+an ID token JWT of the user. This ID token JWT will
 contain "claims" about the user which your app will need to properly know who they are. Here's
 an `example <https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload>`__ of
 how an ID token JWT should look like.
@@ -301,12 +301,12 @@ Service account
 -----------------------------
 
 A service account is a special kind of account that belongs to an application
-or a virtual machine (VM) instance but not a person. 
+or a virtual machine (VM) instance but not a person.
 They are intended for scenarios where your application needs to
-access resources or perform actions on its own, 
+access resources or perform actions on its own,
 such as running App Engine apps or interacting with Compute Engine instances.
 
-There are a couple of authentication/authorization methods you 
+There are a couple of authentication/authorization methods you
 can use with service accounts. We'll only concern ourselves with
 the ones that will grant us access to Google APIs and not for
 any other purpose e.g. communicating with other servers on a different cloud,
@@ -316,7 +316,7 @@ OAuth2
 ^^^^^^^^^^^^^
 
 OAuth2 is the most commonly used service account authorization method and the only one implemented by Aiogoogle.
-There are a couple of ways you can access Google APIs using OAuth2 
+There are a couple of ways you can access Google APIs using OAuth2
 tokens for service accounts:
 
 **1. By passing a user managed service account key:**
@@ -458,7 +458,7 @@ Discovery Service
 
 Most of Google's public APIs are documented/discoverable by a single API called the Discovery Service.
 
-Google's Discovery Serivce provides machine readable specifications known as discovery documents 
+Google's Discovery Serivce provides machine readable specifications known as discovery documents
 (similar to `Swagger/OpenAPI <https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml>`_). `e.g. Google Books <https://www.googleapis.com/discovery/v1/apis/books/v1/rest>`_.
 
 ``Aiogoogle`` is a Pythonic wrapper for discovery documents.
@@ -526,7 +526,7 @@ This is what the JSON representation of the discovery document we downloaded loo
 
     `Full reference: <https://developers.google.com/discovery/v1/reference/apis>`_.
 
-You don't have to worry about most of this. 
+You don't have to worry about most of this.
 What's important to understand right now is that a discovery service is just a way to specify the **resources** and **methods** of an API.
 
 **What are resources and methods?**
@@ -605,7 +605,7 @@ Let's see what this method does
     >>> list_url['description']
 
     "Retrieves a list of URLs shortened by a user."
-    
+
 Cool, now let's see the optional parameters that this method accepts
 
 .. code-block:: python3
@@ -652,7 +652,7 @@ We can inspect the URL of the request by typing:
 .. code-block:: python3
 
     >>> request.url
-     
+
     'https://www.googleapis.com/url/history?start_token=a_start_token&key=a_secret_key'
 
 Browse an API - Manually
@@ -669,7 +669,7 @@ Sometimes it's easier to browse a discovery document manually instead of doing i
     https://www.googleapis.com/discovery/v1/apis/{api}/{version}/rest
 
     e.g.
-    
+
     https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest
 
 3. You'll then get a human readable JSON document with a structure similar to the one you've seen `above <https://aiogoogle.readthedocs.io/en/latest/#structure-of-an-api>`_.
@@ -750,7 +750,7 @@ Send Requests Concurrently
                     json=dict(
                         longUrl=long_url[0]
                     ),
-                
+
                 url_shortener.url.insert(
                     json=dict(
                         longUrl=long_url[1]
@@ -811,7 +811,7 @@ Send As API key
         "data": {
             "translations": [
                 {
-                    "translatedText": "Aiogoogle est terribilis!",  
+                    "translatedText": "Aiogoogle est terribilis!",
                     # Google probably meant "awesomelis", but whatever..
                     "detectedSourceLanguage": "en"
                 }
@@ -986,7 +986,7 @@ Upload a File to Google Drive
                 drive_v3.files.create(upload_file=path)
             )
     asyncio.run(upload_file('/home/aiogoogle/Documents/my_cool_gif.gif/'))
-	
+
 Upload a File to Google Drive using an AsyncIterable
 -----------------------------------------------------
 
@@ -997,7 +997,7 @@ Full example `here <https://github.com/omarryhan/aiogoogle/blob/master/examples/
 		chunks = ['chunk1', 'chunk2']
 		for chunk in chunks:
 			yield chunk
-			
+
     async def upload_iterable(iterable):
         async with Aiogoogle(user_creds=user_creds) as aiogoogle:
             drive_v3 = await aiogoogle.discover('drive', 'v3')
@@ -1171,7 +1171,7 @@ And Trio:
     if __name__ == '__main__':
         trio.run(list_events)
 
-Lightweight and minimalistic 
+Lightweight and minimalistic
 ------------------------------
 
 Aiogoogle is built to be as lightweight and extensible as possible so that both client facing applications and API libraries can use it.
@@ -1295,7 +1295,7 @@ There's a bunch you can do to help regardless of your experience level:
 
 1. **Features, chores and bug reports:**
 
-    Please refer to the Github issue tracker where they are posted. 
+    Please refer to the Github issue tracker where they are posted.
 
 2. **Examples:**
 

@@ -182,7 +182,7 @@ def test_stack_parameters_are_passed_correctly(open_discovery_document, name, ve
             )
 
 
-# Mehh 
+# Mehh
 @pytest.mark.parametrize("name,version", ALL_APIS)
 def test_resources_generator(open_discovery_document, name, version, resources_generator):
     for resource in resources_generator(name, version):
