@@ -27,7 +27,7 @@ class Aiogoogle:
         2. Aiogoogle's OAuth2 manager
         3. Aiogoogle's API key manager
         4. Aiogoogle's OpenID Connect manager
-        5. Aiogoogle's service account manager 
+        5. Aiogoogle's service account manager
         6. One of Aiogoogle's implementations of a session object
 
     Arguments:
@@ -35,17 +35,17 @@ class Aiogoogle:
         session_factory (aiogoogle.sessions.abc.AbstractSession): AbstractSession Implementation. Defaults to ``aiogoogle.sessions.aiohttp_session.AiohttpSession``
 
         api_key (aiogoogle.auth.creds.ApiKey): Google API key
-        
-        user_creds (aiogoogle.auth.creds.UserCreds): OAuth2 cser credentials 
+
+        user_creds (aiogoogle.auth.creds.UserCreds): OAuth2 cser credentials
 
         client_creds (aiogoogle.auth.creds.ClientCreds): OAuth2 client credentials
 
         service_account_creds (aiogoogle.auth.creds.ServiceAccountCreds): Service account credentials
-        
-    Note: 
-    
+
+    Note:
+
         In case you want to instantiate a custom session with initial parameters, you can pass an anonymous factory. e.g. ::
-        
+
             >>> sess = lambda: Session(your_custome_arg, your_custom_kwarg=True)
             >>> aiogoogle = Aiogoogle(session_factory=sess)
     """
@@ -91,9 +91,9 @@ class Aiogoogle:
         https://developers.google.com/discovery/v1/reference/apis/list
 
         The discovery.apis.list method returns the list all APIs supported by the Google APIs Discovery Service.
-        
+
         The data for each entry is a subset of the Discovery Document for that API, and the list provides a directory of supported APIs.
-        
+
         If a specific API has multiple versions, each of the versions has its own entry in the list.
 
         Example:
@@ -207,9 +207,9 @@ class Aiogoogle:
     # -------- Send Requests ----------#
 
     async def as_user(self, *requests, timeout=None, full_res=False, user_creds=None, raise_for_status=True):
-        """ 
+        """
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
-        
+
         Arguments:
 
             *requests (aiogoogle.models.Request):
@@ -265,9 +265,9 @@ class Aiogoogle:
 
     async def as_service_account(
             self, *requests, timeout=None, full_res=False, service_account_creds=None, raise_for_status=True):
-        """ 
+        """
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
-        
+
         Arguments:
 
             *requests (aiogoogle.models.Request):
@@ -314,9 +314,9 @@ class Aiogoogle:
         )
 
     async def as_api_key(self, *requests, timeout=None, full_res=False, api_key=None, raise_for_status=True):
-        """ 
+        """
         Sends requests on behalf of ``self.api_key`` (OAuth2)
-        
+
         Arguments:
 
             *requests (aiogoogle.models.Request):
@@ -362,9 +362,9 @@ class Aiogoogle:
         )
 
     async def as_anon(self, *requests, timeout=None, full_res=False, raise_for_status=True):
-        """ 
+        """
         Sends unauthorized requests
-        
+
         Arguments:
 
             *requests (aiogoogle.models.Request):

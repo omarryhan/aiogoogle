@@ -43,7 +43,7 @@ MEDIA_SIZE_BIT_SHIFTS = {"KB": 10, "MB": 20, "GB": 30, "TB": 40}
 
 def _temporarily_add_back_dashes_to_param_definitions(f):
     """
-        When instantiating a Method, Method's constructor will remove all 
+        When instantiating a Method, Method's constructor will remove all
         dashes from the names of its URI params and global params in order
         to make it possible to pass uri params through function calls
         e.g. this is viable get_videos(my_videos=True)
@@ -215,7 +215,7 @@ class Method:
 
     @property
     def parameters(self) -> dict:
-        """ 
+        """
         Parameters property
 
         Returns:
@@ -351,16 +351,16 @@ class Method:
 
             ::
 
-                >>> self['description'] 
-                
+                >>> self['description']
+
                 "method description"
 
                 >>> self['scopes']
-                
+
                 ['returns', 'scopes', 'required', 'by', 'this', 'method', 'in', 'a', 'list']
 
                 >>> self['supportsMediaDownload']
-                
+
                 False
 
                 >>> self['supportsMediaUpload']
@@ -399,39 +399,39 @@ class Method:
         path_params_safe_chars={},
         **uri_params,
     ) -> Request:
-        """ 
+        """
         Builds a request from this method
 
         Note:
 
             * When passing ``datetime.datetime or datetime.date`` pass them in json format.
-            
+
             * Aiogoogle won't do that as it would be a big hassle to iterate over every item in ``*uri_params``, ``json`` and ``data`` to check if there's any datetime objects.
 
-            * Fortunately Python makes it really easy to achieve that. 
-            
+            * Fortunately Python makes it really easy to achieve that.
+
             * Instead of passing say ``datetime.datetime.utcnow()``, pass: ``datetime.datetime.utcnow().jsonformat()``
 
         Note:
 
-            * All ``None`` values are ommited before sending to Google apis, if you want to explicitly pass a JSON null then pass it as ``"null"`` not ``None`` 
+            * All ``None`` values are ommited before sending to Google apis, if you want to explicitly pass a JSON null then pass it as ``"null"`` not ``None``
 
         Arguments:
 
             validate (bool): Overrides :param: aiogoogle.Aiogoole.validate if not None
-            
+
             json (dict): Json body
-            
+
             data (any): Data body (Bytes, text, www-url-form-encoded and others)
-            
+
             upload_file (str): full path of file to upload
-            
+
             download_file (str): full path of file to download to
-            
+
             timeout (str): total timeout for this request
-            
+
             path_params_safe_chars (dict): Dictionary of safe characters for each path parameter.
-            
+
             **uri_params (dict): path and query, required and optional parameters
 
         Returns:
@@ -844,7 +844,7 @@ class Resource:
 
 
         Note:
-            
+
             This method will first check in nested resources then will check in methods.
 
         Raises:
@@ -860,8 +860,8 @@ class Resource:
         else:
             raise AttributeError(
                 f"""Resource/Method {method_or_resource} doesn't exist.
-                                 Check: https://developers.google.com/ for more info. 
-                                 \nAvailable resources are: 
+                                 Check: https://developers.google.com/ for more info.
+                                 \nAvailable resources are:
                                  {self.resources_available}\n
                                  Available methods are {self.methods_available}"""
             )
@@ -870,7 +870,7 @@ class Resource:
 class GoogleAPI:
     """
     Creetes a representation of Google API given a discovery document
-    
+
     Arguments:
 
         discovery_document (dict): A discovery document
@@ -946,7 +946,7 @@ class GoogleAPI:
         Returns resources from an API
 
         Note:
-            
+
             This method will first check in resources then will check in methods.
 
         Arguments:
@@ -981,8 +981,8 @@ class GoogleAPI:
             )
             raise AttributeError(
                 f"""Resource/Method {method_or_resource} doesn't exist.
-                                 Check: {documentation_link} for more info. 
-                                 \nAvailable resources are: 
+                                 Check: {documentation_link} for more info.
+                                 \nAvailable resources are:
                                  {self.resources_available}\n
                                  Available methods are {self.methods_available}"""
             )
@@ -1010,14 +1010,14 @@ class GoogleAPI:
 
                 >>> google_service['documentationLink']
 
-                'https://developers.google.com/books/docs/v1/getting_started'                
-                
+                'https://developers.google.com/books/docs/v1/getting_started'
+
                 >>> google_service['oauth2']['scopes']
 
                 https://www.googleapis.com/auth/books: {
-                    
+
                     description: "Manage your books"
-                
+
                 }
 
         Returns:

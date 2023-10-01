@@ -1,15 +1,15 @@
 client_creds:
   client_id: PLACEHOLDER
   client_secret: PLACEHOLDER
-  scopes: 
+  scopes:
     - https://www.googleapis.com/auth/youtube
     - https://www.googleapis.com/auth/youtube.force-ssl
     - email # OpenID Connect
-  
-user_creds:  
+
+user_creds:
   email: example@gmail.com  # Optional
   access_token: ''
   refresh_token: ''
   expires_at: ''
 
-api_key: 
+api_key:

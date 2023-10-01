@@ -35,7 +35,7 @@ Example:
         0Bw9MwYF2OXbSc0d0ZmNlRjVhMmM: myold_archive.tar.gz
 
     Now run:
-    
+
         ./download_drive_file.py 0Bw9MwYF2OXbSc0d0ZmNlRjVhMmM /home/omar/Desktop
 """
 

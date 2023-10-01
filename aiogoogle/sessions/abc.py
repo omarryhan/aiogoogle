@@ -38,13 +38,13 @@ class AbstractSession(ABC):
         Note:
 
             Given more than one request this method should return responses as a list. However if only given one, it will return a single response object
-        
+
         Arguments:
-            
+
             requests (aiogoogle.models.Request):
 
                 Request objects from aiogoogle.models
-            
+
             timeout (int):
 
                 Total timeout for *requests
@@ -65,7 +65,7 @@ class AbstractSession(ABC):
 
                 * Session factory that creates a session that will handle pagination, resumable uploads etc.
 
-                * Defaults to ``self.__class__`` 
+                * Defaults to ``self.__class__``
 
         Returns:
 
