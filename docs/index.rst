@@ -118,7 +118,7 @@ If you want to integrate OAuth2 in an existing web app, or use it on many users 
 
     @app.route('/authorize')
     def authorize(request):
-        uri = aiogoogle.oauth2.authorization_url(
+        uri = aiogoogle.auth.managers.Oauth2Manager().authorization_url(
             client_creds={
                 'client_id': '...',
                 'client_secret': '...',
@@ -149,7 +149,7 @@ If you want to integrate OAuth2 in an existing web app, or use it on many users 
 
         # Here we request the access and refresh token
         elif request.args.get('code'):
-            full_user_creds = await aiogoogle.oauth2.build_user_creds(
+            full_user_creds = await aiogoogle.auth.managers.Oauth2Manager().build_user_creds(
                 grant = request.args.get('code'),
                 client_creds = CLIENT_CREDS
             )
