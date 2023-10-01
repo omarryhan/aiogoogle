@@ -424,7 +424,7 @@ class Oauth2Manager:
 
     async def build_user_creds(
         self, grant, client_creds=None, grant_type=AUTH_CODE_GRANT_TYPE
-    ) -> dict:
+    ) -> UserCreds:
         """
         Second step of Oauth2 authrization code flow. Creates a User Creds object with access and refresh token
 
