@@ -36,7 +36,7 @@ class Aiogoogle:
 
         api_key (aiogoogle.auth.creds.ApiKey): Google API key
 
-        user_creds (aiogoogle.auth.creds.UserCreds): OAuth2 cser credentials
+        user_creds (aiogoogle.auth.creds.UserCreds): OAuth2 user credentials
 
         client_creds (aiogoogle.auth.creds.ClientCreds): OAuth2 client credentials
 
