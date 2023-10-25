@@ -626,7 +626,7 @@ class Oauth2Manager:
         """
         client_creds = client_creds or self.client_creds
 
-        if not self.is_expired(user_creds):
+        if user_creds.get("expires_at") and not self.is_expired(user_creds):
             return False, user_creds
 
         request = self._build_refresh_request(user_creds, client_creds)
