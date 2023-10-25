@@ -243,7 +243,7 @@ class Aiogoogle:
         is_refreshed, user_creds = await self.oauth2.refresh(
             user_creds, client_creds=self.client_creds
         )
-        # Set refreshed user_creds if ones were already existing
+        # Set refreshed user_creds if ones already exist
         if is_refreshed and self.user_creds is not None:
             self.user_creds = user_creds
 
