@@ -168,15 +168,14 @@ class AiohttpSession(ClientSession, AbstractSession):
         # ----------------- /send sequence ------------------#
 
         async def schedule_tasks():
-            if full_res is True:
-                tasks = [
-                    asyncio.ensure_future(get_response(request)) for request in requests
-                ]
-            else:
-                tasks = [
-                    asyncio.ensure_future(get_content(request)) for request in requests
-                ]
-            return await asyncio.gather(*tasks, return_exceptions=False)
+            return await asyncio.gather(
+                *[
+                    asyncio.ensure_future(
+                        get_response(request) if full_res is True else get_content(request)
+                    ) for request in requests
+                ],
+                return_exceptions=False
+            )
 
         session_factory = self.__class__ if session_factory is None else session_factory
 
