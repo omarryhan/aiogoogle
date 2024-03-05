@@ -13,6 +13,7 @@ try:
     import yaml
 except:  # noqa: E722  bare-except
     print('couldn\'t import yaml. Install "pyyaml" first')
+    sys.exit(-1)
 
 sys.path.append("../..")
 
