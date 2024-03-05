@@ -43,7 +43,7 @@ async def refresh_disc_docs_json():
             e = google_api
             if e.res.status_code != 404:
                 print('Non 404 error')
-                print('\033[91m\n' + e + '\n\033[0m')
+                print('\033[91m\n' + str(e) + '\n\033[0m')
             else:
                 # only ignore if it's a 404 error. Should raise an error otherwise
                 final_all_apis = list(filter(lambda api: (api[0] != name), final_all_apis))

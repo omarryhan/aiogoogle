@@ -257,7 +257,6 @@ WELLKNOWN_OPENID_CONFIGS = {
         "given_name",
         "iat",
         "iss",
-        "locale",
         "name",
         "picture",
         "sub",
