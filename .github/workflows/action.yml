@@ -2,8 +2,8 @@ name: CI
 on:
   push:
   pull_request:
-  schedule:
-      - cron: '0 0 * * *' # Once per day at midnight
+  # schedule:
+  #     - cron: '0 0 * * *' # Once per day at midnight
 jobs:
   test:
     runs-on: macos-latest
