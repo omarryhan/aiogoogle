@@ -275,7 +275,7 @@ class ServiceAccountCreds(_dict):
     def __init__(
         self, type=None, project_id=None, private_key_id=None, private_key=None,
         client_email=None, client_id=None, auth_uri=None, token_uri=None, auth_provider_x509_cert_url=None,
-        client_x509_cert_url=None, subject=None, scopes=None, additional_claims=None
+        client_x509_cert_url=None, subject=None, scopes=None, additional_claims=None, universe_domain='googleapis.com'
     ):
         self.type = type
         self.project_id = project_id
@@ -292,3 +292,4 @@ class ServiceAccountCreds(_dict):
         self.subject = subject
         self.scopes = scopes
         self.additional_claims = additional_claims or {}
+        self.universe_domain = universe_domain
