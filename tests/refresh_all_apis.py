@@ -38,9 +38,9 @@ async def refresh_disc_docs_json():
         if isinstance(google_api, HTTPError):
             e = google_api
             # filter out the errored api from the final_all_apis
-            final_all_apis = list(filter(lambda api: (api[0] != name), final_all_apis))
+            final_all_apis = [api for api in final_all_apis if api[0] != name]
             file_errors.append({f"{name}-{version}": str(e)})
-            print(f'\033[91mError: Failed to download {name} {version}\033[0m')
+            print(f'\033[91mError: Failed to download {name} {version}\033[0m\n')
             continue
         else:
             # Save discovery docuemnt as .json file to the newly created data dir
