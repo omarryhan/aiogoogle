@@ -37,7 +37,6 @@ setup(
     tests_require=test_requirements,
     url=main_ns["__url__"],
     packages=find_packages(exclude=['tests*']),
-    package_data={"aiogoogle": ["py.typed"]},
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",
