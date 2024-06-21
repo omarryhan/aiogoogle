@@ -286,7 +286,7 @@ class Response:
 
     def __init__(
         self,
-        status_code=None,
+        status_code: int,
         headers=None,
         url=None,
         json=None,

@@ -1,4 +1,10 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 __all__ = ["AiogoogleError", "ValidationError", "HTTPError", "AuthError"]
+
+if TYPE_CHECKING:
+    from .models import Response
 
 
 class AiogoogleError(Exception):
@@ -14,7 +20,7 @@ class ValidationError(AiogoogleError):
 
 
 class HTTPError(AiogoogleError):
-    def __init__(self, msg, req=None, res=None):
+    def __init__(self, msg, req, res: Response):
         self.req = req
         self.res = res
         super().__init__(msg)
