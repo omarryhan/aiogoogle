@@ -35,7 +35,7 @@ STACK_QUERY_PARAMETER_DEFAULT_VALUE = {"type": "string", "location": "query"}
 MEDIA_SIZE_BIT_SHIFTS = {"KB": 10, "MB": 20, "GB": 30, "TB": 40}
 
 # TODO: etagRequired: {
-#    type: "boolean",  # noqa: F821 (weird error)
+#    should be type: "boolean",  # noqa: F821 (weird error)
 #    description: "Whether this method requires an ETag to be specified. The ETag is sent as an HTTP If-Match or If-None-Match header."
 #    }
 # NOTE: etagRequired is only mentioned once in all of the discovery documents available from Google. (In discovery_service-v1. So, it isn't actually being used)
