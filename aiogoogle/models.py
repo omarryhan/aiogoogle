@@ -187,7 +187,7 @@ class Request:
         data: Any = None,
         media_upload: Optional[MediaUpload] = None,
         media_download: Optional[MediaDownload] = None,
-        timeout: Optional[int]= None,
+        timeout: Optional[int] = None,
         callback: Optional[Callable] = None,
         _verify_ssl: bool = True,
         upload_file_content_type: Optional[str] = None,
