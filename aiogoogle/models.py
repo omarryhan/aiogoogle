@@ -1,5 +1,5 @@
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
-from typing import AsyncIterable
+from typing import Any, AsyncIterable, Callable, Optional
 import pprint
 
 from .excs import HTTPError, AuthError, ValidationError
@@ -179,18 +179,18 @@ class Request:
 
     def __init__(
         self,
-        method=None,
-        url=None,
-        batch_url=None,
-        headers=None,
-        json=None,
-        data=None,
-        media_upload=None,
-        media_download=None,
-        timeout=None,
-        callback=None,
-        _verify_ssl=True,
-        upload_file_content_type=None,
+        method: Optional[str] = None,
+        url: Optional[str] = None,
+        batch_url: Optional[str] = None,
+        headers: Optional[dict] = None,
+        json: Optional[dict] = None,
+        data: Any = None,
+        media_upload: Optional[MediaUpload] = None,
+        media_download: Optional[MediaDownload] = None,
+        timeout: Optional[int] = None,
+        callback: Optional[Callable] = None,
+        _verify_ssl: bool = True,
+        upload_file_content_type: Optional[str] = None,
     ):
         self.method = method
         self.url = url

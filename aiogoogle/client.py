@@ -1,13 +1,19 @@
+from __future__ import annotations
+
 __all__ = ["Aiogoogle"]
 
 from contextvars import ContextVar
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional, Type
 
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager, ServiceAccountManager
 from .sessions.aiohttp_session import AiohttpSession
 from .data import DISCOVERY_SERVICE_V1_DISCOVERY_DOC
 
+if TYPE_CHECKING:
+    from .auth.creds import ApiKey, ClientCreds, ServiceAccountCreds, UserCreds
+    from .models import Request, Response
+    from .sessions.abc import AbstractSession
 
 # Discovery doc reference https://developers.google.com/discovery/v1/reference/apis
 
@@ -52,11 +58,11 @@ class Aiogoogle:
 
     def __init__(
         self,
-        session_factory=AiohttpSession,
-        api_key=None,
-        user_creds=None,
-        client_creds=None,
-        service_account_creds=None,
+        session_factory: Type[AbstractSession] = AiohttpSession,
+        api_key: Optional[ApiKey] = None,
+        user_creds: Optional[UserCreds] = None,
+        client_creds: Optional[ClientCreds] = None,
+        service_account_creds: Optional[ServiceAccountCreds] = None,
     ):
 
         self.session_factory = session_factory
@@ -147,7 +153,7 @@ class Aiogoogle:
         )
         return await self.as_anon(request)
 
-    async def discover(self, api_name, api_version=None, validate=False, *, disco_doc_ver: Optional[int] = None):
+    async def discover(self, api_name: str, api_version: Optional[str] = None, validate: bool = False, *, disco_doc_ver: Optional[int] = None) -> GoogleAPI:
         """
         Donwloads a discovery document from Google's Discovery Service V1 and sets it a ``aiogoogle.resource.GoogleAPI``
 
@@ -262,7 +268,7 @@ class Aiogoogle:
         )
 
     async def as_service_account(
-            self, *requests, timeout=None, full_res=False, service_account_creds=None, raise_for_status=True):
+            self, *requests: Request, timeout: Optional[int] = None, full_res: bool = False, service_account_creds: ServiceAccountCreds = None, raise_for_status: bool = True) -> Response:
         """
         Sends requests on behalf of ``self.user_creds`` (OAuth2)
 
@@ -408,7 +414,7 @@ class Aiogoogle:
             session = self._set_session()
         return await session.send(*args, **kwargs)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Aiogoogle:
         session = self._get_session()
         if session is None:
             session = self._set_session()
@@ -416,7 +422,7 @@ class Aiogoogle:
             return self
         raise RuntimeError("Nesting context managers using the same Aiogoogle object is not allowed.")
 
-    async def __aexit__(self, *args):
+    async def __aexit__(self, *args: Any) -> None:
         session = self._get_session()
         await session.__aexit__(*args)
         # Had to add this because there's no use of keeping a closed session

@@ -1,6 +1,7 @@
 __all__ = ["ApiKey", "UserCreds", "ClientCreds", "ServiceAccountCreds"]
 
 
+from typing import Mapping, Optional, Sequence
 from ..utils import _dict
 
 
@@ -273,9 +274,10 @@ class ServiceAccountCreds(_dict):
             }
     """
     def __init__(
-        self, type=None, project_id=None, private_key_id=None, private_key=None,
-        client_email=None, client_id=None, auth_uri=None, token_uri=None, auth_provider_x509_cert_url=None,
-        client_x509_cert_url=None, subject=None, scopes=None, additional_claims=None, universe_domain='googleapis.com'
+        self, type: Optional[str] = None, project_id: Optional[str] = None, private_key_id: Optional[str] = None, private_key: Optional[str] = None,
+        client_email: Optional[str] = None, client_id: Optional[str] = None, auth_uri: Optional[str] = None, token_uri: Optional[str] = None, auth_provider_x509_cert_url: Optional[str] = None,
+        client_x509_cert_url: Optional[str] = None, subject: Optional[str] = None, scopes: Optional[Sequence[str]] = None, additional_claims: Optional[Mapping[str, str]] = None,
+        universe_domain: str = 'googleapis.com'
     ):
         self.type = type
         self.project_id = project_id
