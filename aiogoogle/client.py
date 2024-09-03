@@ -3,12 +3,13 @@ from __future__ import annotations
 __all__ = ["Aiogoogle"]
 
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Optional, Type
+from typing import TYPE_CHECKING, Any, Literal, Optional, Type
 
 from .resource import GoogleAPI
 from .auth.managers import Oauth2Manager, ApiKeyManager, OpenIdConnectManager, ServiceAccountManager
 from .sessions.aiohttp_session import AiohttpSession
 from .data import DISCOVERY_SERVICE_V1_DISCOVERY_DOC
+from .excs import HTTPError
 
 if TYPE_CHECKING:
     from .auth.creds import ApiKey, ClientCreds, ServiceAccountCreds, UserCreds
@@ -153,7 +154,7 @@ class Aiogoogle:
         )
         return await self.as_anon(request)
 
-    async def discover(self, api_name: str, api_version: Optional[str] = None, validate: bool = False, *, disco_doc_ver: Optional[int] = None) -> GoogleAPI:
+    async def discover(self, api_name: str, api_version: Optional[str] = None, validate: bool = False, *, disco_doc_ver: Optional[Literal[2]] = None) -> GoogleAPI:
         """
         Donwloads a discovery document from Google's Discovery Service V1 and sets it a ``aiogoogle.resource.GoogleAPI``
 
@@ -206,7 +207,16 @@ class Aiogoogle:
                 api=api_name, api_version=api_version
             )
 
-        discovery_document = await self.as_anon(request)
+        try:
+            discovery_document = await self.as_anon(request)
+
+        except Exception as e:
+            if isinstance(e, HTTPError):
+                if not disco_doc_ver:
+                    raise ValueError(
+                        f"Failed to fetch discovery document from v1 of the Google Discovery Service. Consider setting `disco_doc_ver=2` parmeter. Error: {e}."
+                    )
+            raise e
 
         return GoogleAPI(discovery_document, validate)
 
