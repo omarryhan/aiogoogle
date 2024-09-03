@@ -35,7 +35,7 @@ async def refresh_disc_docs_json():
 
     # Refresh discovery files in tests/data
     for google_api, (name, version) in zip(all_discovery_documents, all_apis):
-        if isinstance(google_api, HTTPError):
+        if isinstance(google_api, (HTTPError, ValueError)):
             e = google_api
             # filter out the errored api from the final_all_apis
             final_all_apis = [api for api in final_all_apis if api[0] != name]
