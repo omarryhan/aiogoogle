@@ -125,7 +125,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                             headers=request.headers,
                             data=mpwriter,
                             timeout=request.timeout,
-                            verify_ssl=request._verify_ssl,
+                            ssl=request._verify_ssl,
                         )
                 # Else load file to memory and send
                 else:
@@ -139,7 +139,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                         data=read_file,
                         json=request.json,
                         timeout=request.timeout,
-                        verify_ssl=request._verify_ssl,
+                        ssl=request._verify_ssl,
                     )
             # Else, if no file upload
             else:
@@ -150,7 +150,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                     data=request.data,
                     json=request.json,
                     timeout=request.timeout,
-                    verify_ssl=request._verify_ssl,
+                    ssl=request._verify_ssl,
                 )
 
         # ----------------- send sequence ------------------#
