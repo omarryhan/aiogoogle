@@ -31,8 +31,9 @@ def _is_expired(expires_at):
             expires_at = _parse_isoformat(expires_at)
         else:
             expires_at = datetime.datetime.fromisoformat(expires_at)
-    utc_now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
-    if utc_now >= expires_at:
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=datetime.timezone.utc)
+    if datetime.datetime.now(datetime.timezone.utc) >= expires_at:
         return True
     else:
         return False
