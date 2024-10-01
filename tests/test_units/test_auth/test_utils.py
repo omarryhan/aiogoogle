@@ -14,6 +14,6 @@ def test_get_expires_at():
 def test_is_expired():
     # correctness not tested, but none of these should raise an exception
     _is_expired("2024-10-01T14:26:21")
-    _is_expired("2024-10-01T14:26:21Z")
+    _is_expired("2024-10-01T14:26:21+00:00")
     _is_expired(datetime.datetime.now())
     _is_expired(datetime.datetime.now(datetime.timezone.utc))
