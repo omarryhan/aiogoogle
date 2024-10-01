@@ -14,9 +14,10 @@ def create_secret(bytes_length=1024):  # pragma: no cover
 
 
 def _get_expires_at(expires_in):
-    expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=expires_in)
+    expires_at = datetime.datetime.now() + datetime.timedelta(seconds=expires_in)
     # account for clock skew
     expires_at -= datetime.timedelta(seconds=120)
+    expires_at = expires_at.astimezone(datetime.timezone.utc).replace(tzinfo=None)
     return expires_at.isoformat()
 
 
@@ -30,7 +31,8 @@ def _is_expired(expires_at):
             expires_at = _parse_isoformat(expires_at)
         else:
             expires_at = datetime.datetime.fromisoformat(expires_at)
-    if datetime.datetime.utcnow() >= expires_at:
+    utc_now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    if utc_now >= expires_at:
         return True
     else:
         return False
