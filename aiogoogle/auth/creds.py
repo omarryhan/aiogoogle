@@ -151,6 +151,7 @@ class UserCreds(_dict):
 
         access_token (str): Access Token
         refresh_token (str): Refresh Token
+        refresh_token_expires_in (int): seconds till refresh token expiry from creation
         expires_in (int): seconds till expiry from creation
         expires_at (str): JSON datetime ISO 8601 expiry datetime
         scopes (list): list of scopes owned by access token
@@ -169,6 +170,7 @@ class UserCreds(_dict):
         self,
         access_token=None,
         refresh_token=None,
+        refresh_token_expires_in=None,
         expires_in=None,
         expires_at=None,
         scopes=None,
@@ -181,6 +183,7 @@ class UserCreds(_dict):
     ):
         self.access_token = access_token
         self.refresh_token = refresh_token
+        self.refresh_token_expires_in = refresh_token_expires_in
         self.expires_in = expires_in
         self.expires_at = expires_at
         self.scopes = scopes
