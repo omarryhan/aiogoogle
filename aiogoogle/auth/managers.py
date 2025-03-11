@@ -95,7 +95,7 @@ except ValueError:  # pragma: NO COVER
 try:
     HTTP_PROXY = str(os.getenv("http_proxy", ""))
 except ValueError:  
-    GCE_METADATA_DEFAULT_TIMEOUT = ""
+    GCE_METADATA_DEFAULT_TIMEOUT = None
 
 
 class ApiKeyManager:
