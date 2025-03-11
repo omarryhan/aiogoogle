@@ -41,6 +41,7 @@ class AiohttpSession(ClientSession, AbstractSession):
         raise_for_status=True,
         session_factory=None,
         auth_manager=None,
+        proxy=None,
         **kwargs
     ):
         async def resolve_response(request, response):
@@ -126,6 +127,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                             data=mpwriter,
                             timeout=request.timeout,
                             ssl=request._verify_ssl,
+                            proxy=proxy,
                         )
                 # Else load file to memory and send
                 else:
@@ -140,6 +142,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                         json=request.json,
                         timeout=request.timeout,
                         ssl=request._verify_ssl,
+                        proxy=proxy
                     )
             # Else, if no file upload
             else:
@@ -151,6 +154,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                     json=request.json,
                     timeout=request.timeout,
                     ssl=request._verify_ssl,
+                    proxy=proxy,
                 )
 
         # ----------------- send sequence ------------------#
