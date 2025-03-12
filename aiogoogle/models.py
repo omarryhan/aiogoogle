@@ -175,6 +175,7 @@ class Request:
         _verify_ssl (boolean): Defaults to True.
 
         upload_file_content_type (str): Optional content-type header string. In case you don't want to use the default application/octet-stream (Or whatever is auto-detected by your transport handler)
+        
         """
 
     def __init__(

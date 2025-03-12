@@ -11,6 +11,9 @@ import async_timeout
 
 from ..models import Response
 from .abc import AbstractSession
+import os
+
+HTTP_PROXY = os.getenv("AIOGOOGLE_HTTP_PROXY", "")
 
 
 async def _get_file_size(full_file_path):
@@ -126,6 +129,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                             data=mpwriter,
                             timeout=request.timeout,
                             ssl=request._verify_ssl,
+                            proxy=HTTP_PROXY,
                         )
                 # Else load file to memory and send
                 else:
@@ -140,6 +144,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                         json=request.json,
                         timeout=request.timeout,
                         ssl=request._verify_ssl,
+                        proxy=HTTP_PROXY
                     )
             # Else, if no file upload
             else:
@@ -151,6 +156,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                     json=request.json,
                     timeout=request.timeout,
                     ssl=request._verify_ssl,
+                    proxy=HTTP_PROXY,
                 )
 
         # ----------------- send sequence ------------------#

@@ -1261,7 +1261,7 @@ class ServiceAccountManager:
                         url=GCE_METADATA_IP_ROOT,
                         headers=GCE_METADATA_HEADERS,
                         timeout=GCE_METADATA_DEFAULT_TIMEOUT,
-                        _verify_ssl=False
+                        _verify_ssl=False,
                     ), full_res=True)
                 except Exception:
                     raise RuntimeError(
@@ -1316,7 +1316,7 @@ class ServiceAccountManager:
                 data=parse.urlencode({
                     "assertion": google_auth_lib_creds._make_authorization_grant_assertion(),
                     "grant_type": JWT_GRANT_TYPE
-                }).encode("utf-8")
+                }).encode("utf-8"),
             ))
 
         if not json_res.get('access_token'):
