@@ -13,7 +13,8 @@ from ..models import Response
 from .abc import AbstractSession
 import os
 
-HTTP_PROXY = str(os.getenv("AIOGOOGLE_HTTP_PROXY", ""))
+HTTP_PROXY = os.getenv("AIOGOOGLE_HTTP_PROXY", "")
+
 
 async def _get_file_size(full_file_path):
     stat = await async_os.stat(full_file_path)

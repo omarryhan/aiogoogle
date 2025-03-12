@@ -93,7 +93,6 @@ except ValueError:  # pragma: NO COVER
     GCE_METADATA_DEFAULT_TIMEOUT = 3
 
 
-
 class ApiKeyManager:
     def __init__(self, api_key=None):
         self.key = api_key
