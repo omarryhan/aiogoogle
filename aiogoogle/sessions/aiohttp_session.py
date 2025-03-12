@@ -13,10 +13,7 @@ from ..models import Response
 from .abc import AbstractSession
 import os
 
-try:
-    HTTP_PROXY = str(os.getenv("AIOGOOGLE_HTTP_PROXY", ""))
-except:
-    HTTP_PROXY = None
+HTTP_PROXY = str(os.getenv("AIOGOOGLE_HTTP_PROXY", ""))
 
 async def _get_file_size(full_file_path):
     stat = await async_os.stat(full_file_path)
@@ -46,7 +43,6 @@ class AiohttpSession(ClientSession, AbstractSession):
         raise_for_status=True,
         session_factory=None,
         auth_manager=None,
-        proxy=None,
         **kwargs
     ):
         async def resolve_response(request, response):
