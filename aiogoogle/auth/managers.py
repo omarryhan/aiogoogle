@@ -92,10 +92,6 @@ try:
 except ValueError:  # pragma: NO COVER
     GCE_METADATA_DEFAULT_TIMEOUT = 3
 
-try:
-    HTTP_PROXY = str(os.getenv("http_proxy", ""))
-except ValueError:  
-    GCE_METADATA_DEFAULT_TIMEOUT = None
 
 
 class ApiKeyManager:
@@ -180,7 +176,6 @@ class Oauth2Manager:
         self.active_session = None
 
     async def _send_request(self, req):
-        req.proxy = HTTP_PROXY
         if self.active_session is None:
             async with self.session_factory() as sess:
                 res = await sess.send(req)
@@ -1214,7 +1209,6 @@ class ServiceAccountManager:
             method="GET",
             url=GCE_METADATA_SERVER_URI + GCE_DEFAULT_SERVICE_ACCOUNT_URL,
             headers=GCE_METADATA_HEADERS,
-            proxy= HTTP_PROXY,
         )
 
         scopes = self.creds.get('scopes')
@@ -1269,7 +1263,6 @@ class ServiceAccountManager:
                         headers=GCE_METADATA_HEADERS,
                         timeout=GCE_METADATA_DEFAULT_TIMEOUT,
                         _verify_ssl=False,
-                        proxy=HTTP_PROXY,
                     ), full_res=True)
                 except Exception:
                     raise RuntimeError(
@@ -1325,7 +1318,6 @@ class ServiceAccountManager:
                     "assertion": google_auth_lib_creds._make_authorization_grant_assertion(),
                     "grant_type": JWT_GRANT_TYPE
                 }).encode("utf-8"),
-                proxy=HTTP_PROXY
             ))
 
         if not json_res.get('access_token'):
