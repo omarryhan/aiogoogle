@@ -176,7 +176,6 @@ class Request:
 
         upload_file_content_type (str): Optional content-type header string. In case you don't want to use the default application/octet-stream (Or whatever is auto-detected by your transport handler)
         
-        proxy (str) Optional http proxy address
         """
 
     def __init__(
@@ -193,7 +192,6 @@ class Request:
         callback: Optional[Callable] = None,
         _verify_ssl: bool = True,
         upload_file_content_type: Optional[str] = None,
-        proxy: Optional[str] = None,
     ):
         self.method = method
         self.url = url
@@ -207,7 +205,6 @@ class Request:
         self.callback = callback
         self._verify_ssl = _verify_ssl
         self.upload_file_content_type = upload_file_content_type
-        self.proxy = proxy
 
     def _add_query_param(self, query: dict):
         url = self.url
