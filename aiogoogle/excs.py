@@ -7,6 +7,10 @@ if TYPE_CHECKING:
     from .models import Response
 
 
+class AuthError(Exception):
+    pass
+
+
 class AiogoogleError(Exception):
     pass
 
@@ -24,7 +28,3 @@ class HTTPError(AiogoogleError):
         self.req = req
         self.res = res
         super().__init__(msg)
-
-
-class AuthError(HTTPError):
-    pass
