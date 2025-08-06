@@ -825,7 +825,7 @@ Send As User
 .. code-block:: python
 
     import asyncio
-    from aiogoogle import Aiogoole
+    from aiogoogle import Aiogoogle
     from pprint import pprint
 
     async def get_calendar_events():
