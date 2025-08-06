@@ -418,7 +418,7 @@ class Method:
 
         Arguments:
 
-            validate (bool): Overrides :param: aiogoogle.Aiogoole.validate if not None
+            validate (bool): Overrides :param: aiogoogle.Aiogoogle.validate if not None
 
             json (dict): Json body
 
