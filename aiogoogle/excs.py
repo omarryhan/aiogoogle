@@ -20,7 +20,7 @@ class ValidationError(AiogoogleError):
 
 
 class HTTPError(AiogoogleError):
-    def __init__(self, msg, req, res: Response):
+    def __init__(self, msg, req=None, res: Response | None = None):
         self.req = req
         self.res = res
         super().__init__(msg)
