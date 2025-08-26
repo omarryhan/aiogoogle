@@ -35,7 +35,19 @@ async def _read_file(file_name):
         return await file.read()
 
 
-class AiohttpSession(ClientSession, AbstractSession):
+class AiohttpSession(AbstractSession):
+    def __init__(self, *args, **kwargs):
+        self._session = ClientSession(*args, **kwargs)
+    
+    async def __aenter__(self):
+        return self
+    
+    async def __aexit__(self, exc_type, exc, tb):
+        await self._session.close()
+    
+    async def close(self):
+        await self._session.close()
+
     async def send(
         self,
         *requests,
@@ -122,7 +134,7 @@ class AiohttpSession(ClientSession, AbstractSession):
 
                         request.headers.update({"Content-Type": f"{req_content_type}; boundary={mpwriter.boundary}"})
 
-                        return await self.request(
+                        return await self._session.request(
                             method=request.method,
                             url=request.media_upload.upload_path,
                             headers=request.headers,
@@ -136,7 +148,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                     read_file = await request.media_upload.read_file(_read_file)
                     if request.upload_file_content_type:
                         request.headers.update({"Content-Type": request.upload_file_content_type})
-                    return await self.request(
+                    return await self._session.request(
                         method=request.method,
                         url=request.media_upload.upload_path,
                         headers=request.headers,
@@ -148,7 +160,7 @@ class AiohttpSession(ClientSession, AbstractSession):
                     )
             # Else, if no file upload
             else:
-                return await self.request(
+                return await self._session.request(
                     method=request.method,
                     url=request.url,
                     headers=request.headers,
