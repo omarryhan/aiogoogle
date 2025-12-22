@@ -485,3 +485,11 @@ class Response:
 
     def __repr__(self):
         return f"Aiogoogle response model. Status: {str(self.status_code)}"
+
+    def __getitem__(self, item):
+        if self.data:
+            return self.data[item]
+        elif self.json:
+            return self.json[item]
+        else:
+            raise TypeError("json and data are not defined.")
