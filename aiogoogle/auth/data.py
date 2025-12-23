@@ -259,19 +259,29 @@ WELLKNOWN_OPENID_CONFIGS = {
         "iss",
         "name",
         "picture",
-        "sub",
+        "sub"
     ],
-    "code_challenge_methods_supported": ["plain", "S256"],
+    "code_challenge_methods_supported": [
+        "plain",
+        "S256"
+    ],
     "device_authorization_endpoint": "https://oauth2.googleapis.com/device/code",
     "grant_types_supported": [
         "authorization_code",
         "refresh_token",
         "urn:ietf:params:oauth:grant-type:device_code",
-        "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        "urn:ietf:params:oauth:grant-type:jwt-bearer"
     ],
-    "id_token_signing_alg_values_supported": ["RS256"],
+    "id_token_signing_alg_values_supported": [
+        "RS256"
+    ],
     "issuer": "https://accounts.google.com",
     "jwks_uri": "https://www.googleapis.com/oauth2/v3/certs",
+    "response_modes_supported": [
+        "query",
+        "fragment",
+        "form_post"
+    ],
     "response_types_supported": [
         "code",
         "token",
@@ -280,15 +290,21 @@ WELLKNOWN_OPENID_CONFIGS = {
         "code id_token",
         "token id_token",
         "code token id_token",
-        "none",
+        "none"
     ],
     "revocation_endpoint": "https://oauth2.googleapis.com/revoke",
-    "scopes_supported": ["openid", "email", "profile"],
-    "subject_types_supported": ["public"],
+    "scopes_supported": [
+        "openid",
+        "email",
+        "profile"
+    ],
+    "subject_types_supported": [
+        "public"
+    ],
     "token_endpoint": "https://oauth2.googleapis.com/token",
     "token_endpoint_auth_methods_supported": [
         "client_secret_post",
-        "client_secret_basic",
+        "client_secret_basic"
     ],
-    "userinfo_endpoint": "https://openidconnect.googleapis.com/v1/userinfo",
+    "userinfo_endpoint": "https://openidconnect.googleapis.com/v1/userinfo"
 }
