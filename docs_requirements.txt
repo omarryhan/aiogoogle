@@ -2,7 +2,6 @@ aiohttp
 aiofiles
 google-auth
 sphinxcontrib-asyncio
-tonyg-rfc3339
 async-timeout
 asks
 trio
