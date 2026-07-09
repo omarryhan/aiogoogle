@@ -57,10 +57,16 @@ KNOWN_FORMATS = [
     "google-fieldmask",
     "google-duration",
     "google-datetime",
+    "google.protobuf.Any",
 ]
 
 # After writing a format check for any of those formats, remove the format you wrote the checker for.
-IGNORABLE_FORMATS = ["google-fieldmask", "google-duration", "google-datetime"]
+IGNORABLE_FORMATS = [
+    "google-fieldmask",
+    "google-duration",
+    "google-datetime",
+    "google.protobuf.Any",
+]
 
 TYPE_FORMAT_MAPPING = {
     # Given this type, if None then don't check for additional "format" property in the schema, else, format might be any of the mapped values
