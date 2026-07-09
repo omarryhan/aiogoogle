@@ -248,6 +248,7 @@ OAUTH2_V2_DISCVOCERY_DOC = {
 
 WELLKNOWN_OPENID_CONFIGS = {
     "authorization_endpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+    "authorization_response_iss_parameter_supported": True,
     "claims_supported": [
         "aud",
         "email",
