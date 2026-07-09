@@ -461,3 +461,30 @@ def test_validates_repeated(create_api):
             ranges=[132, 'valid'],  # Only first item is invalid
             validate=True
         )
+
+
+def test_date_validator():
+    from aiogoogle.validate import date_validator
+
+    date_validator("2024-01-31")
+
+    with pytest.raises(ValidationError):
+        date_validator("not-a-date")
+
+    with pytest.raises(ValidationError):
+        date_validator("2024-13-01")
+
+
+def test_datetime_validator():
+    from aiogoogle.validate import datetime_validator
+
+    datetime_validator("2024-01-31T12:34:56")
+    datetime_validator("2024-01-31T12:34:56Z")
+    datetime_validator("2024-01-31T12:34:56.123456Z")
+    datetime_validator("2024-01-31T12:34:56+02:00")
+
+    with pytest.raises(ValidationError):
+        datetime_validator("not-a-datetime")
+
+    with pytest.raises(ValidationError):
+        datetime_validator("2024-01-31T25:00:00Z")
