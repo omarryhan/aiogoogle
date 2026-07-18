@@ -209,14 +209,12 @@ class Aiogoogle:
 
         try:
             discovery_document = await self.as_anon(request)
-
-        except Exception as e:
-            if isinstance(e, HTTPError):
-                if not disco_doc_ver:
-                    raise ValueError(
-                        f"Failed to fetch discovery document from v1 of the Google Discovery Service. Consider setting `disco_doc_ver=2` parmeter. Error: {e}."
-                    )
-            raise e
+        except HTTPError as e:
+            if disco_doc_ver is None:
+                e.args = (
+                    f"Failed to fetch discovery document from v1 of the Google Discovery Service. Consider setting `disco_doc_ver=2` parameter. Error: {e}.",
+                )
+            raise
 
         return GoogleAPI(discovery_document, validate)
 
