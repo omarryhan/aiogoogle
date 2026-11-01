@@ -67,7 +67,7 @@ class AiohttpSession(AbstractSession):
             pipe_to = None
 
             # If downloading file:
-            if request.media_download:
+            if request.media_download and response.status < 400:
                 chunk_size = request.media_download.chunk_size
                 download_file = request.media_download.file_path
                 pipe_to = request.media_download.pipe_to
