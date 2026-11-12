@@ -677,6 +677,9 @@ class Method:
         )
         mime_range = _safe_getitem(self._method_specs, "mediaUpload", "accept")
         multipart = self["mediaUpload"]["protocols"]["simple"].get("multipart", True)
+        media_upload_url = self._add_upload_type(
+            media_upload_url, "multipart" if multipart else "media"
+        )
 
         return MediaUpload(
             upload_file,
@@ -688,6 +691,19 @@ class Method:
             resumable=resumable,
             validate=validate,
         )
+
+    @staticmethod
+    def _add_upload_type(url, upload_type):
+        """Append ``uploadType`` to an upload URL unless the caller already set it.
+
+        Google's upload endpoints need ``uploadType`` to tell how the body is
+        encoded. Without it, Drive accepts a multipart/related body, keeps the
+        metadata and silently stores an empty file.
+        """
+        if re.search(r"[?&]uploadType=", url):
+            return url
+        sep = "&" if "?" in url else "?"
+        return f"{url}{sep}uploadType={upload_type}"
 
     def _build_resumeable_media(self, qualified_url):
         resumable_url_base = self._root_url + "resumable/upload/" + self._service_path
