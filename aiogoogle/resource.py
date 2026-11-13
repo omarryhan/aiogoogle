@@ -451,7 +451,7 @@ class Method:
         # Remove params that are None
         uri_params = self._del_none_params(uri_params)
 
-        # An uploadType passed by the caller decides how an upload body is encoded
+        # An uploadType passed by the caller is kept in the upload URL as is
         upload_type = uri_params.get("uploadType")
 
         # Assert timeout is int
@@ -589,22 +589,14 @@ class Method:
                     )
             media_download = MediaDownload(pipe_to=pipe_to)
 
-        if not upload_file and not pipe_from:
-            media_upload = None
-
-        # Process upload_file
-        if upload_file:
-            media_upload = self._build_upload_media(
-                upload_file, uri, validate, fallback_url=url, pipe_from=None,
-                has_metadata=json is not None, upload_type=upload_type,
-            )
-
-        # Process pipe_from
-        if pipe_from:
+        # Process upload_file / pipe_from
+        if upload_file or pipe_from:
             media_upload = self._build_upload_media(
                 upload_file, uri, validate, fallback_url=url, pipe_from=pipe_from,
                 has_metadata=json is not None, upload_type=upload_type,
             )
+        else:
+            media_upload = None
 
         return Request(
             method=self["httpMethod"],
@@ -683,10 +675,12 @@ class Method:
             _safe_getitem(self._method_specs, "mediaUpload", "maxSize")
         )
         mime_range = _safe_getitem(self._method_specs, "mediaUpload", "accept")
-        multipart = self._is_multipart_upload(has_metadata, upload_type)
+        # Like googleapiclient.discovery: json metadata and the media go together
+        # as multipart/related, and without metadata the media is sent alone.
+        multipart = has_metadata and self["mediaUpload"]["protocols"]["simple"].get("multipart", True)
         # Google's upload endpoints need uploadType to tell how the body is encoded.
         # Without it, Drive accepts a multipart/related body, keeps the metadata
-        # and silently stores an empty file.
+        # and silently stores an empty file. A caller-supplied uploadType is kept.
         if upload_type is None:
             sep = "&" if "?" in media_upload_url else "?"
             media_upload_url += sep + urlencode(
@@ -703,21 +697,6 @@ class Method:
             resumable=resumable,
             validate=validate,
         )
-
-    def _is_multipart_upload(self, has_metadata, upload_type):
-        """Whether a simple upload is sent as multipart/related (metadata + media)
-        or as the raw media alone, matching googleapiclient.discovery."""
-        if upload_type == "media":
-            if has_metadata:
-                raise TypeError(
-                    "uploadType=media sends only the file, so json metadata can't be sent with it."
-                    " Drop json, or use uploadType=multipart."
-                )
-            return False
-        if upload_type == "multipart":
-            return True
-        # Without metadata there's nothing to put in a multipart body's first part
-        return has_metadata and self["mediaUpload"]["protocols"]["simple"].get("multipart", True)
 
     def _build_resumeable_media(self, qualified_url):
         resumable_url_base = self._root_url + "resumable/upload/" + self._service_path

@@ -311,33 +311,13 @@ def test_upload_type_media_when_method_has_no_multipart():
     )
 
 
-def test_given_upload_type_media_sends_raw_media():
+def test_upload_type_not_overridden_when_given():
     req = _simple_upload_method(multipart=True)(
         upload_file="/tmp/report.txt", uploadType="media"
     )
-    assert req.media_upload.multipart is False
     assert (
         req.media_upload.upload_path
         == "https://example.com/upload/example/v3/resource?uploadType=media"
-    )
-
-
-def test_given_upload_type_media_with_metadata_fails():
-    with pytest.raises(TypeError) as e:
-        _simple_upload_method(multipart=True)(
-            upload_file="/tmp/report.txt", json={"name": "report.txt"}, uploadType="media"
-        )
-    assert "uploadType=media" in str(e.value)
-
-
-def test_given_upload_type_multipart_is_kept():
-    req = _simple_upload_method(multipart=True)(
-        upload_file="/tmp/report.txt", uploadType="multipart"
-    )
-    assert req.media_upload.multipart is True
-    assert (
-        req.media_upload.upload_path
-        == "https://example.com/upload/example/v3/resource?uploadType=multipart"
     )
 
 
