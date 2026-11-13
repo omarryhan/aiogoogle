@@ -4,7 +4,7 @@ import re
 import warnings
 from urllib.parse import urlencode, quote
 from functools import wraps
-from typing import List, Generic, TypeVar
+from typing import List, Generic, TypeVar, Union
 
 from .excs import ValidationError
 from .utils import _safe_getitem
@@ -869,7 +869,7 @@ class Resource:
 
 class GoogleAPI:
     """
-    Creetes a representation of Google API given a discovery document
+    Creates a representation of Google API given a discovery document
 
     Arguments:
 
@@ -885,7 +885,7 @@ class GoogleAPI:
         self._validate = validate
 
     def _add_extra_query_param_definitions(self, discovery_document):
-        """ Adds extra parameters that aren't explicitly defined in discovery docuemnts
+        """ Adds extra parameters that aren't explicitly defined in discovery documents
             i.e. "trace", "pp", "strict"
         """
         extra_params = {
@@ -941,7 +941,7 @@ class GoogleAPI:
             validate=self._validate,
         )
 
-    def __getattr__(self, method_or_resource) -> Resource:
+    def __getattr__(self, method_or_resource) -> Union[Resource, Method]:
         """
         Returns resources from an API
 
