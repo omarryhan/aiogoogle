@@ -30,11 +30,6 @@ async def _aiter_file(file_name, chunk_size):
             chunk = await f.read(chunk_size)
 
 
-async def _read_file(file_name):
-    async with aiofiles.open(file_name, "rb") as file:
-        return await file.read()
-
-
 class AiohttpSession(AbstractSession):
     def __init__(self, *args, **kwargs):
         self._session = ClientSession(*args, **kwargs)
@@ -143,16 +138,27 @@ class AiohttpSession(AbstractSession):
                             ssl=request._verify_ssl,
                             proxy=HTTP_PROXY,
                         )
-                # Else load file to memory and send
+                # Else send the media alone, streamed like the multipart path
                 else:
-                    read_file = await request.media_upload.read_file(_read_file)
+                    media_upload = request.media_upload
+                    # A copy, so this upload's Content-Length doesn't stick to the Request
+                    headers = dict(request.headers)
+                    if media_upload.pipe_from is None and media_upload.file_path:
+                        # Keep Content-Length so the body isn't sent chunked
+                        body = media_upload.aiter_file(_aiter_file)
+                        headers["Content-Length"] = str(await _get_file_size(media_upload.file_path))
+                    elif media_upload.pipe_from is None:
+                        body = media_upload.file_body
+                    else:
+                        # Unknown length: sent chunked
+                        body = media_upload.aiter_file(_aiter_file)
                     if request.upload_file_content_type:
-                        request.headers.update({"Content-Type": request.upload_file_content_type})
+                        headers["Content-Type"] = request.upload_file_content_type
                     return await self._session.request(
                         method=request.method,
                         url=request.media_upload.upload_path,
-                        headers=request.headers,
-                        data=read_file,
+                        headers=headers,
+                        data=body,
                         json=request.json,
                         timeout=request.timeout,
                         ssl=request._verify_ssl,

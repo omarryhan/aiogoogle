@@ -451,6 +451,9 @@ class Method:
         # Remove params that are None
         uri_params = self._del_none_params(uri_params)
 
+        # An uploadType passed by the caller is kept in the upload URL as is
+        upload_type = uri_params.get("uploadType")
+
         # Assert timeout is int
         if timeout is not None:
             if not isinstance(timeout, int) or isinstance(timeout, bool):  # True isinstanceof int
@@ -586,20 +589,14 @@ class Method:
                     )
             media_download = MediaDownload(pipe_to=pipe_to)
 
-        if not upload_file and not pipe_from:
+        # Process upload_file / pipe_from
+        if upload_file or pipe_from:
+            media_upload = self._build_upload_media(
+                upload_file, uri, validate, fallback_url=url, pipe_from=pipe_from,
+                has_metadata=json is not None, upload_type=upload_type,
+            )
+        else:
             media_upload = None
-
-        # Process upload_file
-        if upload_file:
-            media_upload = self._build_upload_media(
-                upload_file, uri, validate, fallback_url=url, pipe_from=None
-            )
-
-        # Process pipe_from
-        if pipe_from:
-            media_upload = self._build_upload_media(
-                upload_file, uri, validate, fallback_url=url, pipe_from=pipe_from
-            )
 
         return Request(
             method=self["httpMethod"],
@@ -651,7 +648,9 @@ class Method:
         else:
             return base_url + self["path"]
 
-    def _build_upload_media(self, upload_file, qualified_url, validate, fallback_url, pipe_from):
+    def _build_upload_media(
+        self, upload_file, qualified_url, validate, fallback_url, pipe_from, has_metadata=False, upload_type=None
+    ):
         if not self["supportsMediaUpload"]:
             if validate:
                 raise ValidationError(
@@ -676,7 +675,17 @@ class Method:
             _safe_getitem(self._method_specs, "mediaUpload", "maxSize")
         )
         mime_range = _safe_getitem(self._method_specs, "mediaUpload", "accept")
-        multipart = self["mediaUpload"]["protocols"]["simple"].get("multipart", True)
+        # Like googleapiclient.discovery: json metadata and the media go together
+        # as multipart/related, and without metadata the media is sent alone.
+        multipart = has_metadata and self["mediaUpload"]["protocols"]["simple"].get("multipart", True)
+        # Google's upload endpoints need uploadType to tell how the body is encoded.
+        # Without it, Drive accepts a multipart/related body, keeps the metadata
+        # and silently stores an empty file. A caller-supplied uploadType is kept.
+        if upload_type is None:
+            sep = "&" if "?" in media_upload_url else "?"
+            media_upload_url += sep + urlencode(
+                {"uploadType": "multipart" if multipart else "media"}
+            )
 
         return MediaUpload(
             upload_file,

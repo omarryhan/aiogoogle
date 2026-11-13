@@ -1,3 +1,4 @@
+import inspect
 from urllib.parse import urlparse, urlunparse, urlencode, parse_qs
 from typing import Any, AsyncIterable, Callable, Optional
 import pprint
@@ -45,7 +46,7 @@ class MediaUpload:
 
         max_size (int): Maximum size of a media upload in bytes
 
-        multipart (bool): True if this endpoint supports upload multipart media.
+        multipart (bool): True to send json metadata and the media together as multipart/related, False to send the media alone.
 
         chunksize (int): Size of a chunk of bytes that a session should read at a time when uploading in multipart.
 
@@ -84,7 +85,8 @@ class MediaUpload:
         self.pipe_from = pipe_from
 
     async def run_validation(self, size_func):
-        if self.validate and self.max_size:
+        # A pipe_from stream's size isn't known before it's sent
+        if self.validate and self.max_size and (self.file_path or self.file_body is not None):
             size = await size_func(self.file_path) if self.file_path else len(self.file_body)
             if size > self.max_size:
                 raise ValidationError(
@@ -102,7 +104,10 @@ class MediaUpload:
                 async for chunk in self.pipe_from:
                     yield chunk
             else:
-                yield self.pipe_from.read()
+                chunk = self.pipe_from.read()
+                if inspect.isawaitable(chunk):  # e.g. an object with `async def read()`
+                    chunk = await chunk
+                yield chunk
         else:
             async for chunk in self._aiter_body():
                 yield chunk
