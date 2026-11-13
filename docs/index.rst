@@ -1318,29 +1318,6 @@ To run the test suite
 3. For extra configs, check out the tox.ini file.
 
 
-To upload a new version
--------------------------
-
-**Bump the version**
-
-In: ``aiogoogle/__version__.py``
-
-**Push a new tag**
-
-Make a new Git tag then push it.
-
-.. code-block:: sh
-
-    $ git tag -a 1.0.1 -m "New version :tada:" master
-    $ git push --tags
-
-**Publish release**
-
-Then go to Github -> Releases -> Click on the tag -> Write a release title and description -> Hit the publish release button.
-
-The ``publish.yml`` Github action should take it from there.
-It will build and then upload the new package to Pypi.
-
 To install the local version of the aiogoogle instead of the latest one on Pip
 --------------------------------------------------------------------------------
 

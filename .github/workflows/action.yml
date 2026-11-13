@@ -21,11 +21,26 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
 
+  # Supported Python versions are the "Programming Language :: Python :: 3.N"
+  # classifiers in setup.py. "3.x" (newest release) is always tested on top.
+  python-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+    steps:
+    - uses: actions/checkout@v3
+    - id: read
+      run: |
+        versions=$(grep -oE 'Programming Language :: Python :: 3\.[0-9]+' setup.py | grep -oE '3\.[0-9]+$')
+        [ -n "$versions" ] || { echo "No Python classifiers found in setup.py"; exit 1; }
+        echo "matrix=$( (echo "$versions"; echo 3.x) | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
+
   test:
+    needs: python-versions
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10"]
+        python-version: ${{ fromJSON(needs.python-versions.outputs.matrix) }}
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -42,12 +57,13 @@ jobs:
     - name: Install test runner
       run: python -m pip install tox
     - name: Run tests
-      run: PY_VERSION=${{ matrix.python-version }} && tox -e py${PY_VERSION//.}
+      run: tox -e py
   lint:
+    needs: python-versions
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10"]
+        python-version: ${{ fromJSON(needs.python-versions.outputs.matrix) }}
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -68,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.x"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
