@@ -5,7 +5,7 @@ description: Publish a new aiogoogle release to GitHub and PyPI, which covers me
 
 # Release aiogoogle
 
-Creating a GitHub release triggers `.github/workflows/publish.yml`, which uploads to PyPI. A PyPI version can't be reused once uploaded, so check everything before step 5. Stop and report if any check fails, and don't work around it.
+Creating a GitHub release triggers `.github/workflows/publish.yml`, which uploads to PyPI. A PyPI version can't be reused once uploaded, so check everything before step 6. Stop and report if any check fails, and don't work around it.
 
 Any maintainer can run this. It needs `gh` signed in with write access to `omarryhan/aiogoogle` and permission to push to `master`. No PyPI credentials are needed locally, because the upload runs in GitHub Actions. Check with `gh auth status` and `gh repo view omarryhan/aiogoogle --json viewerPermission`.
 
@@ -22,16 +22,25 @@ Read the diff. Merge only when every check succeeded and `mergeStateStatus` is `
 gh pr merge <N> --repo omarryhan/aiogoogle --merge --match-head-commit <headRefOid>
 ```
 
-## 2. Choose the version
+## 2. Check supported Python versions
+
+The `Programming Language :: Python :: 3.N` classifiers in `setup.py` are the only list of supported versions. CI builds its test matrix from them, and it also tests `3.x`, the newest release. Compare them with the versions page at https://devguide.python.org/versions/:
+
+- Remove the classifier for any version that has reached end of life. Installs on it aren't blocked; it's just no longer tested or supported.
+- Add a classifier for a new stable release once CI passes on it. The `3.x` job shows whether it does.
+
+If the list changes, commit it separately before the version bump and let CI run. List added or dropped versions in the release notes.
+
+## 3. Choose the version
 
 Read `__version_info__` in `aiogoogle/__version__.py` and review every change since the last tag:
 
-- **Breaking change:** bump the major version and reset the rest (5.20.0 → 6.0.0). That covers anything that can break existing callers, such as removed or renamed APIs, changed signatures or defaults, different exception types, or dropped Python versions. Tell the user which change makes it breaking, and call it out in the release notes with what users need to update.
+- **Breaking change:** bump the major version and reset the rest (5.20.0 → 6.0.0). That covers anything that can break existing callers, such as removed or renamed APIs, changed signatures or defaults, or different exception types. Dropping a Python version isn't breaking, since installs on it aren't blocked. Tell the user which change makes it breaking, and call it out in the release notes with what users need to update.
 - **Anything else:** bump the minor version, even for bug fixes (5.18.0 → 5.19.0 → 5.20.0).
 
 Check that the tag is free with `gh release list --repo omarryhan/aiogoogle --limit 5`.
 
-## 3. Bump and push
+## 4. Bump and push
 
 Start from the latest master. `master` is often checked out in another worktree, so work on the current branch and push to master by ref rather than switching:
 
@@ -48,7 +57,7 @@ git push origin HEAD:master
 
 If `--ff-only` fails, the current branch has its own work. Commit from a detached `origin/master` instead, so that work doesn't land on master.
 
-## 4. Wait for CI on the bump commit
+## 5. Wait for CI on the bump commit
 
 ```bash
 gh run list --repo omarryhan/aiogoogle --commit <sha> --workflow CI --json databaseId --jq '.[0].databaseId'
@@ -57,7 +66,7 @@ gh run watch <id> --repo omarryhan/aiogoogle --exit-status
 
 The run can take a few seconds to appear. CI must pass on the exact commit being released, since a green PR doesn't cover the merge result.
 
-## 5. Publish the release
+## 6. Publish the release
 
 Write the notes in the format of recent releases, one bullet per merged change since the last tag, with a short paragraph on any behavior change users need to act on. List the changes with `git log <last-tag>..HEAD --merges`.
 
@@ -77,7 +86,7 @@ Tag and title are both `vX.Y.Z`. Pin the target to the commit CI just verified:
 gh release create vX.Y.Z --repo omarryhan/aiogoogle --target <sha> --title vX.Y.Z --notes-file <notes> --latest
 ```
 
-## 6. Verify PyPI
+## 7. Verify PyPI
 
 Watch the `Upload Python Package` run, then confirm the upload itself. A green workflow alone doesn't show the files arrived.
 
@@ -89,9 +98,9 @@ curl -s https://pypi.org/pypi/aiogoogle/json | python3 -c 'import json,sys; d=js
 
 Expect a wheel and an sdist. PyPI's JSON can lag by a few seconds, so retry briefly before calling it a failure.
 
-If the upload failed, the tag and release already exist, so tell the user rather than deleting or re-creating them, and skip step 7.
+If the upload failed, the tag and release already exist, so tell the user rather than deleting or re-creating them, and skip step 8.
 
-## 7. Thank the contributors
+## 8. Thank the contributors
 
 Once the version is on PyPI, comment on each merged PR in the release, including ones merged before this run, so contributors know their work has shipped. Skip PRs written by the maintainer running the release and by bots. Comment only after verifying PyPI, so the install command in the message works.
 
