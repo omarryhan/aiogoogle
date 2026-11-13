@@ -228,7 +228,7 @@ def test_upload_simple_path(create_api):
     )
     assert (
         req.media_upload.upload_path
-        == "https://youtube.googleapis.com/upload/youtube/v3/videos?autoLevels=True&part=snippet&uploadType=multipart"
+        == "https://youtube.googleapis.com/upload/youtube/v3/videos?autoLevels=True&part=snippet&uploadType=media"
     )
 
 
@@ -237,9 +237,22 @@ def test_upload_simple_multipart(create_api):
 
     youtube = create_api("youtube", "v3")
     req = youtube.videos.insert(
-        autoLevels=True, part="snippet", upload_file=UPLAOD_FILE_NAME, validate=False
+        autoLevels=True,
+        part="snippet",
+        upload_file=UPLAOD_FILE_NAME,
+        json={"snippet": {"title": "video"}},
+        validate=False,
     )
     assert req.media_upload.multipart is True
+    assert req.media_upload.upload_path.endswith("&uploadType=multipart")
+
+
+def test_upload_without_metadata_is_not_multipart(create_api):
+    youtube = create_api("youtube", "v3")
+    req = youtube.videos.insert(
+        part="snippet", upload_file="/home/omar/Videos/video.mp4", validate=False
+    )
+    assert req.media_upload.multipart is False
 
 
 def _simple_upload_method(multipart):
@@ -269,7 +282,7 @@ def _simple_upload_method(multipart):
 
 def test_upload_type_multipart_added_after_query():
     req = _simple_upload_method(multipart=True)(
-        upload_file="/tmp/report.txt", fields="id,name,size"
+        upload_file="/tmp/report.txt", json={"name": "report.txt"}, fields="id,name,size"
     )
     assert req.media_upload.multipart is True
     assert (
@@ -280,7 +293,16 @@ def test_upload_type_multipart_added_after_query():
     assert req.url == "https://example.com/example/v3/resource?fields=id%2Cname%2Csize"
 
 
-def test_upload_type_media_without_query():
+def test_upload_type_media_without_metadata():
+    req = _simple_upload_method(multipart=True)(upload_file="/tmp/report.txt")
+    assert req.media_upload.multipart is False
+    assert (
+        req.media_upload.upload_path
+        == "https://example.com/upload/example/v3/resource?uploadType=media"
+    )
+
+
+def test_upload_type_media_when_method_has_no_multipart():
     req = _simple_upload_method(multipart=False)(upload_file="/tmp/report.txt")
     assert req.media_upload.multipart is False
     assert (
@@ -289,13 +311,33 @@ def test_upload_type_media_without_query():
     )
 
 
-def test_upload_type_not_overridden_when_given():
+def test_given_upload_type_media_sends_raw_media():
     req = _simple_upload_method(multipart=True)(
         upload_file="/tmp/report.txt", uploadType="media"
     )
+    assert req.media_upload.multipart is False
     assert (
         req.media_upload.upload_path
         == "https://example.com/upload/example/v3/resource?uploadType=media"
+    )
+
+
+def test_given_upload_type_media_with_metadata_fails():
+    with pytest.raises(TypeError) as e:
+        _simple_upload_method(multipart=True)(
+            upload_file="/tmp/report.txt", json={"name": "report.txt"}, uploadType="media"
+        )
+    assert "uploadType=media" in str(e.value)
+
+
+def test_given_upload_type_multipart_is_kept():
+    req = _simple_upload_method(multipart=True)(
+        upload_file="/tmp/report.txt", uploadType="multipart"
+    )
+    assert req.media_upload.multipart is True
+    assert (
+        req.media_upload.upload_path
+        == "https://example.com/upload/example/v3/resource?uploadType=multipart"
     )
 
 
@@ -311,6 +353,16 @@ def test_upload_type_drive_files_create(create_api):
         "https://www.googleapis.com/upload/drive/v3/files?"
     )
     assert req.media_upload.upload_path.endswith("&uploadType=multipart")
+
+
+def test_upload_type_drive_files_create_without_metadata(create_api):
+    drive = create_api("drive", "v3")
+    req = drive.files.create(upload_file="/tmp/report.txt", validate=False)
+    assert req.media_upload.multipart is False
+    assert (
+        req.media_upload.upload_path
+        == "https://www.googleapis.com/upload/drive/v3/files?uploadType=media"
+    )
 
 
 def test_upload_file_fails_unsupported_method(create_api):

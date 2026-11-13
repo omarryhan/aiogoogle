@@ -143,9 +143,12 @@ class AiohttpSession(AbstractSession):
                             ssl=request._verify_ssl,
                             proxy=HTTP_PROXY,
                         )
-                # Else load file to memory and send
+                # Else send the media alone: stream pipe_from, or load the file into memory
                 else:
-                    read_file = await request.media_upload.read_file(_read_file)
+                    if request.media_upload.pipe_from is not None:
+                        read_file = request.media_upload.aiter_file(_aiter_file)
+                    else:
+                        read_file = await request.media_upload.read_file(_read_file)
                     if request.upload_file_content_type:
                         request.headers.update({"Content-Type": request.upload_file_content_type})
                     return await self._session.request(
